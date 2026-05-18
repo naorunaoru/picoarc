@@ -1,0 +1,22 @@
+.program cec_tx
+
+; Each symbol is two FIFO words:
+;   1. low duration in microseconds, minus the set/loop overhead
+;   2. high-Z duration in microseconds, minus the set/loop overhead
+;
+; The pin output value is kept low. CEC open-drain behavior is produced by
+; switching the pin direction: output means pull low, input means release.
+
+.wrap_target
+    pull block
+    mov x, osr
+    set pindirs, 1
+low_loop:
+    jmp x-- low_loop
+
+    pull block
+    mov x, osr
+    set pindirs, 0
+high_loop:
+    jmp x-- high_loop
+.wrap

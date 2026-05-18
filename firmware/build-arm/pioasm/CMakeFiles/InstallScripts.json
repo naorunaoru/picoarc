@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
