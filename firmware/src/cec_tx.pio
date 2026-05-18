@@ -1,22 +1,61 @@
 .program cec_tx
 
-; Each symbol is two FIFO words:
-;   1. low duration in microseconds, minus the set/loop overhead
-;   2. high-Z duration in microseconds, minus the set/loop overhead
+.define public CEC_TX_CMD_ZERO 0
+.define public CEC_TX_CMD_ONE 1
+.define public CEC_TX_CMD_START 2
+.define public CEC_TX_CMD_ACK_SAMPLE 3
+.define public CEC_TX_CMD_DONE 4
+.define public CEC_TX_RATE_HZ 20000
+
+; FIFO words are symbolic CEC items, not durations. The state machine owns
+; the CEC low/release timings and drives the pin as open-drain by changing
+; pin direction: output means pull low, input means release.
 ;
-; The pin output value is kept low. CEC open-drain behavior is produced by
-; switching the pin direction: output means pull low, input means release.
+; Timing is quantized at 50 us. The released portions are intentionally a
+; little short here because the following pull/dispatch path also runs while
+; the bus is released.
 
 .wrap_target
+entry:
     pull block
     mov x, osr
-    set pindirs, 1
-low_loop:
-    jmp x-- low_loop
+    jmp !x bit_zero
+    jmp x-- maybe_one
+maybe_one:
+    jmp !x bit_one
+    jmp x-- maybe_start
+maybe_start:
+    jmp !x start_bit
+    jmp x-- maybe_ack
+maybe_ack:
+    jmp !x ack_sample_bit
 
-    pull block
-    mov x, osr
+done:
     set pindirs, 0
-high_loop:
-    jmp x-- high_loop
+    irq 0
+    jmp entry
+
+bit_zero:
+    set pindirs, 1 [29] ; 1500 us low
+    set pindirs, 0 [11] ; plus next dispatch: about 750-950 us released
+    jmp entry
+
+bit_one:
+    set pindirs, 1 [11] ; 600 us low
+    set pindirs, 0 [29] ; plus next dispatch: about 1650-1850 us released
+    jmp entry
+
+ack_sample_bit:
+    set pindirs, 1 [11] ; 600 us low
+    set pindirs, 0 [8] ; sample near 1050 us from the falling edge
+    in pins, 1
+    push block
+    nop [25]
+    jmp entry
+
+start_bit:
+    set pindirs, 1 [31] ; 3700 us low total
+    nop [31]
+    nop [9]
+    set pindirs, 0 [8] ; plus next dispatch: about 600-800 us released
 .wrap

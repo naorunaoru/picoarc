@@ -1,7 +1,7 @@
-set(CMAKE_C_COMPILER "/opt/homebrew/bin/arm-none-eabi-gcc")
+set(CMAKE_C_COMPILER "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc")
 set(CMAKE_C_COMPILER_ARG1 "")
 set(CMAKE_C_COMPILER_ID "GNU")
-set(CMAKE_C_COMPILER_VERSION "16.1.0")
+set(CMAKE_C_COMPILER_VERSION "15.2.1")
 set(CMAKE_C_COMPILER_VERSION_INTERNAL "")
 set(CMAKE_C_COMPILER_WRAPPER "")
 set(CMAKE_C_STANDARD_COMPUTED_DEFAULT "23")
@@ -24,11 +24,11 @@ set(CMAKE_C_COMPILER_ARCHITECTURE_ID "armv6")
 
 
 
-set(CMAKE_AR "/opt/homebrew/bin/arm-none-eabi-ar")
-set(CMAKE_C_COMPILER_AR "/opt/homebrew/bin/arm-none-eabi-gcc-ar")
-set(CMAKE_RANLIB "/opt/homebrew/bin/arm-none-eabi-ranlib")
-set(CMAKE_C_COMPILER_RANLIB "/opt/homebrew/bin/arm-none-eabi-gcc-ranlib")
-set(CMAKE_LINKER "/opt/homebrew/bin/arm-none-eabi-ld")
+set(CMAKE_AR "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-ar")
+set(CMAKE_C_COMPILER_AR "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar")
+set(CMAKE_RANLIB "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-ranlib")
+set(CMAKE_C_COMPILER_RANLIB "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib")
+set(CMAKE_LINKER "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-ld")
 set(CMAKE_LINKER_LINK "")
 set(CMAKE_LINKER_LLD "")
 set(CMAKE_C_COMPILER_LINKER "NOTFOUND")
@@ -79,7 +79,7 @@ endif()
 
 
 
-set(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES "/opt/homebrew/Cellar/arm-none-eabi-gcc/16.1.0/lib/gcc/arm-none-eabi/16.1.0/include;/opt/homebrew/Cellar/arm-none-eabi-gcc/16.1.0/lib/gcc/arm-none-eabi/16.1.0/include-fixed")
+set(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/lib/gcc/arm-none-eabi/15.2.1/include;/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/lib/gcc/arm-none-eabi/15.2.1/include-fixed;/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/arm-none-eabi/include")
 set(CMAKE_C_IMPLICIT_LINK_LIBRARIES "")
-set(CMAKE_C_IMPLICIT_LINK_DIRECTORIES "/opt/homebrew/Cellar/arm-none-eabi-gcc/16.1.0/lib/gcc/arm-none-eabi/16.1.0/thumb/v6-m/nofp;/opt/homebrew/Cellar/arm-none-eabi-gcc/16.1.0/lib/gcc/arm-none-eabi/16.1.0")
+set(CMAKE_C_IMPLICIT_LINK_DIRECTORIES "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp;/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/arm-none-eabi/lib/thumb/v6-m/nofp;/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/lib/gcc/arm-none-eabi/15.2.1;/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/lib/gcc;/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/arm-none-eabi/lib")
 set(CMAKE_C_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")

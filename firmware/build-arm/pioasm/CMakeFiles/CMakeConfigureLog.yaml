@@ -20,7 +20,7 @@ events:
     names:
       - "uname"
     candidate_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -44,9 +44,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/uname"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/uname"
       - "/Users/naoru/.opencode/bin/uname"
       - "/Users/naoru/.bun/bin/uname"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/uname"
@@ -59,7 +59,7 @@ events:
     found: "/usr/bin/uname"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -79,11 +79,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "message-v1"
@@ -118,7 +125,7 @@ events:
       - "icx"
       - "clang++"
     candidate_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -142,9 +149,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/c++"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/c++"
       - "/Users/naoru/.opencode/bin/c++"
       - "/Users/naoru/.bun/bin/c++"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/c++"
@@ -157,7 +164,7 @@ events:
     found: "/usr/bin/c++"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -177,11 +184,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "find-v1"
@@ -210,7 +224,7 @@ events:
     found: "/opt/homebrew/share/cmake/Modules/CMakeCXXCompilerId.cpp.in"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -230,11 +244,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "message-v1"
@@ -320,7 +341,7 @@ events:
       - "ar"
     candidate_directories:
       - "/usr/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -343,11 +364,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/usr/bin/ar"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -367,11 +388,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "find-v1"
@@ -394,7 +422,7 @@ events:
       - "ranlib"
     candidate_directories:
       - "/usr/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -417,11 +445,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/usr/bin/ranlib"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -441,11 +469,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "find-v1"
@@ -468,7 +503,7 @@ events:
       - "strip"
     candidate_directories:
       - "/usr/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -491,11 +526,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/usr/bin/strip"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -515,11 +550,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "find-v1"
@@ -542,7 +584,7 @@ events:
       - "ld"
     candidate_directories:
       - "/usr/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -565,11 +607,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/usr/bin/ld"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -589,11 +631,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "find-v1"
@@ -616,7 +665,7 @@ events:
       - "nm"
     candidate_directories:
       - "/usr/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -639,11 +688,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/usr/bin/nm"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -663,11 +712,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "find-v1"
@@ -690,7 +746,7 @@ events:
       - "objdump"
     candidate_directories:
       - "/usr/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -713,11 +769,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/usr/bin/objdump"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -737,11 +793,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "find-v1"
@@ -764,7 +827,7 @@ events:
       - "objcopy"
     candidate_directories:
       - "/usr/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -787,10 +850,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/usr/bin/objcopy"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/objcopy"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/objcopy"
       - "/Users/naoru/.opencode/bin/objcopy"
       - "/Users/naoru/.bun/bin/objcopy"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/objcopy"
@@ -813,11 +876,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/objcopy"
       - "/Users/naoru/.local/bin/objcopy"
       - "/Users/naoru/.lmstudio/bin/objcopy"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/objcopy"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/objcopy"
     found: false
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -837,11 +900,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "find-v1"
@@ -864,7 +934,7 @@ events:
       - "readelf"
     candidate_directories:
       - "/usr/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -887,10 +957,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/usr/bin/readelf"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/readelf"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/readelf"
       - "/Users/naoru/.opencode/bin/readelf"
       - "/Users/naoru/.bun/bin/readelf"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/readelf"
@@ -913,11 +983,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/readelf"
       - "/Users/naoru/.local/bin/readelf"
       - "/Users/naoru/.lmstudio/bin/readelf"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/readelf"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/readelf"
     found: false
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -937,11 +1007,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "find-v1"
@@ -964,7 +1041,7 @@ events:
       - "dlltool"
     candidate_directories:
       - "/usr/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -987,10 +1064,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/usr/bin/dlltool"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/dlltool"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/dlltool"
       - "/Users/naoru/.opencode/bin/dlltool"
       - "/Users/naoru/.bun/bin/dlltool"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/dlltool"
@@ -1013,11 +1090,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/dlltool"
       - "/Users/naoru/.local/bin/dlltool"
       - "/Users/naoru/.lmstudio/bin/dlltool"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/dlltool"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/dlltool"
     found: false
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -1037,11 +1114,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "find-v1"
@@ -1064,7 +1148,7 @@ events:
       - "addr2line"
     candidate_directories:
       - "/usr/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -1087,10 +1171,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/usr/bin/addr2line"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/addr2line"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/addr2line"
       - "/Users/naoru/.opencode/bin/addr2line"
       - "/Users/naoru/.bun/bin/addr2line"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/addr2line"
@@ -1113,11 +1197,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/addr2line"
       - "/Users/naoru/.local/bin/addr2line"
       - "/Users/naoru/.lmstudio/bin/addr2line"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/addr2line"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/addr2line"
     found: false
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -1137,11 +1221,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "find-v1"
@@ -1164,7 +1255,7 @@ events:
       - "tapi"
     candidate_directories:
       - "/usr/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -1187,10 +1278,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/usr/bin/tapi"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/tapi"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/tapi"
       - "/Users/naoru/.opencode/bin/tapi"
       - "/Users/naoru/.bun/bin/tapi"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/tapi"
@@ -1213,11 +1304,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/tapi"
       - "/Users/naoru/.local/bin/tapi"
       - "/Users/naoru/.lmstudio/bin/tapi"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/tapi"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/tapi"
     found: false
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -1237,11 +1328,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "find-v1"
@@ -1263,7 +1361,7 @@ events:
     names:
       - "install_name_tool"
     candidate_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -1287,9 +1385,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/install_name_tool"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/install_name_tool"
       - "/Users/naoru/.opencode/bin/install_name_tool"
       - "/Users/naoru/.bun/bin/install_name_tool"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/install_name_tool"
@@ -1302,7 +1400,7 @@ events:
     found: "/usr/bin/install_name_tool"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -1322,11 +1420,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm-install"
   -
     kind: "try_compile-v1"
@@ -1337,8 +1442,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-uKwJG7"
-      binary: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-uKwJG7"
+      source: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-rGoWbD"
+      binary: "/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-rGoWbD"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -1352,17 +1457,17 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-uKwJG7'
+        Change Dir: '/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-rGoWbD'
         
-        Run Build Command(s): /opt/homebrew/bin/ninja -v cmTC_54de4
-        [1/2] /usr/bin/c++   -v -Wl,-v -MD -MT CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+        Run Build Command(s): /opt/homebrew/bin/ninja -v cmTC_9d61e
+        [1/2] /usr/bin/c++   -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
         Apple clang version 17.0.0 (clang-1700.6.4.2)
         Target: arm64-apple-darwin25.3.0
         Thread model: posix
         InstalledDir: /Library/Developer/CommandLineTools/usr/bin
         clang++: warning: -Wl,-v: 'linker' input unused [-Wunused-command-line-argument]
         ignoring nonexistent directory "/Library/Developer/CommandLineTools/usr/bin/../include/c++/v1"
-         "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=26.2 -fvisibility-inlines-hidden-static-local-var -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -target-cpu apple-m1 -target-feature +zcm -target-feature +zcz -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-uKwJG7 -target-linker-version 1230.1 -v -fcoverage-compilation-dir=/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-uKwJG7 -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/17 -dependency-file CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/17/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -internal-iframework /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+         "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=26.2 -fvisibility-inlines-hidden-static-local-var -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -target-cpu apple-m1 -target-feature +zcm -target-feature +zcz -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-rGoWbD -target-linker-version 1230.1 -v -fcoverage-compilation-dir=/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-rGoWbD -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/17 -dependency-file CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/17/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -internal-iframework /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
         clang -cc1 version 17.0.0 (clang-1700.6.4.2) default target arm64-apple-darwin25.3.0
         ignoring nonexistent directory "/usr/local/include"
         ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include"
@@ -1376,12 +1481,12 @@ events:
          /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)
          /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/SubFrameworks (framework directory)
         End of search list.
-        [2/2] : && /usr/bin/c++  -v -Wl,-v CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_54de4   && :
+        [2/2] : && /usr/bin/c++ -arch arm64 -v -Wl,-v CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_9d61e   && :
         Apple clang version 17.0.0 (clang-1700.6.4.2)
         Target: arm64-apple-darwin25.3.0
         Thread model: posix
         InstalledDir: /Library/Developer/CommandLineTools/usr/bin
-         "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.2 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_54de4 -L/usr/local/lib -v CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.osx.a
+         "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.2 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_9d61e -L/usr/local/lib -v CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.osx.a
         @(#)PROGRAM:ld PROJECT:ld-1230.1
         BUILD 10:14:01 Jan  9 2026
         configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em armv8m.main armv8.1m.main
@@ -1436,17 +1541,17 @@ events:
       Parsed CXX implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-uKwJG7']
+        ignore line: [Change Dir: '/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-rGoWbD']
         ignore line: []
-        ignore line: [Run Build Command(s): /opt/homebrew/bin/ninja -v cmTC_54de4]
-        ignore line: [[1/2] /usr/bin/c++   -v -Wl -v -MD -MT CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Run Build Command(s): /opt/homebrew/bin/ninja -v cmTC_9d61e]
+        ignore line: [[1/2] /usr/bin/c++   -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
         ignore line: [Apple clang version 17.0.0 (clang-1700.6.4.2)]
         ignore line: [Target: arm64-apple-darwin25.3.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
         ignore line: [clang++: warning: -Wl -v: 'linker' input unused [-Wunused-command-line-argument]]
         ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/usr/bin/../include/c++/v1"]
-        ignore line: [ "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=26.2 -fvisibility-inlines-hidden-static-local-var -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -target-cpu apple-m1 -target-feature +zcm -target-feature +zcz -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-uKwJG7 -target-linker-version 1230.1 -v -fcoverage-compilation-dir=/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-uKwJG7 -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/17 -dependency-file CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/17/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -internal-iframework /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [ "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx26.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=26.2 -fvisibility-inlines-hidden-static-local-var -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -target-cpu apple-m1 -target-feature +zcm -target-feature +zcz -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-rGoWbD -target-linker-version 1230.1 -v -fcoverage-compilation-dir=/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm/CMakeFiles/CMakeScratch/TryCompile-rGoWbD -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/17 -dependency-file CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/17/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -internal-iframework /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks -internal-iframework /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/SubFrameworks -internal-iframework /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
         ignore line: [clang -cc1 version 17.0.0 (clang-1700.6.4.2) default target arm64-apple-darwin25.3.0]
         ignore line: [ignoring nonexistent directory "/usr/local/include"]
         ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include"]
@@ -1460,12 +1565,12 @@ events:
         ignore line: [ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)]
         ignore line: [ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/SubFrameworks (framework directory)]
         ignore line: [End of search list.]
-        ignore line: [[2/2] : && /usr/bin/c++  -v -Wl -v CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_54de4   && :]
+        ignore line: [[2/2] : && /usr/bin/c++ -arch arm64 -v -Wl -v CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_9d61e   && :]
         ignore line: [Apple clang version 17.0.0 (clang-1700.6.4.2)]
         ignore line: [Target: arm64-apple-darwin25.3.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
-        link line: [ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.2 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_54de4 -L/usr/local/lib -v CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.osx.a]
+        link line: [ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 26.0.0 26.2 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_9d61e -L/usr/local/lib -v CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.osx.a]
           arg [/Library/Developer/CommandLineTools/usr/bin/ld] ==> ignore
           arg [-demangle] ==> ignore
           arg [-lto_library] ==> ignore, skip following value
@@ -1482,10 +1587,10 @@ events:
           arg [-mllvm] ==> ignore
           arg [-enable-linkonceodr-outlining] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_54de4] ==> ignore
+          arg [cmTC_9d61e] ==> ignore
           arg [-L/usr/local/lib] ==> dir [/usr/local/lib]
           arg [-v] ==> ignore
-          arg [CMakeFiles/cmTC_54de4.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [CMakeFiles/cmTC_9d61e.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
           arg [-lc++] ==> lib [c++]
           arg [-lSystem] ==> lib [System]
           arg [/Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.osx.a] ==> lib [/Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.osx.a]

@@ -1,4 +1,7 @@
 /Volumes/Tray/projects/picoarc/firmware/build/CMakeFiles/picoarc.dir
+/Volumes/Tray/projects/picoarc/firmware/build/CMakeFiles/picoarc_spdif_pio_h.dir
+/Volumes/Tray/projects/picoarc/firmware/build/CMakeFiles/picoarc_cec_tx_pio_h.dir
+/Volumes/Tray/projects/picoarc/firmware/build/CMakeFiles/picoarc_cec_rx_pio_h.dir
 /Volumes/Tray/projects/picoarc/firmware/build/CMakeFiles/edit_cache.dir
 /Volumes/Tray/projects/picoarc/firmware/build/CMakeFiles/rebuild_cache.dir
 /Volumes/Tray/projects/picoarc/firmware/build/pico-sdk/CMakeFiles/edit_cache.dir

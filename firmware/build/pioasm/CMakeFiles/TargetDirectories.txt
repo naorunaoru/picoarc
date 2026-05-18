@@ -1,0 +1,7 @@
+/Volumes/Tray/projects/picoarc/firmware/build/pioasm/CMakeFiles/pioasm.dir
+/Volumes/Tray/projects/picoarc/firmware/build/pioasm/CMakeFiles/edit_cache.dir
+/Volumes/Tray/projects/picoarc/firmware/build/pioasm/CMakeFiles/rebuild_cache.dir
+/Volumes/Tray/projects/picoarc/firmware/build/pioasm/CMakeFiles/list_install_components.dir
+/Volumes/Tray/projects/picoarc/firmware/build/pioasm/CMakeFiles/install.dir
+/Volumes/Tray/projects/picoarc/firmware/build/pioasm/CMakeFiles/install/local.dir
+/Volumes/Tray/projects/picoarc/firmware/build/pioasm/CMakeFiles/install/strip.dir

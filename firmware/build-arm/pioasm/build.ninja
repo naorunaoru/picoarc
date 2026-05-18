@@ -52,7 +52,7 @@ build cmake_object_order_depends_target_pioasm: phony || .
 build CMakeFiles/pioasm.dir/main.cpp.o: CXX_COMPILER__pioasm_unscanned_Release /Users/naoru/Developer/pico/pico-sdk/tools/pioasm/main.cpp || cmake_object_order_depends_target_pioasm
   CONFIG = Release
   DEP_FILE = CMakeFiles/pioasm.dir/main.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11
+  FLAGS = -O3 -DNDEBUG -std=gnu++11 -arch arm64
   INCLUDES = -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen -I/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm
   OBJECT_DIR = CMakeFiles/pioasm.dir
   OBJECT_FILE_DIR = CMakeFiles/pioasm.dir
@@ -63,7 +63,7 @@ build CMakeFiles/pioasm.dir/main.cpp.o: CXX_COMPILER__pioasm_unscanned_Release /
 build CMakeFiles/pioasm.dir/pio_assembler.cpp.o: CXX_COMPILER__pioasm_unscanned_Release /Users/naoru/Developer/pico/pico-sdk/tools/pioasm/pio_assembler.cpp || cmake_object_order_depends_target_pioasm
   CONFIG = Release
   DEP_FILE = CMakeFiles/pioasm.dir/pio_assembler.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11
+  FLAGS = -O3 -DNDEBUG -std=gnu++11 -arch arm64
   INCLUDES = -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen -I/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm
   OBJECT_DIR = CMakeFiles/pioasm.dir
   OBJECT_FILE_DIR = CMakeFiles/pioasm.dir
@@ -74,7 +74,7 @@ build CMakeFiles/pioasm.dir/pio_assembler.cpp.o: CXX_COMPILER__pioasm_unscanned_
 build CMakeFiles/pioasm.dir/pio_disassembler.cpp.o: CXX_COMPILER__pioasm_unscanned_Release /Users/naoru/Developer/pico/pico-sdk/tools/pioasm/pio_disassembler.cpp || cmake_object_order_depends_target_pioasm
   CONFIG = Release
   DEP_FILE = CMakeFiles/pioasm.dir/pio_disassembler.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11
+  FLAGS = -O3 -DNDEBUG -std=gnu++11 -arch arm64
   INCLUDES = -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen -I/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm
   OBJECT_DIR = CMakeFiles/pioasm.dir
   OBJECT_FILE_DIR = CMakeFiles/pioasm.dir
@@ -85,7 +85,7 @@ build CMakeFiles/pioasm.dir/pio_disassembler.cpp.o: CXX_COMPILER__pioasm_unscann
 build CMakeFiles/pioasm.dir/gen/lexer.cpp.o: CXX_COMPILER__pioasm_unscanned_Release /Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen/lexer.cpp || cmake_object_order_depends_target_pioasm
   CONFIG = Release
   DEP_FILE = CMakeFiles/pioasm.dir/gen/lexer.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11
+  FLAGS = -O3 -DNDEBUG -std=gnu++11 -arch arm64
   INCLUDES = -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen -I/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm
   OBJECT_DIR = CMakeFiles/pioasm.dir
   OBJECT_FILE_DIR = CMakeFiles/pioasm.dir/gen
@@ -96,7 +96,7 @@ build CMakeFiles/pioasm.dir/gen/lexer.cpp.o: CXX_COMPILER__pioasm_unscanned_Rele
 build CMakeFiles/pioasm.dir/gen/parser.cpp.o: CXX_COMPILER__pioasm_unscanned_Release /Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen/parser.cpp || cmake_object_order_depends_target_pioasm
   CONFIG = Release
   DEP_FILE = CMakeFiles/pioasm.dir/gen/parser.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11
+  FLAGS = -O3 -DNDEBUG -std=gnu++11 -arch arm64
   INCLUDES = -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen -I/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm
   OBJECT_DIR = CMakeFiles/pioasm.dir
   OBJECT_FILE_DIR = CMakeFiles/pioasm.dir/gen
@@ -107,7 +107,7 @@ build CMakeFiles/pioasm.dir/gen/parser.cpp.o: CXX_COMPILER__pioasm_unscanned_Rel
 build CMakeFiles/pioasm.dir/c_sdk_output.cpp.o: CXX_COMPILER__pioasm_unscanned_Release /Users/naoru/Developer/pico/pico-sdk/tools/pioasm/c_sdk_output.cpp || cmake_object_order_depends_target_pioasm
   CONFIG = Release
   DEP_FILE = CMakeFiles/pioasm.dir/c_sdk_output.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11
+  FLAGS = -O3 -DNDEBUG -std=gnu++11 -arch arm64
   INCLUDES = -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen -I/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm
   OBJECT_DIR = CMakeFiles/pioasm.dir
   OBJECT_FILE_DIR = CMakeFiles/pioasm.dir
@@ -118,7 +118,7 @@ build CMakeFiles/pioasm.dir/c_sdk_output.cpp.o: CXX_COMPILER__pioasm_unscanned_R
 build CMakeFiles/pioasm.dir/python_output.cpp.o: CXX_COMPILER__pioasm_unscanned_Release /Users/naoru/Developer/pico/pico-sdk/tools/pioasm/python_output.cpp || cmake_object_order_depends_target_pioasm
   CONFIG = Release
   DEP_FILE = CMakeFiles/pioasm.dir/python_output.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11
+  FLAGS = -O3 -DNDEBUG -std=gnu++11 -arch arm64
   INCLUDES = -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen -I/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm
   OBJECT_DIR = CMakeFiles/pioasm.dir
   OBJECT_FILE_DIR = CMakeFiles/pioasm.dir
@@ -129,7 +129,7 @@ build CMakeFiles/pioasm.dir/python_output.cpp.o: CXX_COMPILER__pioasm_unscanned_
 build CMakeFiles/pioasm.dir/hex_output.cpp.o: CXX_COMPILER__pioasm_unscanned_Release /Users/naoru/Developer/pico/pico-sdk/tools/pioasm/hex_output.cpp || cmake_object_order_depends_target_pioasm
   CONFIG = Release
   DEP_FILE = CMakeFiles/pioasm.dir/hex_output.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11
+  FLAGS = -O3 -DNDEBUG -std=gnu++11 -arch arm64
   INCLUDES = -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen -I/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm
   OBJECT_DIR = CMakeFiles/pioasm.dir
   OBJECT_FILE_DIR = CMakeFiles/pioasm.dir
@@ -140,7 +140,7 @@ build CMakeFiles/pioasm.dir/hex_output.cpp.o: CXX_COMPILER__pioasm_unscanned_Rel
 build CMakeFiles/pioasm.dir/json_output.cpp.o: CXX_COMPILER__pioasm_unscanned_Release /Users/naoru/Developer/pico/pico-sdk/tools/pioasm/json_output.cpp || cmake_object_order_depends_target_pioasm
   CONFIG = Release
   DEP_FILE = CMakeFiles/pioasm.dir/json_output.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11
+  FLAGS = -O3 -DNDEBUG -std=gnu++11 -arch arm64
   INCLUDES = -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen -I/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm
   OBJECT_DIR = CMakeFiles/pioasm.dir
   OBJECT_FILE_DIR = CMakeFiles/pioasm.dir
@@ -151,7 +151,7 @@ build CMakeFiles/pioasm.dir/json_output.cpp.o: CXX_COMPILER__pioasm_unscanned_Re
 build CMakeFiles/pioasm.dir/ada_output.cpp.o: CXX_COMPILER__pioasm_unscanned_Release /Users/naoru/Developer/pico/pico-sdk/tools/pioasm/ada_output.cpp || cmake_object_order_depends_target_pioasm
   CONFIG = Release
   DEP_FILE = CMakeFiles/pioasm.dir/ada_output.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11
+  FLAGS = -O3 -DNDEBUG -std=gnu++11 -arch arm64
   INCLUDES = -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen -I/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm
   OBJECT_DIR = CMakeFiles/pioasm.dir
   OBJECT_FILE_DIR = CMakeFiles/pioasm.dir
@@ -162,7 +162,7 @@ build CMakeFiles/pioasm.dir/ada_output.cpp.o: CXX_COMPILER__pioasm_unscanned_Rel
 build CMakeFiles/pioasm.dir/go_output.cpp.o: CXX_COMPILER__pioasm_unscanned_Release /Users/naoru/Developer/pico/pico-sdk/tools/pioasm/go_output.cpp || cmake_object_order_depends_target_pioasm
   CONFIG = Release
   DEP_FILE = CMakeFiles/pioasm.dir/go_output.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11
+  FLAGS = -O3 -DNDEBUG -std=gnu++11 -arch arm64
   INCLUDES = -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm -I/Users/naoru/Developer/pico/pico-sdk/tools/pioasm/gen -I/Volumes/Tray/projects/picoarc/firmware/build-arm/pioasm
   OBJECT_DIR = CMakeFiles/pioasm.dir
   OBJECT_FILE_DIR = CMakeFiles/pioasm.dir
@@ -180,7 +180,7 @@ build CMakeFiles/pioasm.dir/go_output.cpp.o: CXX_COMPILER__pioasm_unscanned_Rele
 
 build pioasm: CXX_EXECUTABLE_LINKER__pioasm_Release CMakeFiles/pioasm.dir/main.cpp.o CMakeFiles/pioasm.dir/pio_assembler.cpp.o CMakeFiles/pioasm.dir/pio_disassembler.cpp.o CMakeFiles/pioasm.dir/gen/lexer.cpp.o CMakeFiles/pioasm.dir/gen/parser.cpp.o CMakeFiles/pioasm.dir/c_sdk_output.cpp.o CMakeFiles/pioasm.dir/python_output.cpp.o CMakeFiles/pioasm.dir/hex_output.cpp.o CMakeFiles/pioasm.dir/json_output.cpp.o CMakeFiles/pioasm.dir/ada_output.cpp.o CMakeFiles/pioasm.dir/go_output.cpp.o
   CONFIG = Release
-  FLAGS = -O3 -DNDEBUG
+  FLAGS = -O3 -DNDEBUG -arch arm64
   LINK_FLAGS = -Wl,-search_paths_first -Wl,-headerpad_max_install_names
   OBJECT_DIR = CMakeFiles/pioasm.dir
   POST_BUILD = :

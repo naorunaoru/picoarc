@@ -15,21 +15,21 @@
 ########################
 
 //Path to a program.
-CMAKE_ADDR2LINE:FILEPATH=/opt/homebrew/bin/arm-none-eabi-addr2line
+CMAKE_ADDR2LINE:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-addr2line
 
 //Path to a program.
-CMAKE_AR:FILEPATH=/opt/homebrew/bin/arm-none-eabi-ar
+CMAKE_AR:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-ar
 
 //ASM compiler
-CMAKE_ASM_COMPILER:STRING=/opt/homebrew/bin/arm-none-eabi-gcc
+CMAKE_ASM_COMPILER:STRING=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
-CMAKE_ASM_COMPILER_AR:FILEPATH=/opt/homebrew/bin/arm-none-eabi-gcc-ar
+CMAKE_ASM_COMPILER_AR:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar
 
 //A wrapper around 'ranlib' adding the appropriate '--plugin' option
 // for the GCC compiler
-CMAKE_ASM_COMPILER_RANLIB:FILEPATH=/opt/homebrew/bin/arm-none-eabi-gcc-ranlib
+CMAKE_ASM_COMPILER_RANLIB:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib
 
 //Flags used by the ASM compiler during all build types.
 CMAKE_ASM_FLAGS:STRING=-mcpu=cortex-m0plus -mthumb
@@ -51,15 +51,15 @@ CMAKE_ASM_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 CMAKE_BUILD_TYPE:STRING=Release
 
 //CXX compiler
-CMAKE_CXX_COMPILER:STRING=/opt/homebrew/bin/arm-none-eabi-g++
+CMAKE_CXX_COMPILER:STRING=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
-CMAKE_CXX_COMPILER_AR:FILEPATH=/opt/homebrew/bin/arm-none-eabi-gcc-ar
+CMAKE_CXX_COMPILER_AR:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar
 
 //A wrapper around 'ranlib' adding the appropriate '--plugin' option
 // for the GCC compiler
-CMAKE_CXX_COMPILER_RANLIB:FILEPATH=/opt/homebrew/bin/arm-none-eabi-gcc-ranlib
+CMAKE_CXX_COMPILER_RANLIB:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib
 
 //Flags used by the CXX compiler during all build types.
 CMAKE_CXX_FLAGS:STRING=-mcpu=cortex-m0plus -mthumb
@@ -77,15 +77,15 @@ CMAKE_CXX_FLAGS_RELEASE:STRING=-g -O3 -DNDEBUG
 CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 
 //C compiler
-CMAKE_C_COMPILER:STRING=/opt/homebrew/bin/arm-none-eabi-gcc
+CMAKE_C_COMPILER:STRING=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc
 
 //A wrapper around 'ar' adding the appropriate '--plugin' option
 // for the GCC compiler
-CMAKE_C_COMPILER_AR:FILEPATH=/opt/homebrew/bin/arm-none-eabi-gcc-ar
+CMAKE_C_COMPILER_AR:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar
 
 //A wrapper around 'ranlib' adding the appropriate '--plugin' option
 // for the GCC compiler
-CMAKE_C_COMPILER_RANLIB:FILEPATH=/opt/homebrew/bin/arm-none-eabi-gcc-ranlib
+CMAKE_C_COMPILER_RANLIB:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib
 
 //Flags used by the C compiler during all build types.
 CMAKE_C_FLAGS:STRING=-mcpu=cortex-m0plus -mthumb
@@ -133,7 +133,7 @@ CMAKE_FIND_PACKAGE_REDIRECTS_DIR:STATIC=/Volumes/Tray/projects/picoarc/firmware/
 CMAKE_INSTALL_PREFIX:PATH=/usr/local
 
 //Path to a program.
-CMAKE_LINKER:FILEPATH=/opt/homebrew/bin/arm-none-eabi-ld
+CMAKE_LINKER:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-ld
 
 //Program used to build from build.ninja files.
 CMAKE_MAKE_PROGRAM:FILEPATH=/opt/homebrew/bin/ninja
@@ -159,11 +159,11 @@ CMAKE_MODULE_LINKER_FLAGS_RELEASE:STRING=
 CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
 //Path to a program.
-CMAKE_NM:FILEPATH=/opt/homebrew/bin/arm-none-eabi-nm
+CMAKE_NM:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-nm
 
-CMAKE_OBJCOPY:FILEPATH=/opt/homebrew/bin/arm-none-eabi-objcopy
+CMAKE_OBJCOPY:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-objcopy
 
-CMAKE_OBJDUMP:FILEPATH=/opt/homebrew/bin/arm-none-eabi-objdump
+CMAKE_OBJDUMP:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-objdump
 
 //Value Computed by CMake
 CMAKE_PROJECT_COMPAT_VERSION:STATIC=
@@ -181,10 +181,10 @@ CMAKE_PROJECT_NAME:STATIC=picoarc
 CMAKE_PROJECT_SPDX_LICENSE:STATIC=
 
 //Path to a program.
-CMAKE_RANLIB:FILEPATH=/opt/homebrew/bin/arm-none-eabi-ranlib
+CMAKE_RANLIB:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-ranlib
 
 //Path to a program.
-CMAKE_READELF:FILEPATH=/opt/homebrew/bin/arm-none-eabi-readelf
+CMAKE_READELF:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-readelf
 
 //Flags used by the linker during the creation of shared libraries
 // during all build types.
@@ -234,7 +234,7 @@ CMAKE_STATIC_LINKER_FLAGS_RELEASE:STRING=
 CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
 //Path to a program.
-CMAKE_STRIP:FILEPATH=/opt/homebrew/bin/arm-none-eabi-strip
+CMAKE_STRIP:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-strip
 
 //Path to a program.
 CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
@@ -277,10 +277,10 @@ PICO_BOARD_HEADER_DIRS:STRING=
 PICO_BUILD_DOCS:BOOL=OFF
 
 //Path to a program.
-PICO_COMPILER_CC:FILEPATH=/opt/homebrew/bin/arm-none-eabi-gcc
+PICO_COMPILER_CC:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc
 
 //Path to a program.
-PICO_COMPILER_CXX:FILEPATH=/opt/homebrew/bin/arm-none-eabi-g++
+PICO_COMPILER_CXX:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++
 
 //Default binaries to copy code to RAM when booting from flash
 PICO_COPY_TO_RAM:BOOL=OFF
@@ -298,10 +298,10 @@ PICO_DEOPTIMIZED_DEBUG:BOOL=OFF
 PICO_NO_FLASH:BOOL=OFF
 
 //Path to a program.
-PICO_OBJCOPY:FILEPATH=/opt/homebrew/bin/arm-none-eabi-objcopy
+PICO_OBJCOPY:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-objcopy
 
 //Path to a program.
-PICO_OBJDUMP:FILEPATH=/opt/homebrew/bin/arm-none-eabi-objdump
+PICO_OBJDUMP:FILEPATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-objdump
 
 //PICO Build platform (e.g. rp2040, rp2350, rp2350-riscv,  host)
 PICO_PLATFORM:STRING=rp2040
@@ -541,7 +541,7 @@ PICO_BOOT_STAGE2_DIR:INTERNAL=/Users/naoru/Developer/pico/pico-sdk/src/rp2040/bo
 PICO_CMAKE_PRELOAD_PLATFORM_DIR:INTERNAL=/Users/naoru/Developer/pico/pico-sdk/cmake/preload/platforms
 PICO_CMAKE_PRELOAD_PLATFORM_FILE:INTERNAL=/Users/naoru/Developer/pico/pico-sdk/cmake/preload/platforms/rp2040.cmake
 PICO_CMSIS_DEVICE:INTERNAL=RP2040
-PICO_COMPILER_ASM:INTERNAL=/opt/homebrew/bin/arm-none-eabi-gcc
+PICO_COMPILER_ASM:INTERNAL=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc
 PICO_DOXYGEN_ENABLED_SECTIONS:INTERNAL=rp2040_specific
 PICO_DOXYGEN_EXCLUDE_PATHS:INTERNAL=/Users/naoru/Developer/pico/pico-sdk/src/rp2040/hardware_regs;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/cmsis
 PICO_DOXYGEN_PATHS:INTERNAL=/Users/naoru/Developer/pico/pico-sdk/src/common/boot_picobin_headers;/Users/naoru/Developer/pico/pico-sdk/src/common/boot_picoboot_headers;/Users/naoru/Developer/pico/pico-sdk/src/common/boot_uf2_headers;/Users/naoru/Developer/pico/pico-sdk/src/common/pico_base_headers;/Users/naoru/Developer/pico/pico-sdk/src/common/pico_usb_reset_interface_headers;/Users/naoru/Developer/pico/pico-sdk/src/common/pico_bit_ops_headers;/Users/naoru/Developer/pico/pico-sdk/src/common/pico_binary_info;/Users/naoru/Developer/pico/pico-sdk/src/common/pico_divider_headers;/Users/naoru/Developer/pico/pico-sdk/src/common/pico_sync;/Users/naoru/Developer/pico/pico-sdk/src/common/pico_time;/Users/naoru/Developer/pico/pico-sdk/src/common/pico_util;/Users/naoru/Developer/pico/pico-sdk/src/common/pico_stdlib_headers;/Users/naoru/Developer/pico/pico-sdk/src/common/hardware_claim;/Users/naoru/Developer/pico/pico-sdk/src/rp2040/pico_platform;/Users/naoru/Developer/pico/pico-sdk/src/rp2040/hardware_regs;/Users/naoru/Developer/pico/pico-sdk/src/rp2040/hardware_structs;/Users/naoru/Developer/pico/pico-sdk/src/rp2040/boot_stage2;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_base;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_adc;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_boot_lock;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_clocks;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_divider;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_dma;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_exception;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_flash;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_gpio;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_i2c;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_interp;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_irq;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_pio;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_pll;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_pwm;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_resets;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_rtc;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_spi;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_sync;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_sync_spin_lock;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_ticks;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_timer;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_uart;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_vreg;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_watchdog;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_xip_cache;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/hardware_xosc;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/boot_bootrom_headers;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_platform_common;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_platform_compiler;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_platform_sections;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_platform_panic;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_aon_timer;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_bootrom;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_bootsel_via_double_reset;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_multicore;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_unique_id;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_atomic;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_bit_ops;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_divider;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_double;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_int64_ops;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_flash;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_float;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_mem_ops;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_malloc;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_printf;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_rand;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_stdio_semihosting;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_stdio_uart;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_stdio_rtt;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/cmsis;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/tinyusb;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_stdio_usb;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_i2c_slave;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_async_context;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_btstack;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_cyw43_driver;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_mbedtls;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_lwip/tools;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_lwip;/Users/naoru/Developer/pico/pico-sdk/lib/cyw43-driver/src;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_cyw43_arch;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_time_adapter;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_crt0;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_clib_interface;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_cxx_options;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_standard_binary_info;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_standard_link;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_fix/rp2040_usb_device_enumeration;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_fix;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_status_led;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_runtime_init;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_runtime;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_stdio;/Users/naoru/Developer/pico/pico-sdk/src/rp2_common/pico_stdlib;/Volumes/Tray/projects/picoarc/firmware/build/pico-sdk/src/extra_doxygen
@@ -560,7 +560,7 @@ PICO_RP2040:INTERNAL=1
 PICO_RP2350:INTERNAL=0
 //Enable build of SDK tests
 PICO_SDK_TESTS_ENABLED:INTERNAL=
-PICO_TOOLCHAIN_PATH:INTERNAL=
+PICO_TOOLCHAIN_PATH:INTERNAL=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin
 PICO_TOOLS_DIR:INTERNAL=/Users/naoru/Developer/pico/pico-sdk/tools
 //Compiler reason failure
 _Python3_Compiler_REASON_FAILURE:INTERNAL=

@@ -20,7 +20,7 @@ events:
     names:
       - "uname"
     candidate_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -44,9 +44,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/uname"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/uname"
       - "/Users/naoru/.opencode/bin/uname"
       - "/Users/naoru/.bun/bin/uname"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/uname"
@@ -59,7 +59,7 @@ events:
     found: "/usr/bin/uname"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -79,11 +79,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -114,7 +121,7 @@ events:
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -134,11 +141,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -169,7 +183,7 @@ events:
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -189,11 +203,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -224,7 +245,7 @@ events:
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-objcopy"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -244,11 +265,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
   -
     kind: "find-v1"
     backtrace:
@@ -279,7 +307,7 @@ events:
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-objdump"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -299,11 +327,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
   -
     kind: "message-v1"
     backtrace:
@@ -333,7 +368,7 @@ events:
       - "ninja"
       - "samu"
     candidate_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -357,11 +392,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/ninja-build"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/ninja"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/samu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/ninja-build"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/ninja"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/samu"
       - "/Users/naoru/.opencode/bin/ninja-build"
       - "/Users/naoru/.opencode/bin/ninja"
       - "/Users/naoru/.opencode/bin/samu"
@@ -381,7 +416,7 @@ events:
     found: "/opt/homebrew/bin/ninja"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -401,11 +436,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -435,7 +477,7 @@ events:
     found: "/opt/homebrew/share/cmake/Modules/CMakeCCompilerId.c.in"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -455,11 +497,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "message-v1"
@@ -531,7 +580,7 @@ events:
     found: "/opt/homebrew/share/cmake/Modules/CMakeCCompilerId.c.in"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -551,11 +600,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "message-v1"
@@ -601,7 +657,7 @@ events:
       - "ar"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -625,11 +681,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-ar"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -649,11 +705,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -677,7 +740,7 @@ events:
       - "ranlib"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -701,11 +764,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-ranlib"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -725,11 +788,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -753,7 +823,7 @@ events:
       - "strip"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -777,11 +847,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-strip"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -801,11 +871,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -829,7 +906,7 @@ events:
       - "ld"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -853,11 +930,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-ld"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -877,11 +954,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -905,7 +989,7 @@ events:
       - "nm"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -929,11 +1013,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-nm"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -953,11 +1037,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -981,7 +1072,7 @@ events:
       - "readelf"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -1005,11 +1096,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-readelf"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -1029,11 +1120,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -1057,7 +1155,7 @@ events:
       - "dlltool"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -1081,10 +1179,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-dlltool"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-dlltool"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-dlltool"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-dlltool"
       - "/Users/naoru/.bun/bin/arm-none-eabi-dlltool"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-dlltool"
@@ -1108,9 +1206,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-dlltool"
       - "/Users/naoru/.local/bin/arm-none-eabi-dlltool"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-dlltool"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-dlltool"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-dlltool"
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/dlltool"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/dlltool"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/dlltool"
       - "/Users/naoru/.opencode/bin/dlltool"
       - "/Users/naoru/.bun/bin/dlltool"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/dlltool"
@@ -1134,11 +1232,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/dlltool"
       - "/Users/naoru/.local/bin/dlltool"
       - "/Users/naoru/.lmstudio/bin/dlltool"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/dlltool"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/dlltool"
     found: false
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -1158,11 +1256,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -1186,7 +1291,7 @@ events:
       - "addr2line"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -1210,11 +1315,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-addr2line"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -1234,11 +1339,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -1262,7 +1374,7 @@ events:
       - "tapi"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -1286,10 +1398,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-tapi"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-tapi"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-tapi"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-tapi"
       - "/Users/naoru/.bun/bin/arm-none-eabi-tapi"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-tapi"
@@ -1313,9 +1425,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-tapi"
       - "/Users/naoru/.local/bin/arm-none-eabi-tapi"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-tapi"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-tapi"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-tapi"
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/tapi"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/tapi"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/tapi"
       - "/Users/naoru/.opencode/bin/tapi"
       - "/Users/naoru/.bun/bin/tapi"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/tapi"
@@ -1339,11 +1451,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/tapi"
       - "/Users/naoru/.local/bin/tapi"
       - "/Users/naoru/.lmstudio/bin/tapi"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/tapi"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/tapi"
     found: false
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -1363,11 +1475,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -1393,7 +1512,7 @@ events:
       - "arm-none-eabi-gcc-ar"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -1417,10 +1536,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar-15.2"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ar-15.2"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ar-15.2"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ar-15.2"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ar-15.2"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ar-15.2"
@@ -1444,9 +1563,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ar-15.2"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ar-15.2"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ar-15.2"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ar-15.2"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ar-15.2"
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar-15"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ar-15"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ar-15"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ar-15"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ar-15"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ar-15"
@@ -1470,9 +1589,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ar-15"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ar-15"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ar-15"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ar-15"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ar-15"
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar15"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ar15"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ar15"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ar15"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ar15"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ar15"
@@ -1496,11 +1615,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ar15"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ar15"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ar15"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ar15"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ar15"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -1520,11 +1639,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -1550,7 +1676,7 @@ events:
       - "arm-none-eabi-gcc-ranlib"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -1574,10 +1700,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib-15.2"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ranlib-15.2"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ranlib-15.2"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ranlib-15.2"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ranlib-15.2"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ranlib-15.2"
@@ -1601,9 +1727,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ranlib-15.2"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ranlib-15.2"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ranlib-15.2"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ranlib-15.2"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ranlib-15.2"
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib-15"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ranlib-15"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ranlib-15"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ranlib-15"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ranlib-15"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ranlib-15"
@@ -1627,9 +1753,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ranlib-15"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ranlib-15"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ranlib-15"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ranlib-15"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ranlib-15"
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib15"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ranlib15"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ranlib15"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ranlib15"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ranlib15"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ranlib15"
@@ -1653,11 +1779,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ranlib15"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ranlib15"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ranlib15"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ranlib15"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ranlib15"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -1677,11 +1803,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -1711,7 +1844,7 @@ events:
     found: "/opt/homebrew/share/cmake/Modules/CMakeCXXCompilerId.cpp.in"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -1731,11 +1864,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "message-v1"
@@ -1807,7 +1947,7 @@ events:
     found: "/opt/homebrew/share/cmake/Modules/CMakeCXXCompilerId.cpp.in"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -1827,11 +1967,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "message-v1"
@@ -1879,7 +2026,7 @@ events:
       - "arm-none-eabi-gcc-ar"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -1903,10 +2050,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar-15.2"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ar-15.2"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ar-15.2"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ar-15.2"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ar-15.2"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ar-15.2"
@@ -1930,9 +2077,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ar-15.2"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ar-15.2"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ar-15.2"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ar-15.2"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ar-15.2"
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar-15"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ar-15"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ar-15"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ar-15"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ar-15"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ar-15"
@@ -1956,9 +2103,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ar-15"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ar-15"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ar-15"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ar-15"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ar-15"
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar15"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ar15"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ar15"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ar15"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ar15"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ar15"
@@ -1982,11 +2129,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ar15"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ar15"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ar15"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ar15"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ar15"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -2006,11 +2153,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -2036,7 +2190,7 @@ events:
       - "arm-none-eabi-gcc-ranlib"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -2060,10 +2214,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib-15.2"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ranlib-15.2"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ranlib-15.2"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ranlib-15.2"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ranlib-15.2"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ranlib-15.2"
@@ -2087,9 +2241,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ranlib-15.2"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ranlib-15.2"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ranlib-15.2"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ranlib-15.2"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ranlib-15.2"
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib-15"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ranlib-15"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ranlib-15"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ranlib-15"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ranlib-15"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ranlib-15"
@@ -2113,9 +2267,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ranlib-15"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ranlib-15"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ranlib-15"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ranlib-15"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ranlib-15"
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib15"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ranlib15"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ranlib15"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ranlib15"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ranlib15"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ranlib15"
@@ -2139,11 +2293,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ranlib15"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ranlib15"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ranlib15"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ranlib15"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ranlib15"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -2163,11 +2317,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "message-v1"
@@ -2206,7 +2367,7 @@ events:
       - "arm-none-eabi-gcc-ar"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -2230,10 +2391,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar-"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ar-"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ar-"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ar-"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ar-"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ar-"
@@ -2257,9 +2418,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ar-"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ar-"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ar-"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ar-"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ar-"
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar-"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ar-"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ar-"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ar-"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ar-"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ar-"
@@ -2283,11 +2444,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ar-"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ar-"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ar-"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ar-"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ar-"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ar"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -2307,11 +2468,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "find-v1"
@@ -2337,7 +2505,7 @@ events:
       - "arm-none-eabi-gcc-ranlib"
     candidate_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -2361,10 +2529,10 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
     searched_directories:
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib-"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ranlib-"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ranlib-"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ranlib-"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ranlib-"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ranlib-"
@@ -2388,9 +2556,9 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ranlib-"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ranlib-"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ranlib-"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ranlib-"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ranlib-"
       - "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib-"
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/arm-none-eabi-gcc-ranlib-"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/arm-none-eabi-gcc-ranlib-"
       - "/Users/naoru/.opencode/bin/arm-none-eabi-gcc-ranlib-"
       - "/Users/naoru/.bun/bin/arm-none-eabi-gcc-ranlib-"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/arm-none-eabi-gcc-ranlib-"
@@ -2414,11 +2582,11 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/arm-none-eabi-gcc-ranlib-"
       - "/Users/naoru/.local/bin/arm-none-eabi-gcc-ranlib-"
       - "/Users/naoru/.lmstudio/bin/arm-none-eabi-gcc-ranlib-"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/arm-none-eabi-gcc-ranlib-"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/arm-none-eabi-gcc-ranlib-"
     found: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc-ranlib"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -2438,11 +2606,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_FIND_ROOT_PATH: "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi"
   -
     kind: "try_compile-v1"
@@ -2453,8 +2628,8 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-MII8n4"
-      binary: "/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-MII8n4"
+      source: "/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-ucNhc9"
+      binary: "/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-ucNhc9"
     cmakeVariables:
       CMAKE_CXX_STDLIB_MODULES_JSON: ""
       CMAKE_C_FLAGS: "-mcpu=cortex-m0plus -mthumb"
@@ -2466,10 +2641,10 @@ events:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-MII8n4'
+        Change Dir: '/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-ucNhc9'
         
-        Run Build Command(s): /opt/homebrew/bin/ninja -v cmTC_2f101
-        [1/2] /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc   -mcpu=cortex-m0plus -mthumb    -v -o CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c
+        Run Build Command(s): /opt/homebrew/bin/ninja -v cmTC_51b39
+        [1/2] /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc   -mcpu=cortex-m0plus -mthumb    -v -o CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c
         Using built-in specs.
         COLLECT_GCC=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc
         Target: arm-none-eabi
@@ -2477,8 +2652,8 @@ events:
         Thread model: single
         Supported LTO compression algorithms: zlib
         gcc version 15.2.1 20251203 (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 
-        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_2f101.dir/'
-         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/cc1 -quiet -v -imultilib thumb/v6-m/nofp -iprefix /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/ -isysroot /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -D__USES_INITFINI__ /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_2f101.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -mlibarch=armv6s-m -march=armv6s-m -version -o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//cceJqE0L.s
+        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_51b39.dir/'
+         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/cc1 -quiet -v -imultilib thumb/v6-m/nofp -iprefix /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/ -isysroot /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -D__USES_INITFINI__ /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_51b39.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -mlibarch=armv6s-m -march=armv6s-m -version -o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccF5z7JF.s
         GNU C23 (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) version 15.2.1 20251203 (arm-none-eabi)
         	compiled by GNU C version Apple LLVM 13.0.0 (clang-1300.0.29.30), GMP version 6.2.1, MPFR version 3.1.6, MPC version 1.0.3, isl version isl-0.15-1-g835ea3a-GMP
         
@@ -2495,13 +2670,13 @@ events:
          /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/include
         End of search list.
         Compiler executable checksum: 102968aafa3cff165d00ca07963f2f7f
-        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_2f101.dir/'
-         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/as -v -march=armv6s-m -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//cceJqE0L.s
+        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_51b39.dir/'
+         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/as -v -march=armv6s-m -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccF5z7JF.s
         GNU assembler version 2.45.1 (arm-none-eabi) using BFD version (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 2.45.1.20251203
         COMPILER_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/
         LIBRARY_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/
-        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.'
-        [2/2] : && /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb -Wl,--build-id=none -nostdlib  -v CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o -o cmTC_2f101.elf   && :
+        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.'
+        [2/2] : && /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb -Wl,--build-id=none -nostdlib  -v CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o -o cmTC_51b39.elf   && :
         Using built-in specs.
         COLLECT_GCC=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc
         COLLECT_LTO_WRAPPER=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper
@@ -2512,10 +2687,10 @@ events:
         gcc version 15.2.1 20251203 (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 
         COMPILER_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/
         LIBRARY_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/
-        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_2f101.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_2f101.elf.'
-         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/collect2 -plugin /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/liblto_plugin.so -plugin-opt=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper -plugin-opt=-fresolution=/var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccU08uP8.res --sysroot=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -X -o cmTC_2f101.elf -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1 -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib --build-id=none CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o
+        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_51b39.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_51b39.elf.'
+         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/collect2 -plugin /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/liblto_plugin.so -plugin-opt=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper -plugin-opt=-fresolution=/var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//cc21PE8P.res --sysroot=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -X -o cmTC_51b39.elf -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1 -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib --build-id=none CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o
         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/ld: warning: cannot find entry symbol _start; defaulting to 00008000
-        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_2f101.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_2f101.elf.'
+        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_51b39.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_51b39.elf.'
         
       exitCode: 0
   -
@@ -2548,10 +2723,10 @@ events:
       Parsed C implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-MII8n4']
+        ignore line: [Change Dir: '/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-ucNhc9']
         ignore line: []
-        ignore line: [Run Build Command(s): /opt/homebrew/bin/ninja -v cmTC_2f101]
-        ignore line: [[1/2] /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc   -mcpu=cortex-m0plus -mthumb    -v -o CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c]
+        ignore line: [Run Build Command(s): /opt/homebrew/bin/ninja -v cmTC_51b39]
+        ignore line: [[1/2] /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc   -mcpu=cortex-m0plus -mthumb    -v -o CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc]
         ignore line: [Target: arm-none-eabi]
@@ -2559,8 +2734,8 @@ events:
         ignore line: [Thread model: single]
         ignore line: [Supported LTO compression algorithms: zlib]
         ignore line: [gcc version 15.2.1 20251203 (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) ]
-        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_2f101.dir/']
-        ignore line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/cc1 -quiet -v -imultilib thumb/v6-m/nofp -iprefix /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/ -isysroot /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -D__USES_INITFINI__ /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_2f101.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -mlibarch=armv6s-m -march=armv6s-m -version -o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//cceJqE0L.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_51b39.dir/']
+        ignore line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/cc1 -quiet -v -imultilib thumb/v6-m/nofp -iprefix /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/ -isysroot /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -D__USES_INITFINI__ /opt/homebrew/share/cmake/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_51b39.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -mlibarch=armv6s-m -march=armv6s-m -version -o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccF5z7JF.s]
         ignore line: [GNU C23 (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) version 15.2.1 20251203 (arm-none-eabi)]
         ignore line: [	compiled by GNU C version Apple LLVM 13.0.0 (clang-1300.0.29.30)  GMP version 6.2.1  MPFR version 3.1.6  MPC version 1.0.3  isl version isl-0.15-1-g835ea3a-GMP]
         ignore line: []
@@ -2577,13 +2752,13 @@ events:
         ignore line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/include]
         ignore line: [End of search list.]
         ignore line: [Compiler executable checksum: 102968aafa3cff165d00ca07963f2f7f]
-        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_2f101.dir/']
-        ignore line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/as -v -march=armv6s-m -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//cceJqE0L.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_51b39.dir/']
+        ignore line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/as -v -march=armv6s-m -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccF5z7JF.s]
         ignore line: [GNU assembler version 2.45.1 (arm-none-eabi) using BFD version (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 2.45.1.20251203]
         ignore line: [COMPILER_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/]
         ignore line: [LIBRARY_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.']
-        ignore line: [[2/2] : && /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb -Wl --build-id=none -nostdlib  -v CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o -o cmTC_2f101.elf   && :]
+        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.']
+        ignore line: [[2/2] : && /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb -Wl --build-id=none -nostdlib  -v CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o -o cmTC_51b39.elf   && :]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-gcc]
         ignore line: [COLLECT_LTO_WRAPPER=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper]
@@ -2594,17 +2769,17 @@ events:
         ignore line: [gcc version 15.2.1 20251203 (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) ]
         ignore line: [COMPILER_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/]
         ignore line: [LIBRARY_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_2f101.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_2f101.elf.']
-        link line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/collect2 -plugin /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/liblto_plugin.so -plugin-opt=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper -plugin-opt=-fresolution=/var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccU08uP8.res --sysroot=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -X -o cmTC_2f101.elf -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1 -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib --build-id=none CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o]
+        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_51b39.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_51b39.elf.']
+        link line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/collect2 -plugin /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/liblto_plugin.so -plugin-opt=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper -plugin-opt=-fresolution=/var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//cc21PE8P.res --sysroot=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -X -o cmTC_51b39.elf -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1 -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib --build-id=none CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o]
           arg [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/collect2] ==> ignore
           arg [-plugin] ==> ignore
           arg [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/liblto_plugin.so] ==> ignore
           arg [-plugin-opt=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper] ==> ignore
-          arg [-plugin-opt=-fresolution=/var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccU08uP8.res] ==> ignore
+          arg [-plugin-opt=-fresolution=/var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//cc21PE8P.res] ==> ignore
           arg [--sysroot=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi] ==> ignore
           arg [-X] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_2f101.elf] ==> ignore
+          arg [cmTC_51b39.elf] ==> ignore
           arg [-L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp] ==> dir [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp]
           arg [-L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp] ==> dir [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp]
           arg [-L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp] ==> dir [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp]
@@ -2613,10 +2788,10 @@ events:
           arg [-L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib] ==> dir [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib]
           arg [-L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib] ==> dir [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib]
           arg [--build-id=none] ==> ignore
-          arg [CMakeFiles/cmTC_2f101.dir/CMakeCCompilerABI.c.o] ==> ignore
+          arg [CMakeFiles/cmTC_51b39.dir/CMakeCCompilerABI.c.o] ==> ignore
         ignore line: [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/ld: warning: cannot find entry symbol _start]
         ignore line: [ defaulting to 00008000]
-        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_2f101.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_2f101.elf.']
+        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_51b39.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_51b39.elf.']
         ignore line: []
         ignore line: []
         collapse library dir [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp] ==> [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp]
@@ -2641,8 +2816,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-zBZXDK"
-      binary: "/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-zBZXDK"
+      source: "/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-yfiAcQ"
+      binary: "/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-yfiAcQ"
     cmakeVariables:
       CMAKE_CXX_FLAGS: "-mcpu=cortex-m0plus -mthumb"
       CMAKE_CXX_FLAGS_DEBUG: "-Og -g"
@@ -2655,10 +2830,10 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-zBZXDK'
+        Change Dir: '/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-yfiAcQ'
         
-        Run Build Command(s): /opt/homebrew/bin/ninja -v cmTC_03687
-        [1/2] /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++   -mcpu=cortex-m0plus -mthumb    -v -o CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+        Run Build Command(s): /opt/homebrew/bin/ninja -v cmTC_85e8c
+        [1/2] /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++   -mcpu=cortex-m0plus -mthumb    -v -o CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
         Using built-in specs.
         COLLECT_GCC=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++
         Target: arm-none-eabi
@@ -2666,8 +2841,8 @@ events:
         Thread model: single
         Supported LTO compression algorithms: zlib
         gcc version 15.2.1 20251203 (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 
-        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_03687.dir/'
-         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/cc1plus -quiet -v -imultilib thumb/v6-m/nofp -iprefix /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/ -isysroot /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -D__USES_INITFINI__ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_03687.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -mlibarch=armv6s-m -march=armv6s-m -version -o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccHXaI7c.s
+        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_85e8c.dir/'
+         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/cc1plus -quiet -v -imultilib thumb/v6-m/nofp -iprefix /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/ -isysroot /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -D__USES_INITFINI__ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_85e8c.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -mlibarch=armv6s-m -march=armv6s-m -version -o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccZsUYag.s
         GNU C++17 (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) version 15.2.1 20251203 (arm-none-eabi)
         	compiled by GNU C version Apple LLVM 13.0.0 (clang-1300.0.29.30), GMP version 6.2.1, MPFR version 3.1.6, MPC version 1.0.3, isl version isl-0.15-1-g835ea3a-GMP
         
@@ -2690,13 +2865,13 @@ events:
          /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/include
         End of search list.
         Compiler executable checksum: 70dd2b75a43d778853878c77fa3ca703
-        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_03687.dir/'
-         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/as -v -march=armv6s-m -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccHXaI7c.s
+        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_85e8c.dir/'
+         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/as -v -march=armv6s-m -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccZsUYag.s
         GNU assembler version 2.45.1 (arm-none-eabi) using BFD version (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 2.45.1.20251203
         COMPILER_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/
         LIBRARY_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/
-        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.'
-        [2/2] : && /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++ -mcpu=cortex-m0plus -mthumb -Wl,--build-id=none -nostdlib  -v CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_03687.elf   && :
+        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.'
+        [2/2] : && /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++ -mcpu=cortex-m0plus -mthumb -Wl,--build-id=none -nostdlib  -v CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_85e8c.elf   && :
         Using built-in specs.
         COLLECT_GCC=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++
         COLLECT_LTO_WRAPPER=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper
@@ -2707,10 +2882,10 @@ events:
         gcc version 15.2.1 20251203 (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 
         COMPILER_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/
         LIBRARY_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/
-        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_03687.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_03687.elf.'
-         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/collect2 -plugin /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/liblto_plugin.so -plugin-opt=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper -plugin-opt=-fresolution=/var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccQmmEAF.res --sysroot=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -X -o cmTC_03687.elf -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1 -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib --build-id=none CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o
+        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_85e8c.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_85e8c.elf.'
+         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/collect2 -plugin /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/liblto_plugin.so -plugin-opt=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper -plugin-opt=-fresolution=/var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//cciZinLy.res --sysroot=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -X -o cmTC_85e8c.elf -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1 -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib --build-id=none CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o
         /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/ld: warning: cannot find entry symbol _start; defaulting to 00008000
-        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_03687.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_03687.elf.'
+        COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_85e8c.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_85e8c.elf.'
         
       exitCode: 0
   -
@@ -2749,10 +2924,10 @@ events:
       Parsed CXX implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|"|[0-9]+>[ 	-]*Build:[ 	0-9]+ ms[ 	]*)?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-zBZXDK']
+        ignore line: [Change Dir: '/Volumes/Tray/projects/picoarc/firmware/build-arm/CMakeFiles/CMakeScratch/TryCompile-yfiAcQ']
         ignore line: []
-        ignore line: [Run Build Command(s): /opt/homebrew/bin/ninja -v cmTC_03687]
-        ignore line: [[1/2] /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++   -mcpu=cortex-m0plus -mthumb    -v -o CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Run Build Command(s): /opt/homebrew/bin/ninja -v cmTC_85e8c]
+        ignore line: [[1/2] /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++   -mcpu=cortex-m0plus -mthumb    -v -o CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++]
         ignore line: [Target: arm-none-eabi]
@@ -2760,8 +2935,8 @@ events:
         ignore line: [Thread model: single]
         ignore line: [Supported LTO compression algorithms: zlib]
         ignore line: [gcc version 15.2.1 20251203 (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) ]
-        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_03687.dir/']
-        ignore line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/cc1plus -quiet -v -imultilib thumb/v6-m/nofp -iprefix /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/ -isysroot /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -D__USES_INITFINI__ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_03687.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -mlibarch=armv6s-m -march=armv6s-m -version -o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccHXaI7c.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_85e8c.dir/']
+        ignore line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/cc1plus -quiet -v -imultilib thumb/v6-m/nofp -iprefix /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/ -isysroot /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -D__USES_INITFINI__ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_85e8c.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -mlibarch=armv6s-m -march=armv6s-m -version -o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccZsUYag.s]
         ignore line: [GNU C++17 (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) version 15.2.1 20251203 (arm-none-eabi)]
         ignore line: [	compiled by GNU C version Apple LLVM 13.0.0 (clang-1300.0.29.30)  GMP version 6.2.1  MPFR version 3.1.6  MPC version 1.0.3  isl version isl-0.15-1-g835ea3a-GMP]
         ignore line: []
@@ -2784,13 +2959,13 @@ events:
         ignore line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/include]
         ignore line: [End of search list.]
         ignore line: [Compiler executable checksum: 70dd2b75a43d778853878c77fa3ca703]
-        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_03687.dir/']
-        ignore line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/as -v -march=armv6s-m -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccHXaI7c.s]
+        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_85e8c.dir/']
+        ignore line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/as -v -march=armv6s-m -mfloat-abi=soft -meabi=5 -o CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o /var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccZsUYag.s]
         ignore line: [GNU assembler version 2.45.1 (arm-none-eabi) using BFD version (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) 2.45.1.20251203]
         ignore line: [COMPILER_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/]
         ignore line: [LIBRARY_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.']
-        ignore line: [[2/2] : && /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++ -mcpu=cortex-m0plus -mthumb -Wl --build-id=none -nostdlib  -v CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_03687.elf   && :]
+        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-v' '-o' 'CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.']
+        ignore line: [[2/2] : && /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++ -mcpu=cortex-m0plus -mthumb -Wl --build-id=none -nostdlib  -v CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_85e8c.elf   && :]
         ignore line: [Using built-in specs.]
         ignore line: [COLLECT_GCC=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/arm-none-eabi-g++]
         ignore line: [COLLECT_LTO_WRAPPER=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper]
@@ -2801,17 +2976,17 @@ events:
         ignore line: [gcc version 15.2.1 20251203 (Arm GNU Toolchain 15.2.Rel1 (Build arm-15.86)) ]
         ignore line: [COMPILER_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/]
         ignore line: [LIBRARY_PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/:/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/]
-        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_03687.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_03687.elf.']
-        link line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/collect2 -plugin /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/liblto_plugin.so -plugin-opt=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper -plugin-opt=-fresolution=/var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccQmmEAF.res --sysroot=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -X -o cmTC_03687.elf -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1 -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib --build-id=none CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_85e8c.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_85e8c.elf.']
+        link line: [ /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/collect2 -plugin /Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/liblto_plugin.so -plugin-opt=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper -plugin-opt=-fresolution=/var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//cciZinLy.res --sysroot=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi -X -o cmTC_85e8c.elf -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1 -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib -L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib --build-id=none CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o]
           arg [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/collect2] ==> ignore
           arg [-plugin] ==> ignore
           arg [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/liblto_plugin.so] ==> ignore
           arg [-plugin-opt=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../libexec/gcc/arm-none-eabi/15.2.1/lto-wrapper] ==> ignore
-          arg [-plugin-opt=-fresolution=/var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//ccQmmEAF.res] ==> ignore
+          arg [-plugin-opt=-fresolution=/var/folders/cs/0jcwbjxs3q1078hnrv2bcy0w0000gn/T//cciZinLy.res] ==> ignore
           arg [--sysroot=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi] ==> ignore
           arg [-X] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_03687.elf] ==> ignore
+          arg [cmTC_85e8c.elf] ==> ignore
           arg [-L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp] ==> dir [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp]
           arg [-L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp] ==> dir [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp]
           arg [-L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp] ==> dir [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib/thumb/v6-m/nofp]
@@ -2820,10 +2995,10 @@ events:
           arg [-L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib] ==> dir [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/lib]
           arg [-L/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib] ==> dir [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../arm-none-eabi/lib]
           arg [--build-id=none] ==> ignore
-          arg [CMakeFiles/cmTC_03687.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [CMakeFiles/cmTC_85e8c.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
         ignore line: [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/../../../../arm-none-eabi/bin/ld: warning: cannot find entry symbol _start]
         ignore line: [ defaulting to 00008000]
-        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_03687.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_03687.elf.']
+        ignore line: [COLLECT_GCC_OPTIONS='-mcpu=cortex-m0plus' '-mthumb' '-nostdlib' '-v' '-o' 'cmTC_85e8c.elf' '-mfloat-abi=soft' '-mlibarch=armv6s-m' '-march=armv6s-m' '-dumpdir' 'cmTC_85e8c.elf.']
         ignore line: []
         ignore line: []
         collapse library dir [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp] ==> [/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/lib/gcc/arm-none-eabi/15.2.1/thumb/v6-m/nofp]
@@ -2842,7 +3017,7 @@ events:
   -
     kind: "find-v1"
     backtrace:
-      - "/opt/homebrew/share/cmake/Modules/FindPython/Support.cmake:2148 (find_program)"
+      - "/opt/homebrew/share/cmake/Modules/FindPython/Support.cmake:2127 (find_program)"
       - "/opt/homebrew/share/cmake/Modules/FindPython3.cmake:671 (include)"
       - "/Users/naoru/Developer/pico/pico-sdk/src/rp2040/boot_stage2/CMakeLists.txt:69 (find_package)"
       - "/Users/naoru/Developer/pico/pico-sdk/src/rp2040/boot_stage2/CMakeLists.txt:104 (pico_define_boot_stage2)"
@@ -2989,25 +3164,65 @@ events:
       - "python3"
       - "python"
     candidate_directories:
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/"
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/Scripts/"
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
+      - "/Volumes/Tray/projects/picoarc/.venv/Scripts/"
+      - "/Volumes/Tray/projects/picoarc/.venv/"
     searched_directories:
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.15mu"
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.15m"
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.15u"
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.15"
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.15dmu"
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.15dm"
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.15du"
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.15d"
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14mu"
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14m"
-      - "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14u"
-    found: "/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.15mu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.15m"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.15u"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.15"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.15dmu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.15dm"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.15du"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.15d"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.14mu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.14m"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.14u"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.14"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.14dmu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.14dm"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.14du"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.14d"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.13mu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.13m"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.13u"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.13"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.13dmu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.13dm"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.13du"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.13d"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.12mu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.12m"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.12u"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.12"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.12dmu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.12dm"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.12du"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.12d"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.11mu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.11m"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.11u"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.11"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.11dmu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.11dm"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.11du"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.11d"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.10mu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.10m"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.10u"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.10"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.10dmu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.10dm"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.10du"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.10d"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.9mu"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.9m"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/python3.9u"
+    found: "/Volumes/Tray/projects/picoarc/.venv/bin/python3.9"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -3027,11 +3242,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/usr/local"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "/usr/local"
@@ -3106,23 +3328,23 @@ events:
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/pioasmConfig.cmake"
+        path: "/Volumes/Tray/projects/picoarc/.venv/pioasmConfig.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/pioasm-config.cmake"
+        path: "/Volumes/Tray/projects/picoarc/.venv/pioasm-config.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/lib32/cps/pioasm.cps"
+        path: "/Volumes/Tray/projects/picoarc/.venv/lib32/cps/pioasm.cps"
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/lib/cps/pioasm.cps"
+        path: "/Volumes/Tray/projects/picoarc/.venv/lib/cps/pioasm.cps"
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/share/cps/pioasm.cps"
+        path: "/Volumes/Tray/projects/picoarc/.venv/share/cps/pioasm.cps"
         mode: "cps"
         reason: "no_exist"
       -
@@ -3406,23 +3628,23 @@ events:
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/pioasmConfig.cmake"
+        path: "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/pioasmConfig.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/pioasm-config.cmake"
+        path: "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/pioasm-config.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/lib32/cps/pioasm.cps"
+        path: "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/lib32/cps/pioasm.cps"
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/lib/cps/pioasm.cps"
+        path: "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/lib/cps/pioasm.cps"
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/share/cps/pioasm.cps"
+        path: "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/share/cps/pioasm.cps"
         mode: "cps"
         reason: "no_exist"
       -
@@ -3448,7 +3670,7 @@ events:
     found: null
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -3468,11 +3690,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/usr/local"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "/usr/local"
@@ -3504,7 +3733,7 @@ events:
     names:
       - "doxygen"
     candidate_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -3528,7 +3757,7 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
       - "/usr/local/bin/"
       - "/usr/local/sbin/"
       - "/usr/local/"
@@ -3554,7 +3783,7 @@ events:
       - "/Applications/Utilities/Doxygen.app/Contents/Resources/"
       - "/Applications/Utilities/Doxygen.app/Contents/MacOS/"
     searched_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/doxygen"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/doxygen"
       - "/Users/naoru/.opencode/bin/doxygen"
       - "/Users/naoru/.bun/bin/doxygen"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/doxygen"
@@ -3578,7 +3807,7 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/doxygen"
       - "/Users/naoru/.local/bin/doxygen"
       - "/Users/naoru/.lmstudio/bin/doxygen"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/doxygen"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/doxygen"
       - "/usr/local/bin/doxygen"
       - "/usr/local/sbin/doxygen"
       - "/usr/local/doxygen"
@@ -3606,7 +3835,7 @@ events:
     found: false
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -3626,11 +3855,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/usr/local"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "/usr/local"
@@ -3662,7 +3898,7 @@ events:
     names:
       - "dot"
     candidate_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/"
       - "/Users/naoru/.opencode/bin/"
       - "/Users/naoru/.bun/bin/"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/"
@@ -3686,7 +3922,7 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/"
       - "/Users/naoru/.local/bin/"
       - "/Users/naoru/.lmstudio/bin/"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/"
       - "/usr/local/bin/"
       - "/usr/local/sbin/"
       - "/usr/local/"
@@ -3716,7 +3952,7 @@ events:
       - "/Applications/Utilities/Doxygen.app/Contents/Resources/"
       - "/Applications/Utilities/Doxygen.app/Contents/MacOS/"
     searched_directories:
-      - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/dot"
+      - "/Volumes/Tray/projects/picoarc/.venv/bin/dot"
       - "/Users/naoru/.opencode/bin/dot"
       - "/Users/naoru/.bun/bin/dot"
       - "/Users/naoru/.nvm/versions/node/v24.14.0/bin/dot"
@@ -3740,7 +3976,7 @@ events:
       - "/Applications/iTerm.app/Contents/Resources/utilities/dot"
       - "/Users/naoru/.local/bin/dot"
       - "/Users/naoru/.lmstudio/bin/dot"
-      - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64/dot"
+      - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts/dot"
       - "/usr/local/bin/dot"
       - "/usr/local/sbin/dot"
       - "/usr/local/dot"
@@ -3772,7 +4008,7 @@ events:
     found: false
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -3792,11 +4028,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/usr/local"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "/usr/local"
@@ -3814,7 +4057,7 @@ events:
       - "/Users/naoru/Developer/pico/pico-sdk/tools/CMakeLists.txt:153 (find_package)"
       - "/Users/naoru/Developer/pico/pico-sdk/tools/CMakeLists.txt:688 (pico_init_picotool)"
       - "/Users/naoru/Developer/pico/pico-sdk/src/cmake/on_device.cmake:81 (picotool_postprocess_binary)"
-      - "CMakeLists.txt:33 (pico_add_extra_outputs)"
+      - "CMakeLists.txt:65 (pico_add_extra_outputs)"
     name: "picotool"
     configs:
       -
@@ -3872,23 +4115,23 @@ events:
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/picotoolConfig.cmake"
+        path: "/Volumes/Tray/projects/picoarc/.venv/picotoolConfig.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/picotool-config.cmake"
+        path: "/Volumes/Tray/projects/picoarc/.venv/picotool-config.cmake"
         mode: "config"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/lib32/cps/picotool.cps"
+        path: "/Volumes/Tray/projects/picoarc/.venv/lib32/cps/picotool.cps"
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/lib/cps/picotool.cps"
+        path: "/Volumes/Tray/projects/picoarc/.venv/lib/cps/picotool.cps"
         mode: "cps"
         reason: "no_exist"
       -
-        path: "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane/share/cps/picotool.cps"
+        path: "/Volumes/Tray/projects/picoarc/.venv/share/cps/picotool.cps"
         mode: "cps"
         reason: "no_exist"
       -
@@ -3977,7 +4220,7 @@ events:
       version: "2.2.0"
     search_context:
       ENV{PATH}:
-        - "/Users/naoru/.codex/tmp/arg0/codex-arg0Xmjane"
+        - "/Volumes/Tray/projects/picoarc/.venv/bin"
         - "/Users/naoru/.opencode/bin"
         - "/Users/naoru/.bun/bin"
         - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
@@ -3997,11 +4240,18 @@ events:
         - "/opt/pmk/env/global/bin"
         - "/usr/local/share/dotnet"
         - "~/.dotnet/tools"
+        - "/Users/naoru/.opencode/bin"
+        - "/Users/naoru/.bun/bin"
+        - "/Users/naoru/.nvm/versions/node/v24.14.0/bin"
+        - "/opt/homebrew/opt/postgresql@16/bin"
+        - "/usr/local/opt/libpq/bin"
         - "/Users/naoru/.cargo/bin"
         - "/Applications/iTerm.app/Contents/Resources/utilities"
         - "/Users/naoru/.local/bin"
         - "/Users/naoru/.lmstudio/bin"
-        - "/Users/naoru/.vscode/extensions/openai.chatgpt-26.513.21555-darwin-arm64/bin/macos-aarch64"
+        - "/Users/naoru/.vscode/extensions/ms-python.debugpy-2025.18.0-darwin-arm64/bundled/scripts/noConfigScripts"
+        - "/Users/naoru/.local/bin"
+        - "/Users/naoru/.lmstudio/bin"
       CMAKE_INSTALL_PREFIX: "/usr/local"
       CMAKE_SYSTEM_PREFIX_PATH:
         - "/usr/local"

@@ -534,7 +534,7 @@ DOXYGEN_DOT_EXECUTABLE-ADVANCED:INTERNAL=1
 DOXYGEN_EXECUTABLE-ADVANCED:INTERNAL=1
 FAMILY_MCUS:INTERNAL=RP2040
 //Details about finding Python3
-FIND_PACKAGE_MESSAGE_DETAILS_Python3:INTERNAL=[/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14][found components: Interpreter ][v3.14.5()]
+FIND_PACKAGE_MESSAGE_DETAILS_Python3:INTERNAL=[/Volumes/Tray/projects/picoarc/.venv/bin/python3.9][found components: Interpreter ][v3.9.6()]
 PICO_32BIT:INTERNAL=1
 PICO_ARM:INTERNAL=1
 PICO_BOOT_STAGE2_DIR:INTERNAL=/Users/naoru/Developer/pico/pico-sdk/src/rp2040/boot_stage2
@@ -567,10 +567,10 @@ _Python3_Compiler_REASON_FAILURE:INTERNAL=
 //Development reason failure
 _Python3_Development_REASON_FAILURE:INTERNAL=
 //Path to a program.
-_Python3_EXECUTABLE:INTERNAL=/opt/homebrew/Frameworks/Python.framework/Versions/3.14/bin/python3.14
+_Python3_EXECUTABLE:INTERNAL=/Volumes/Tray/projects/picoarc/.venv/bin/python3.9
 //Python3 Properties
-_Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;14;5;32;64;;;abi3;/opt/homebrew/opt/python@3.14/Frameworks/Python.framework/Versions/3.14/lib/python3.14;/opt/homebrew/opt/python@3.14/Frameworks/Python.framework/Versions/3.14/lib/python3.14;/opt/homebrew/lib/python3.14/site-packages;/opt/homebrew/lib/python3.14/site-packages
-_Python3_INTERPRETER_SIGNATURE:INTERNAL=ff51e67373f329cbcbee6a4ac96f4784
+_Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;9;6;32;64;;;abi3;/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9;/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9;/Volumes/Tray/projects/picoarc/.venv/lib/python3.9/site-packages;/Volumes/Tray/projects/picoarc/.venv/lib/python3.9/site-packages
+_Python3_INTERPRETER_SIGNATURE:INTERNAL=ea02af9a02479312c3a695aa546d9594
 //NumPy reason failure
 _Python3_NumPy_REASON_FAILURE:INTERNAL=
 
