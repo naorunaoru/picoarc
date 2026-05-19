@@ -55,6 +55,7 @@ static unsigned int spdif_sm;
 static unsigned int spdif_dma_chan;
 static dma_channel_config spdif_dma_config;
 static volatile spdif_mode_t current_mode = SPDIF_MODE_TONE_1KHZ;
+static volatile spdif_stream_format_t current_stream_format = SPDIF_STREAM_FORMAT_PCM;
 // Samples are stored 24-bit-left-aligned in int32_t (audio MSB at bit 31,
 // audio LSB at bit 8). 16-bit USB input is shifted left 16 on ingest, 24-bit
 // USB input is unpacked from its 3-byte little-endian form. Either way the
@@ -65,7 +66,7 @@ static volatile unsigned int usb_ring_write;
 static volatile unsigned int usb_underrun_frames;
 static volatile unsigned int usb_high_water_frames;
 static bmc_byte_t bmc_byte[2][256];
-static uint8_t bmc_tail[2][2];
+static uint8_t bmc_tail[2][2][8];
 static uint32_t dma_words[2][SPDIF_WORDS_PER_BLOCK];
 
 static unsigned int buffered_frames_from(unsigned int read, unsigned int write) {
@@ -109,31 +110,44 @@ static void build_bmc_tables(void) {
     }
 
     for (unsigned int start_level = 0; start_level < 2; start_level++) {
-        for (unsigned int parity = 0; parity < 2; parity++) {
-            unsigned int level = start_level;
-            uint8_t bits = 0;
+        for (unsigned int payload_parity = 0; payload_parity < 2; payload_parity++) {
+            for (unsigned int vuc_bits = 0; vuc_bits < 8; vuc_bits++) {
+                unsigned int level = start_level;
+                unsigned int parity = payload_parity;
+                uint8_t bits = 0;
 
-            for (unsigned int bit = 0; bit < 3; bit++) {
+                for (unsigned int bit = 0; bit < 3; bit++) {
+                    const bool value = (vuc_bits >> bit) & 1u;
+                    parity ^= value ? 1u : 0u;
+
+                    level ^= 1u;
+                    if (level) {
+                        bits |= 1u << (bit * 2);
+                    }
+
+                    if (value) {
+                        level ^= 1u;
+                    }
+                    if (level) {
+                        bits |= 1u << (bit * 2 + 1);
+                    }
+                }
+
+                const bool parity_bit = (parity & 1u) != 0;
                 level ^= 1u;
                 if (level) {
-                    bits |= 1u << (bit * 2);
-                    bits |= 1u << (bit * 2 + 1);
+                    bits |= 1u << 6;
                 }
-            }
 
-            level ^= 1u;
-            if (level) {
-                bits |= 1u << 6;
-            }
+                if (parity_bit) {
+                    level ^= 1u;
+                }
+                if (level) {
+                    bits |= 1u << 7;
+                }
 
-            if (parity) {
-                level ^= 1u;
+                bmc_tail[start_level][payload_parity][vuc_bits] = bits;
             }
-            if (level) {
-                bits |= 1u << 7;
-            }
-
-            bmc_tail[start_level][parity] = bits;
         }
     }
 }
@@ -180,7 +194,7 @@ static void append_bmc_bit(bool bit) {
     append_half_bit(current_level);
 }
 
-static void append_subframe(spdif_preamble_t preamble, int32_t sample) {
+static void append_subframe(spdif_preamble_t preamble, int32_t sample, bool channel_status) {
     // sample is 24-bit left-aligned in int32_t; bits 31..8 carry the audio,
     // bits 7..0 are ignored. The S/PDIF subframe carries audio bits LSB-first.
     uint32_t payload = ((uint32_t)sample) >> 8;
@@ -194,10 +208,12 @@ static void append_subframe(spdif_preamble_t preamble, int32_t sample) {
         append_bmc_bit(value);
     }
 
-    // V, U, and C are all zero for this first PCM test tone.
+    // V and U are zero. C carries channel status, bit-by-bit across the
+    // 192-frame block.
     append_bmc_bit(false);
     append_bmc_bit(false);
-    append_bmc_bit(false);
+    append_bmc_bit(channel_status);
+    ones += channel_status ? 1u : 0u;
 
     append_bmc_bit((ones & 1u) != 0);
 }
@@ -214,7 +230,8 @@ static inline void put_bits16(uint32_t *lo, uint32_t *hi, unsigned int offset, u
 }
 
 static void encode_subframe_fast(uint32_t words[SPDIF_WORDS_PER_SUBFRAME],
-                                 spdif_preamble_t preamble, int32_t sample, unsigned int *level) {
+                                 spdif_preamble_t preamble, int32_t sample,
+                                 bool channel_status, unsigned int *level) {
     uint8_t pattern = 0;
     uint32_t lo = 0;
     uint32_t hi = 0;
@@ -260,11 +277,18 @@ static void encode_subframe_fast(uint32_t words[SPDIF_WORDS_PER_SUBFRAME],
     *level = chunk.level;
     parity ^= chunk.parity;
 
-    hi |= (uint32_t)bmc_tail[*level][parity] << 24;
+    const unsigned int vuc_bits = channel_status ? 0x04u : 0x00u;
+    hi |= (uint32_t)bmc_tail[*level][parity][vuc_bits] << 24;
     *level = (hi >> 31) & 1u;
 
     words[0] = lo;
     words[1] = hi;
+}
+
+static bool channel_status_bit(unsigned int frame_index, spdif_stream_format_t format) {
+    // IEC 60958 consumer channel status byte 0 bit 1: 0 = linear PCM,
+    // 1 = non-PCM / encoded audio. Other bits remain zero for now.
+    return format == SPDIF_STREAM_FORMAT_IEC61937 && frame_index == 1;
 }
 
 static bool read_usb_frame(int32_t *left, int32_t *right) {
@@ -286,10 +310,11 @@ static bool read_usb_frame(int32_t *left, int32_t *right) {
 static void encode_live_frame(uint32_t *words, unsigned int frame_index, unsigned int *level) {
     int32_t left = 0;
     int32_t right = 0;
+    const bool c_bit = channel_status_bit(frame_index, current_stream_format);
 
     read_usb_frame(&left, &right);
-    encode_subframe_fast(&words[0], frame_index == 0 ? PREAMBLE_B : PREAMBLE_M, left, level);
-    encode_subframe_fast(&words[2], PREAMBLE_W, right, level);
+    encode_subframe_fast(&words[0], frame_index == 0 ? PREAMBLE_B : PREAMBLE_M, left, c_bit, level);
+    encode_subframe_fast(&words[2], PREAMBLE_W, right, c_bit, level);
 }
 
 static void copy_block(uint32_t *dst, const uint32_t *src) {
@@ -334,8 +359,8 @@ static void build_block(uint32_t *words, bool tone) {
         // sine_1khz_48k is 16-bit; promote to the encoder's 24-bit
         // left-aligned int32 by shifting up the same way live USB does.
         const int32_t sample = tone ? ((int32_t)sine_1khz_48k[frame % 48]) << 16 : 0;
-        append_subframe(frame == 0 ? PREAMBLE_B : PREAMBLE_M, sample);
-        append_subframe(PREAMBLE_W, sample);
+        append_subframe(frame == 0 ? PREAMBLE_B : PREAMBLE_M, sample, false);
+        append_subframe(PREAMBLE_W, sample, false);
     }
 }
 
@@ -411,6 +436,14 @@ void spdif_set_sample_rate(uint32_t rate_hz) {
 
 spdif_mode_t spdif_get_mode(void) {
     return current_mode;
+}
+
+void spdif_set_stream_format(spdif_stream_format_t format) {
+    current_stream_format = format;
+}
+
+spdif_stream_format_t spdif_get_stream_format(void) {
+    return current_stream_format;
 }
 
 const char *spdif_mode_name(spdif_mode_t mode) {

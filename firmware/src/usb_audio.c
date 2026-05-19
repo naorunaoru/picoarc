@@ -49,6 +49,27 @@ static unsigned int dropped_frames;
 static uint64_t next_diag_log_us;
 static uint64_t next_feedback_us;
 
+static bool active_alt_is_iec61937(void) {
+    return active_alt == PICOARC_AUDIO_ALT_IEC61937;
+}
+
+static bool active_alt_is_pcm_24(void) {
+    return active_alt == PICOARC_AUDIO_ALT_PCM_24;
+}
+
+static const char *active_alt_format_name(void) {
+    switch (active_alt) {
+    case PICOARC_AUDIO_ALT_PCM_16:
+        return "PCM 16-bit";
+    case PICOARC_AUDIO_ALT_PCM_24:
+        return "PCM 24-bit";
+    case PICOARC_AUDIO_ALT_IEC61937:
+        return "IEC 61937 DD/DTS";
+    default:
+        return "off";
+    }
+}
+
 static int16_t host_volume_min_256(void) {
     return HOST_VOLUME_MIN_DB * 256;
 }
@@ -337,17 +358,17 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
         output_enabled = false;
         refill_target_frames = START_BUFFER_FRAMES;
         spdif_clear_usb_buffer();
+        spdif_set_stream_format(active_alt_is_iec61937() ?
+                                SPDIF_STREAM_FORMAT_IEC61937 :
+                                SPDIF_STREAM_FORMAT_PCM);
         spdif_set_mode(SPDIF_MODE_SILENCE);
         dropped_frames = 0;
         next_diag_log_us = time_us_64() + 2000000;
         next_feedback_us = 0;
         update_feedback(true);
-        const char *bit_depth =
-            alt == PICOARC_AUDIO_ALT_PCM_24 ? "24" :
-            alt == PICOARC_AUDIO_ALT_PCM_16 ? "16" : "off";
-        printf("usb-audio: streaming %s (alt=%u, %lu Hz/%s-bit), spdif=%s\n",
+        printf("usb-audio: streaming %s (alt=%u, %lu Hz, %s), spdif=%s\n",
                streaming ? "on" : "off", alt,
-               (unsigned long)active_sample_rate, bit_depth,
+               (unsigned long)active_sample_rate, active_alt_format_name(),
                spdif_mode_name(spdif_get_mode()));
     }
 
@@ -362,6 +383,7 @@ bool tud_audio_set_itf_close_EP_cb(uint8_t rhport, tusb_control_request_t const 
     output_enabled = false;
     refill_target_frames = START_BUFFER_FRAMES;
     spdif_clear_usb_buffer();
+    spdif_set_stream_format(SPDIF_STREAM_FORMAT_PCM);
     spdif_set_mode(SPDIF_MODE_SILENCE);
     dropped_frames = 0;
     usb_dpram->ep_buf_ctrl[AUDIO_OUT_EP_NUM].out = 0;
@@ -384,7 +406,7 @@ void usb_audio_task(void) {
 
     update_feedback(false);
 
-    const unsigned int bytes_per_sample = active_alt == PICOARC_AUDIO_ALT_PCM_24 ? 3u : 2u;
+    const unsigned int bytes_per_sample = active_alt_is_pcm_24() ? 3u : 2u;
     const unsigned int bytes_per_frame = bytes_per_sample * CHANNELS;
 
     while (tud_audio_available() >= bytes_per_frame) {
@@ -412,7 +434,8 @@ void usb_audio_task(void) {
                 pcm_frames[i] = (int32_t)raw;
             }
         } else {
-            // 16-bit input: promote into the same 24-bit-left-aligned int32.
+            // 16-bit PCM and IEC 61937 both ride in the same 16-bit subslot;
+            // promote into the encoder's 24-bit-left-aligned representation.
             const int16_t *src = (const int16_t *)pcm_bytes;
             for (unsigned int i = 0; i < frames * CHANNELS; i++) {
                 pcm_frames[i] = (int32_t)src[i] << 16;

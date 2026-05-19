@@ -9,6 +9,11 @@ typedef enum {
     SPDIF_MODE_USB_AUDIO,
 } spdif_mode_t;
 
+typedef enum {
+    SPDIF_STREAM_FORMAT_PCM,
+    SPDIF_STREAM_FORMAT_IEC61937,
+} spdif_stream_format_t;
+
 typedef struct {
     unsigned int buffered_frames;
     unsigned int high_water_frames;
@@ -19,6 +24,8 @@ void spdif_start(unsigned int pin);
 void spdif_set_mode(spdif_mode_t mode);
 spdif_mode_t spdif_get_mode(void);
 const char *spdif_mode_name(spdif_mode_t mode);
+void spdif_set_stream_format(spdif_stream_format_t format);
+spdif_stream_format_t spdif_get_stream_format(void);
 // Switch the PIO output clock to the given sample rate. The encoder block
 // layout (192 stereo frames per DMA block) is sample-rate-agnostic — only the
 // PIO clkdiv changes. The host is required by UAC2 to drop alt=0 before
