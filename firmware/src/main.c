@@ -10,6 +10,15 @@
 #define CEC_PIN 3
 #define HPD_PIN 4
 
+static void wait_for_console_attach(void) {
+    absolute_time_t deadline = make_timeout_time_ms(5000);
+
+    while (absolute_time_diff_us(get_absolute_time(), deadline) > 0) {
+        tud_task();
+        sleep_ms(1);
+    }
+}
+
 int main(void) {
     tusb_init();
     stdio_init_all();
@@ -18,12 +27,14 @@ int main(void) {
     gpio_init(led_pin);
     gpio_set_dir(led_pin, GPIO_OUT);
 
+    wait_for_console_attach();
+
+    printf("\nPicoARC bring-up\n");
+
     spdif_start(SPDIF_PIN);
     spdif_set_mode(SPDIF_MODE_SILENCE);
     arc_init(CEC_PIN, HPD_PIN);
 
-    sleep_ms(2000);
-    printf("\nPicoARC bring-up\n");
     printf("spdif: GP%d 48k stereo %s\n", SPDIF_PIN, spdif_mode_name(spdif_get_mode()));
     printf("arc: ready\n");
 

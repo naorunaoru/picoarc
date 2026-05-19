@@ -267,6 +267,9 @@ FETCHCONTENT_QUIET:BOOL=ON
 //Enables UPDATE_DISCONNECTED behavior for all content population
 FETCHCONTENT_UPDATES_DISCONNECTED:BOOL=OFF
 
+//Build passive CEC sniffer firmware
+PICOARC_CEC_SNIFFER:BOOL=OFF
+
 //PICO target board (e.g. pico, pico2)
 PICO_BOARD:STRING=pico
 

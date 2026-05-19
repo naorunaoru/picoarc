@@ -13,53 +13,28 @@
 // ------ //
 
 #define cec_tx_wrap_target 0
-#define cec_tx_wrap 27
+#define cec_tx_wrap 7
 #define cec_tx_pio_version 0
 
-#define cec_tx_CEC_TX_CMD_ZERO 0
-#define cec_tx_CEC_TX_CMD_ONE 1
-#define cec_tx_CEC_TX_CMD_START 2
-#define cec_tx_CEC_TX_CMD_ACK_SAMPLE 3
-#define cec_tx_CEC_TX_CMD_DONE 4
-#define cec_tx_CEC_TX_RATE_HZ 20000
+#define cec_tx_CEC_TX_RATE_HZ 1000000
 
 static const uint16_t cec_tx_program_instructions[] = {
             //     .wrap_target
     0x80a0, //  0: pull   block
     0xa027, //  1: mov    x, osr
-    0x002c, //  2: jmp    !x, 12
-    0x0044, //  3: jmp    x--, 4
-    0x002f, //  4: jmp    !x, 15
-    0x0046, //  5: jmp    x--, 6
-    0x0038, //  6: jmp    !x, 24
-    0x0048, //  7: jmp    x--, 8
-    0x0032, //  8: jmp    !x, 18
-    0xe080, //  9: set    pindirs, 0
-    0xc000, // 10: irq    nowait 0
-    0x0000, // 11: jmp    0
-    0xfd81, // 12: set    pindirs, 1             [29]
-    0xeb80, // 13: set    pindirs, 0             [11]
-    0x0000, // 14: jmp    0
-    0xeb81, // 15: set    pindirs, 1             [11]
-    0xfd80, // 16: set    pindirs, 0             [29]
-    0x0000, // 17: jmp    0
-    0xeb81, // 18: set    pindirs, 1             [11]
-    0xe880, // 19: set    pindirs, 0             [8]
-    0x4001, // 20: in     pins, 1
-    0x8020, // 21: push   block
-    0xb942, // 22: nop                           [25]
-    0x0000, // 23: jmp    0
-    0xff81, // 24: set    pindirs, 1             [31]
-    0xbf42, // 25: nop                           [31]
-    0xa942, // 26: nop                           [9]
-    0xe880, // 27: set    pindirs, 0             [8]
+    0xe081, //  2: set    pindirs, 1
+    0x0043, //  3: jmp    x--, 3
+    0x80a0, //  4: pull   block
+    0xa027, //  5: mov    x, osr
+    0xe080, //  6: set    pindirs, 0
+    0x0047, //  7: jmp    x--, 7
             //     .wrap
 };
 
 #if !PICO_NO_HARDWARE
 static const struct pio_program cec_tx_program = {
     .instructions = cec_tx_program_instructions,
-    .length = 28,
+    .length = 8,
     .origin = -1,
     .pio_version = cec_tx_pio_version,
 #if PICO_PIO_VERSION > 0

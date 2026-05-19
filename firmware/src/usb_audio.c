@@ -16,10 +16,10 @@ enum {
     BYTES_PER_SAMPLE = 2,
     BYTES_PER_FRAME = CHANNELS * BYTES_PER_SAMPLE,
     FRAMES_PER_MS = SAMPLE_RATE / 1000,
-    START_BUFFER_FRAMES = 4096,
-    RECOVER_BUFFER_FRAMES = 4096,
+    START_BUFFER_FRAMES = 256,
+    RECOVER_BUFFER_FRAMES = 256,
     AUDIO_OUT_EP_NUM = 3,
-    FEEDBACK_TARGET_FRAMES = 4096,
+    FEEDBACK_TARGET_FRAMES = 256,
     FEEDBACK_UPDATE_US = 4000,
     FEEDBACK_P_GAIN_Q16_PER_FRAME = 16,
     FEEDBACK_MAX_ADJUST_Q16 = 1 << 15,
@@ -53,6 +53,10 @@ void usb_audio_set_cec_audio_status(uint8_t cec_volume, bool muted) {
         mute[i] = usb_mute;
         volume[i] = usb_volume;
     }
+}
+
+bool usb_audio_is_streaming(void) {
+    return streaming;
 }
 
 static void update_feedback(bool force) {
