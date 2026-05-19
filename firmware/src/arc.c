@@ -9,10 +9,11 @@
 #include "pico/stdlib.h"
 #include "usb_audio.h"
 
-static unsigned int hpd_pin;
+static unsigned int hdmi_5v_pin;
 static bool arc_initiated;
 static bool system_audio_mode;
 static bool last_streaming;
+static bool last_source_5v;
 static unsigned int probe_step;
 static unsigned int streaming_probe_step;
 static absolute_time_t next_probe;
@@ -503,7 +504,7 @@ static bool start_relative_volume_sync(uint8_t desired_volume) {
     return true;
 }
 
-static bool continue_relative_volume_sync(bool hpd, bool bus_high) {
+static bool continue_relative_volume_sync(bool source_5v, bool bus_high) {
     if (!relative_volume_sync_active || !cec_audio_volume_known) {
         return false;
     }
@@ -519,12 +520,12 @@ static bool continue_relative_volume_sync(bool hpd, bool bus_high) {
         cec_audio_volume += key == 0x41 ? 1 : -1;
     }
 
-    printf("arc: relative volume step key=%s now=%u target=%u ack=%s hpd=%d idle=%d\n",
+    printf("arc: relative volume step key=%s now=%u target=%u ack=%s src5v=%d idle=%d\n",
            user_control_name(key),
            cec_audio_volume,
            relative_volume_target,
            ack ? "yes" : "no",
-           hpd,
+           source_5v,
            bus_high);
 
     send_give_audio_status();
@@ -532,7 +533,7 @@ static bool continue_relative_volume_sync(bool hpd, bool bus_high) {
     return true;
 }
 
-static bool process_volume_sync(bool hpd, bool bus_high) {
+static bool process_volume_sync(bool source_5v, bool bus_high) {
     if (!pending_volume_sync && !pending_mute_sync && !relative_volume_sync_active) {
         return false;
     }
@@ -548,10 +549,10 @@ static bool process_volume_sync(bool hpd, bool bus_high) {
         bool ack = false;
         if (absolute_volume_supported) {
             ack = send_set_audio_volume_level(desired_volume);
-            printf("arc: set-audio-volume-level volume=%u ack=%s hpd=%d idle=%d\n",
+            printf("arc: set-audio-volume-level volume=%u ack=%s src5v=%d idle=%d\n",
                    desired_volume,
                    ack ? "yes" : "no",
-                   hpd,
+                   source_5v,
                    bus_high);
             if (!ack) {
                 absolute_volume_supported = false;
@@ -569,16 +570,16 @@ static bool process_volume_sync(bool hpd, bool bus_high) {
         return true;
     }
 
-    if (continue_relative_volume_sync(hpd, bus_high)) {
+    if (continue_relative_volume_sync(source_5v, bus_high)) {
         return true;
     }
 
     if (pending_mute_sync) {
         if (!cec_audio_mute_known) {
             const bool ack = send_give_audio_status();
-            printf("arc: defer mute sync until audio-status ack=%s hpd=%d idle=%d\n",
+            printf("arc: defer mute sync until audio-status ack=%s src5v=%d idle=%d\n",
                    ack ? "yes" : "no",
-                   hpd,
+                   source_5v,
                    bus_high);
             next_volume_sync = make_timeout_time_ms(500);
             return true;
@@ -591,10 +592,10 @@ static bool process_volume_sync(bool hpd, bool bus_high) {
         }
 
         const bool ack = send_user_control_tap(0x43);
-        printf("arc: user-control mute desired=%s ack=%s hpd=%d idle=%d\n",
+        printf("arc: user-control mute desired=%s ack=%s src5v=%d idle=%d\n",
                desired_mute ? "on" : "off",
                ack ? "yes" : "no",
-               hpd,
+               source_5v,
                bus_high);
         if (ack) {
             cec_audio_muted = desired_mute;
@@ -607,7 +608,7 @@ static bool process_volume_sync(bool hpd, bool bus_high) {
     return false;
 }
 
-static void probe_arc_while_streaming(bool hpd, bool bus_high) {
+static void probe_arc_while_streaming(bool source_5v, bool bus_high) {
     if (system_audio_mode && arc_initiated) {
         next_probe = make_timeout_time_ms(10000);
         return;
@@ -617,27 +618,27 @@ static void probe_arc_while_streaming(bool hpd, bool bus_high) {
     case 0:
         if (!system_audio_mode) {
             const bool ack = send_system_audio_mode_request();
-            printf("arc: streaming system-audio-mode-request 0000 ack=%s hpd=%d idle=%d\n",
+            printf("arc: streaming system-audio-mode-request 0000 ack=%s src5v=%d idle=%d\n",
                    ack ? "yes" : "no",
-                   hpd,
+                   source_5v,
                    bus_high);
         }
         break;
     case 1:
         if (!arc_initiated) {
             const bool ack = send_request_arc_initiation();
-            printf("arc: streaming request-arc-initiation ack=%s hpd=%d idle=%d\n",
+            printf("arc: streaming request-arc-initiation ack=%s src5v=%d idle=%d\n",
                    ack ? "yes" : "no",
-                   hpd,
+                   source_5v,
                    bus_high);
         }
         break;
     default:
         if (!system_audio_mode) {
             const bool ack = send_give_system_audio_mode_status();
-            printf("arc: streaming give-system-audio-mode-status ack=%s hpd=%d idle=%d\n",
+            printf("arc: streaming give-system-audio-mode-status ack=%s src5v=%d idle=%d\n",
                    ack ? "yes" : "no",
-                   hpd,
+                   source_5v,
                    bus_high);
         }
         break;
@@ -763,11 +764,12 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
     }
 }
 
-void arc_init(unsigned int cec_pin, unsigned int hpd_gpio) {
-    hpd_pin = hpd_gpio;
+void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
+    hdmi_5v_pin = hdmi_5v_gpio;
     arc_initiated = false;
     system_audio_mode = false;
     last_streaming = false;
+    last_source_5v = false;
     probe_step = 0;
     streaming_probe_step = 0;
     next_probe = make_timeout_time_ms(1000);
@@ -788,14 +790,15 @@ void arc_init(unsigned int cec_pin, unsigned int hpd_gpio) {
     relative_volume_sync_active = false;
     relative_volume_target = 0;
 
-    gpio_init(hpd_pin);
-    gpio_set_dir(hpd_pin, GPIO_IN);
+    gpio_init(hdmi_5v_pin);
+    gpio_set_dir(hdmi_5v_pin, GPIO_IN);
+    gpio_disable_pulls(hdmi_5v_pin);
 
     cec_init(cec_pin);
     cec_set_logical_address(CEC_LOGICAL_TV);
     cec_passive_reset();
 
-    printf("arc: CEC on GP%u, HPD on GP%u\n", cec_pin, hpd_pin);
+    printf("arc: CEC on GP%u, HDMI +5V sense on GP%u\n", cec_pin, hdmi_5v_pin);
     printf("arc: TV ARC endpoint mode\n");
 }
 
@@ -809,15 +812,32 @@ void arc_task(void) {
         cec_frames++;
     }
 
-    const bool hpd = gpio_get(hpd_pin);
+    const bool source_5v = gpio_get(hdmi_5v_pin);
     const bool bus_high = cec_bus_is_high();
+
+    if (source_5v != last_source_5v) {
+        last_source_5v = source_5v;
+        probe_step = 0;
+        streaming_probe_step = 0;
+        next_probe = make_timeout_time_ms(source_5v ? 250 : 2000);
+        if (!source_5v) {
+            arc_initiated = false;
+            system_audio_mode = false;
+            relative_volume_sync_active = false;
+        }
+        printf("arc: HDMI +5V %s\n", source_5v ? "present" : "lost");
+    }
 
     if (streaming != last_streaming) {
         last_streaming = streaming;
         streaming_probe_step = 0;
     }
 
-    if (process_volume_sync(hpd, bus_high)) {
+    if (!source_5v) {
+        return;
+    }
+
+    if (process_volume_sync(source_5v, bus_high)) {
         return;
     }
 
@@ -826,44 +846,44 @@ void arc_task(void) {
     }
 
     if (streaming) {
-        probe_arc_while_streaming(hpd, bus_high);
+        probe_arc_while_streaming(source_5v, bus_high);
         return;
     }
 
     if (probe_step == 0) {
         const bool ack = cec_poll(CEC_LOGICAL_TV, CEC_LOGICAL_AUDIO_SYSTEM);
-        printf("arc: audio-system poll ack=%s hpd=%d idle=%d\n",
-               ack ? "yes" : "no", hpd, bus_high);
+        printf("arc: audio-system poll ack=%s src5v=%d idle=%d\n",
+               ack ? "yes" : "no", source_5v, bus_high);
     } else if (probe_step == 1) {
         const uint8_t give_power_status[] = {
             (CEC_LOGICAL_TV << 4) | CEC_LOGICAL_AUDIO_SYSTEM,
             0x8f,
         };
         const bool ack = cec_send_with_retry(give_power_status, sizeof(give_power_status), 2);
-        printf("arc: give-device-power-status ack=%s hpd=%d idle=%d\n",
-               ack ? "yes" : "no", hpd, bus_high);
+        printf("arc: give-device-power-status ack=%s src5v=%d idle=%d\n",
+               ack ? "yes" : "no", source_5v, bus_high);
     } else if (probe_step == 2) {
         const bool ack = send_report_physical_address(CEC_LOGICAL_TV, tv_physical_address, 0x00);
-        printf("arc: report-physical-address 0000 tv ack=%s hpd=%d idle=%d\n",
-               ack ? "yes" : "no", hpd, bus_high);
+        printf("arc: report-physical-address 0000 tv ack=%s src5v=%d idle=%d\n",
+               ack ? "yes" : "no", source_5v, bus_high);
     } else if (probe_step == 3) {
         const bool ack = send_give_system_audio_mode_status();
-        printf("arc: give-system-audio-mode-status ack=%s hpd=%d idle=%d\n",
-               ack ? "yes" : "no", hpd, bus_high);
+        printf("arc: give-system-audio-mode-status ack=%s src5v=%d idle=%d\n",
+               ack ? "yes" : "no", source_5v, bus_high);
     } else if (probe_step == 4 && !system_audio_mode) {
         const bool ack = send_system_audio_mode_request();
-        printf("arc: system-audio-mode-request 0000 ack=%s hpd=%d idle=%d\n",
-               ack ? "yes" : "no", hpd, bus_high);
+        printf("arc: system-audio-mode-request 0000 ack=%s src5v=%d idle=%d\n",
+               ack ? "yes" : "no", source_5v, bus_high);
     } else if (probe_step == 5) {
         const bool ack = send_give_audio_status();
-        printf("arc: give-audio-status ack=%s hpd=%d idle=%d\n",
-               ack ? "yes" : "no", hpd, bus_high);
+        printf("arc: give-audio-status ack=%s src5v=%d idle=%d\n",
+               ack ? "yes" : "no", source_5v, bus_high);
     } else if (!arc_initiated) {
         const bool ack = send_request_arc_initiation();
-        printf("arc: request-arc-initiation ack=%s hpd=%d idle=%d\n",
-               ack ? "yes" : "no", hpd, bus_high);
+        printf("arc: request-arc-initiation ack=%s src5v=%d idle=%d\n",
+               ack ? "yes" : "no", source_5v, bus_high);
     } else {
-        printf("arc: initiated hpd=%d idle=%d\n", hpd, bus_high);
+        printf("arc: initiated src5v=%d idle=%d\n", source_5v, bus_high);
     }
 
     probe_step = (probe_step + 1) % 7;

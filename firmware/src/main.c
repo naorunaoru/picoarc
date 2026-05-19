@@ -9,7 +9,7 @@
 
 #define SPDIF_PIN 2
 #define CEC_PIN 3
-#define HPD_PIN 4
+#define HDMI_5V_PIN 4
 
 static void cec_yield_pump(void) {
     tud_task();
@@ -37,7 +37,7 @@ int main(void) {
     // to bogus addresses and the device silently runs at the wrong rate.
     spdif_start(SPDIF_PIN);
     spdif_set_mode(SPDIF_MODE_SILENCE);
-    arc_init(CEC_PIN, HPD_PIN);
+    arc_init(CEC_PIN, HDMI_5V_PIN);
     cec_set_yield(cec_yield_pump);
 
     const uint led_pin = PICO_DEFAULT_LED_PIN;

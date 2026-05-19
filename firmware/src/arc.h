@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-void arc_init(unsigned int cec_pin, unsigned int hpd_pin);
+void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_pin);
 void arc_task(void);
 bool arc_is_initiated(void);
 void arc_request_volume_sync(uint8_t volume);
