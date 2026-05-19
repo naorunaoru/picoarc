@@ -11,7 +11,11 @@
 #include "spdif.pio.h"
 
 enum {
-    SPDIF_PIN_RATE_HZ = 6144000,
+    // Each S/PDIF audio frame is 2 subframes × 32 bits × 2 half-bits = 128
+    // half-bits, and the PIO outputs 1 half-bit per cycle, so the PIO clock
+    // is 128× the audio sample rate (6.144 MHz at 48 kHz, 12.288 MHz at 96 kHz).
+    SPDIF_HALF_BITS_PER_FRAME = 128,
+    SPDIF_DEFAULT_SAMPLE_RATE_HZ = 48000,
     SPDIF_FRAMES_PER_BLOCK = 192,
     SPDIF_WORDS_PER_SUBFRAME = 2,
     SPDIF_WORDS_PER_FRAME = 4,
@@ -368,7 +372,9 @@ void spdif_start(unsigned int pin) {
     sm_config_set_out_pins(&config, pin, 1);
     sm_config_set_out_shift(&config, true, true, 32);
     sm_config_set_fifo_join(&config, PIO_FIFO_JOIN_TX);
-    sm_config_set_clkdiv(&config, (float)clock_get_hz(clk_sys) / SPDIF_PIN_RATE_HZ);
+    sm_config_set_clkdiv(&config,
+                         (float)clock_get_hz(clk_sys) /
+                             (SPDIF_DEFAULT_SAMPLE_RATE_HZ * SPDIF_HALF_BITS_PER_FRAME));
 
     pio_sm_init(spdif_pio, spdif_sm, offset, &config);
     pio_sm_set_enabled(spdif_pio, spdif_sm, true);
@@ -386,6 +392,13 @@ void spdif_start(unsigned int pin) {
 
 void spdif_set_mode(spdif_mode_t mode) {
     current_mode = mode;
+}
+
+void spdif_set_sample_rate(uint32_t rate_hz) {
+    const float divider = (float)clock_get_hz(clk_sys) /
+                          (float)(rate_hz * SPDIF_HALF_BITS_PER_FRAME);
+    pio_sm_set_clkdiv(spdif_pio, spdif_sm, divider);
+    pio_sm_clkdiv_restart(spdif_pio, spdif_sm);
 }
 
 spdif_mode_t spdif_get_mode(void) {

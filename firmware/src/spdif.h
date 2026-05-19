@@ -19,6 +19,11 @@ void spdif_start(unsigned int pin);
 void spdif_set_mode(spdif_mode_t mode);
 spdif_mode_t spdif_get_mode(void);
 const char *spdif_mode_name(spdif_mode_t mode);
+// Switch the PIO output clock to the given sample rate. The encoder block
+// layout (192 stereo frames per DMA block) is sample-rate-agnostic — only the
+// PIO clkdiv changes. The host is required by UAC2 to drop alt=0 before
+// SET CUR on the clock source, so streaming is stopped when this is called.
+void spdif_set_sample_rate(uint32_t rate_hz);
 // samples is interleaved L/R 24-bit audio left-aligned in int32_t: the audio
 // MSB sits at bit 31 and the audio LSB at bit 8. Bits 7..0 are ignored. 16-bit
 // callers shift their value left by 16 before calling.

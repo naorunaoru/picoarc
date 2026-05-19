@@ -14,17 +14,22 @@
 #define ITF_NUM_TOTAL                   5
 
 // UAC2 streaming alts exposed on ITF_NUM_AUDIO_STREAMING. Alt 0 is the
-// mandatory zero-bandwidth setting; alt 1 is 48 kHz / 16-bit stereo PCM (the
-// original v1 format); alt 2 adds 48 kHz / 24-bit packed stereo PCM. The host
-// picks which alt to use at SET_INTERFACE time.
+// mandatory zero-bandwidth setting; alt 1 is 16-bit stereo PCM; alt 2 is
+// 24-bit packed stereo PCM. Both alts run at whatever rate the host
+// programs via SET CUR on the clock source (48 kHz or 96 kHz are advertised
+// — see usb_audio.c clock_get_request).
 #define PICOARC_AUDIO_ALT_ZERO          0
 #define PICOARC_AUDIO_ALT_PCM_16        1
 #define PICOARC_AUDIO_ALT_PCM_24        2
 
-#define PICOARC_AUDIO_SAMPLE_RATE       48000
+#define PICOARC_AUDIO_SAMPLE_RATE_LOW   48000
+#define PICOARC_AUDIO_SAMPLE_RATE_HIGH  96000
 #define PICOARC_AUDIO_CHANNELS          2
-#define PICOARC_AUDIO_EP_OUT_SZ_16      TUD_AUDIO_EP_SIZE(PICOARC_AUDIO_SAMPLE_RATE, 2, PICOARC_AUDIO_CHANNELS)
-#define PICOARC_AUDIO_EP_OUT_SZ_24      TUD_AUDIO_EP_SIZE(PICOARC_AUDIO_SAMPLE_RATE, 3, PICOARC_AUDIO_CHANNELS)
+// EP wMaxPacketSize is sized for the highest sample rate the device advertises
+// so a single ISO packet at 96 kHz fits. At lower rates the host simply
+// transmits a smaller packet each microframe.
+#define PICOARC_AUDIO_EP_OUT_SZ_16      TUD_AUDIO_EP_SIZE(PICOARC_AUDIO_SAMPLE_RATE_HIGH, 2, PICOARC_AUDIO_CHANNELS)
+#define PICOARC_AUDIO_EP_OUT_SZ_24      TUD_AUDIO_EP_SIZE(PICOARC_AUDIO_SAMPLE_RATE_HIGH, 3, PICOARC_AUDIO_CHANNELS)
 
 #define TUD_AUDIO_PICOARC_DESC_LEN (TUD_AUDIO_DESC_IAD_LEN\
     + TUD_AUDIO_DESC_STD_AC_LEN\
@@ -59,14 +64,14 @@
     TUD_AUDIO_DESC_STD_AC_INT_EP(_epint, 0x01),\
     /* AS alt 0: zero-bandwidth (mandatory). */ \
     TUD_AUDIO_DESC_STD_AS_INT((uint8_t)((_itfnum) + 1), PICOARC_AUDIO_ALT_ZERO, 0x00, 0x00),\
-    /* AS alt 1: 48 kHz / 16-bit stereo PCM. */ \
+    /* AS alt 1: 16-bit stereo PCM (rate from clock source). */ \
     TUD_AUDIO_DESC_STD_AS_INT((uint8_t)((_itfnum) + 1), PICOARC_AUDIO_ALT_PCM_16, 0x02, 0x00),\
     TUD_AUDIO_DESC_CS_AS_INT(UAC2_ENTITY_INPUT_TERMINAL, AUDIO_CTRL_NONE, AUDIO_FORMAT_TYPE_I, AUDIO_DATA_FORMAT_TYPE_I_PCM, 0x02, AUDIO_CHANNEL_CONFIG_NON_PREDEFINED, 0x00),\
     TUD_AUDIO_DESC_TYPE_I_FORMAT(2, 16),\
     TUD_AUDIO_DESC_STD_AS_ISO_EP(_epout, (uint8_t)(TUSB_XFER_ISOCHRONOUS | TUSB_ISO_EP_ATT_ASYNCHRONOUS | TUSB_ISO_EP_ATT_DATA), PICOARC_AUDIO_EP_OUT_SZ_16, 0x01),\
     TUD_AUDIO_DESC_CS_AS_ISO_EP(AUDIO_CS_AS_ISO_DATA_EP_ATT_NON_MAX_PACKETS_OK, AUDIO_CTRL_NONE, AUDIO_CS_AS_ISO_DATA_EP_LOCK_DELAY_UNIT_MILLISEC, 0x0001),\
     TUD_AUDIO_DESC_STD_AS_ISO_FB_EP(_epfb, _epfbsize, 0x01),\
-    /* AS alt 2: 48 kHz / 24-bit (packed, 3 bytes per sample) stereo PCM. */ \
+    /* AS alt 2: 24-bit (packed, 3 bytes per sample) stereo PCM (rate from clock source). */ \
     TUD_AUDIO_DESC_STD_AS_INT((uint8_t)((_itfnum) + 1), PICOARC_AUDIO_ALT_PCM_24, 0x02, 0x00),\
     TUD_AUDIO_DESC_CS_AS_INT(UAC2_ENTITY_INPUT_TERMINAL, AUDIO_CTRL_NONE, AUDIO_FORMAT_TYPE_I, AUDIO_DATA_FORMAT_TYPE_I_PCM, 0x02, AUDIO_CHANNEL_CONFIG_NON_PREDEFINED, 0x00),\
     TUD_AUDIO_DESC_TYPE_I_FORMAT(3, 24),\
