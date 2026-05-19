@@ -14,6 +14,7 @@
 #define EPNUM_CDC_IN    0x82
 #define EPNUM_AUDIO_OUT 0x03
 #define EPNUM_AUDIO_FB  0x83
+#define EPNUM_AUDIO_INT 0x84
 
 enum {
     STRID_LANGID = 0,
@@ -50,18 +51,16 @@ uint8_t const *tud_descriptor_device_cb(void) {
 #define TUD_RPI_RESET_DESCRIPTOR(_itfnum, _stridx) \
     9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUSB_CLASS_VENDOR_SPECIFIC, RESET_INTERFACE_SUBCLASS, RESET_INTERFACE_PROTOCOL, _stridx
 
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_AUDIO_SPEAKER_STEREO_FB_DESC_LEN + TUD_RPI_RESET_DESC_LEN)
+#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_AUDIO_PICOARC_DESC_LEN + TUD_RPI_RESET_DESC_LEN)
 
 uint8_t const desc_configuration[] = {
     TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 250),
     TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, STRID_CDC, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64),
-    TUD_AUDIO_SPEAKER_STEREO_FB_DESCRIPTOR(ITF_NUM_AUDIO_CONTROL, STRID_AUDIO,
-                                           CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_RX,
-                                           CFG_TUD_AUDIO_FUNC_1_RESOLUTION_RX,
-                                           EPNUM_AUDIO_OUT,
-                                           CFG_TUD_AUDIO_FUNC_1_EP_OUT_SZ_MAX,
-                                           EPNUM_AUDIO_FB,
-                                           3),
+    TUD_AUDIO_PICOARC_DESCRIPTOR(ITF_NUM_AUDIO_CONTROL, STRID_AUDIO,
+                                 EPNUM_AUDIO_OUT,
+                                 EPNUM_AUDIO_FB,
+                                 3,
+                                 EPNUM_AUDIO_INT),
     TUD_RPI_RESET_DESCRIPTOR(ITF_NUM_RESET, STRID_RESET),
 };
 

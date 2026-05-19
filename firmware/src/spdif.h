@@ -19,7 +19,10 @@ void spdif_start(unsigned int pin);
 void spdif_set_mode(spdif_mode_t mode);
 spdif_mode_t spdif_get_mode(void);
 const char *spdif_mode_name(spdif_mode_t mode);
-unsigned int spdif_write_pcm(const int16_t *samples, unsigned int frame_count);
+// samples is interleaved L/R 24-bit audio left-aligned in int32_t: the audio
+// MSB sits at bit 31 and the audio LSB at bit 8. Bits 7..0 are ignored. 16-bit
+// callers shift their value left by 16 before calling.
+unsigned int spdif_write_pcm(const int32_t *samples, unsigned int frame_count);
 unsigned int spdif_buffered_frames(void);
 void spdif_clear_usb_buffer(void);
 void spdif_take_usb_stats(spdif_usb_stats_t *stats);

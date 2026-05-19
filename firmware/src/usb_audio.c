@@ -13,9 +13,12 @@
 enum {
     SAMPLE_RATE = 48000,
     CHANNELS = 2,
-    BYTES_PER_SAMPLE = 2,
-    BYTES_PER_FRAME = CHANNELS * BYTES_PER_SAMPLE,
+    MAX_BYTES_PER_SAMPLE = 3,
+    MAX_BYTES_PER_FRAME = CHANNELS * MAX_BYTES_PER_SAMPLE,
     FRAMES_PER_MS = SAMPLE_RATE / 1000,
+    // Read up to ~2 ms of raw USB bytes per task pass; matches the prior
+    // 16-bit budget but sized for the larger 24-bit packing.
+    READ_FRAMES_BUDGET = 2 * FRAMES_PER_MS,
     START_BUFFER_FRAMES = 256,
     RECOVER_BUFFER_FRAMES = 256,
     AUDIO_OUT_EP_NUM = 3,
@@ -27,8 +30,10 @@ enum {
 
 static int8_t mute[CHANNELS + 1];
 static int16_t volume[CHANNELS + 1];
-static int16_t pcm_buffer[FRAMES_PER_MS * CHANNELS * 2];
+static uint8_t pcm_bytes[READ_FRAMES_BUDGET * MAX_BYTES_PER_FRAME];
+static int32_t pcm_frames[READ_FRAMES_BUDGET * CHANNELS];
 static bool streaming;
+static uint8_t active_alt;
 static bool output_enabled;
 static unsigned int refill_target_frames;
 static unsigned int dropped_frames;
@@ -184,7 +189,8 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
     uint8_t const alt = tu_u16_low(tu_le16toh(request->wValue));
 
     if (itf == ITF_NUM_AUDIO_STREAMING) {
-        streaming = alt != 0;
+        active_alt = alt;
+        streaming = alt != PICOARC_AUDIO_ALT_ZERO;
         output_enabled = false;
         refill_target_frames = START_BUFFER_FRAMES;
         spdif_clear_usb_buffer();
@@ -193,7 +199,11 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
         next_diag_log_us = time_us_64() + 2000000;
         next_feedback_us = 0;
         update_feedback(true);
-        printf("usb-audio: streaming %s, spdif=%s\n", streaming ? "on" : "off", spdif_mode_name(spdif_get_mode()));
+        const char *fmt =
+            alt == PICOARC_AUDIO_ALT_PCM_24 ? "48k/24" :
+            alt == PICOARC_AUDIO_ALT_PCM_16 ? "48k/16" : "off";
+        printf("usb-audio: streaming %s (alt=%u %s), spdif=%s\n",
+               streaming ? "on" : "off", alt, fmt, spdif_mode_name(spdif_get_mode()));
     }
 
     return true;
@@ -203,6 +213,7 @@ bool tud_audio_set_itf_close_EP_cb(uint8_t rhport, tusb_control_request_t const 
     (void)rhport;
     (void)request;
     streaming = false;
+    active_alt = PICOARC_AUDIO_ALT_ZERO;
     output_enabled = false;
     refill_target_frames = START_BUFFER_FRAMES;
     spdif_clear_usb_buffer();
@@ -228,20 +239,42 @@ void usb_audio_task(void) {
 
     update_feedback(false);
 
-    while (tud_audio_available() >= BYTES_PER_FRAME) {
+    const unsigned int bytes_per_sample = active_alt == PICOARC_AUDIO_ALT_PCM_24 ? 3u : 2u;
+    const unsigned int bytes_per_frame = bytes_per_sample * CHANNELS;
+
+    while (tud_audio_available() >= bytes_per_frame) {
         uint16_t available = tud_audio_available();
         uint16_t bytes = available;
-        if (bytes > sizeof(pcm_buffer)) {
-            bytes = sizeof(pcm_buffer);
+        if (bytes > sizeof(pcm_bytes)) {
+            bytes = sizeof(pcm_bytes);
         }
-        bytes = (uint16_t)(bytes - (bytes % BYTES_PER_FRAME));
+        bytes = (uint16_t)(bytes - (bytes % bytes_per_frame));
         if (bytes == 0) {
             return;
         }
 
-        uint16_t read = tud_audio_read(pcm_buffer, bytes);
-        unsigned int frames = read / BYTES_PER_FRAME;
-        unsigned int written = spdif_write_pcm(pcm_buffer, frames);
+        uint16_t read = tud_audio_read(pcm_bytes, bytes);
+        unsigned int frames = read / bytes_per_frame;
+
+        if (bytes_per_sample == 3u) {
+            // Unpack interleaved 24-bit little-endian samples into 24-bit
+            // left-aligned int32 (audio MSB at bit 31, audio LSB at bit 8).
+            for (unsigned int i = 0; i < frames * CHANNELS; i++) {
+                const uint8_t *p = &pcm_bytes[i * 3];
+                const uint32_t raw = ((uint32_t)p[0] << 8) |
+                                     ((uint32_t)p[1] << 16) |
+                                     ((uint32_t)p[2] << 24);
+                pcm_frames[i] = (int32_t)raw;
+            }
+        } else {
+            // 16-bit input: promote into the same 24-bit-left-aligned int32.
+            const int16_t *src = (const int16_t *)pcm_bytes;
+            for (unsigned int i = 0; i < frames * CHANNELS; i++) {
+                pcm_frames[i] = (int32_t)src[i] << 16;
+            }
+        }
+
+        unsigned int written = spdif_write_pcm(pcm_frames, frames);
         if (written < frames) {
             dropped_frames += frames - written;
         }

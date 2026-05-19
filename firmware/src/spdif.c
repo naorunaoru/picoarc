@@ -51,7 +51,11 @@ static unsigned int spdif_sm;
 static unsigned int spdif_dma_chan;
 static dma_channel_config spdif_dma_config;
 static volatile spdif_mode_t current_mode = SPDIF_MODE_TONE_1KHZ;
-static int16_t usb_ring[USB_RING_FRAMES][2];
+// Samples are stored 24-bit-left-aligned in int32_t (audio MSB at bit 31,
+// audio LSB at bit 8). 16-bit USB input is shifted left 16 on ingest, 24-bit
+// USB input is unpacked from its 3-byte little-endian form. Either way the
+// S/PDIF encoder sees the same internal representation.
+static int32_t usb_ring[USB_RING_FRAMES][2];
 static volatile unsigned int usb_ring_read;
 static volatile unsigned int usb_ring_write;
 static volatile unsigned int usb_underrun_frames;
@@ -172,8 +176,10 @@ static void append_bmc_bit(bool bit) {
     append_half_bit(current_level);
 }
 
-static void append_subframe(spdif_preamble_t preamble, int16_t sample) {
-    uint32_t payload = ((uint32_t)(uint16_t)sample) << 8;
+static void append_subframe(spdif_preamble_t preamble, int32_t sample) {
+    // sample is 24-bit left-aligned in int32_t; bits 31..8 carry the audio,
+    // bits 7..0 are ignored. The S/PDIF subframe carries audio bits LSB-first.
+    uint32_t payload = ((uint32_t)sample) >> 8;
     unsigned int ones = 0;
 
     append_preamble(preamble);
@@ -204,7 +210,7 @@ static inline void put_bits16(uint32_t *lo, uint32_t *hi, unsigned int offset, u
 }
 
 static void encode_subframe_fast(uint32_t words[SPDIF_WORDS_PER_SUBFRAME],
-                                 spdif_preamble_t preamble, int16_t sample, unsigned int *level) {
+                                 spdif_preamble_t preamble, int32_t sample, unsigned int *level) {
     uint8_t pattern = 0;
     uint32_t lo = 0;
     uint32_t hi = 0;
@@ -232,18 +238,20 @@ static void encode_subframe_fast(uint32_t words[SPDIF_WORDS_PER_SUBFRAME],
         }
     }
 
-    const uint16_t raw = (uint16_t)sample;
-    bmc_byte_t chunk = bmc_byte[*level][0];
+    // 24 audio bits, LSB-first across three encoder bytes, taken from the
+    // 24-bit-left-aligned int32 (audio MSB at bit 31, audio LSB at bit 8).
+    const uint32_t raw = (uint32_t)sample;
+    bmc_byte_t chunk = bmc_byte[*level][(raw >> 8) & 0xffu];
     put_bits16(&lo, &hi, 8, chunk.bits);
     *level = chunk.level;
     unsigned int parity = chunk.parity;
 
-    chunk = bmc_byte[*level][raw & 0xffu];
+    chunk = bmc_byte[*level][(raw >> 16) & 0xffu];
     put_bits16(&lo, &hi, 24, chunk.bits);
     *level = chunk.level;
     parity ^= chunk.parity;
 
-    chunk = bmc_byte[*level][raw >> 8];
+    chunk = bmc_byte[*level][(raw >> 24) & 0xffu];
     put_bits16(&lo, &hi, 40, chunk.bits);
     *level = chunk.level;
     parity ^= chunk.parity;
@@ -255,7 +263,7 @@ static void encode_subframe_fast(uint32_t words[SPDIF_WORDS_PER_SUBFRAME],
     words[1] = hi;
 }
 
-static bool read_usb_frame(int16_t *left, int16_t *right) {
+static bool read_usb_frame(int32_t *left, int32_t *right) {
     const unsigned int read = usb_ring_read;
 
     if (read == usb_ring_write) {
@@ -272,8 +280,8 @@ static bool read_usb_frame(int16_t *left, int16_t *right) {
 }
 
 static void encode_live_frame(uint32_t *words, unsigned int frame_index, unsigned int *level) {
-    int16_t left = 0;
-    int16_t right = 0;
+    int32_t left = 0;
+    int32_t right = 0;
 
     read_usb_frame(&left, &right);
     encode_subframe_fast(&words[0], frame_index == 0 ? PREAMBLE_B : PREAMBLE_M, left, level);
@@ -319,7 +327,9 @@ static void build_block(uint32_t *words, bool tone) {
     current_level = 0;
 
     for (unsigned int frame = 0; frame < SPDIF_FRAMES_PER_BLOCK; frame++) {
-        const int16_t sample = tone ? sine_1khz_48k[frame % 48] : 0;
+        // sine_1khz_48k is 16-bit; promote to the encoder's 24-bit
+        // left-aligned int32 by shifting up the same way live USB does.
+        const int32_t sample = tone ? ((int32_t)sine_1khz_48k[frame % 48]) << 16 : 0;
         append_subframe(frame == 0 ? PREAMBLE_B : PREAMBLE_M, sample);
         append_subframe(PREAMBLE_W, sample);
     }
@@ -395,7 +405,7 @@ const char *spdif_mode_name(spdif_mode_t mode) {
     }
 }
 
-unsigned int spdif_write_pcm(const int16_t *samples, unsigned int frame_count) {
+unsigned int spdif_write_pcm(const int32_t *samples, unsigned int frame_count) {
     unsigned int written = 0;
 
     for (unsigned int i = 0; i < frame_count; i++) {
