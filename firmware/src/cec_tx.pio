@@ -2,23 +2,47 @@
 
 .define public CEC_TX_RATE_HZ 1000000
 
-; Each symbol is two FIFO words:
-;   1. low duration in microseconds, minus the set/loop overhead
-;   2. high-Z duration in microseconds, minus the set/loop overhead
+; The state machine runs at 1 MHz so every loop iteration is exactly 1 us.
+; Each FIFO word encodes one action; OSR is shifted right (LSB first):
 ;
-; The pin output value is kept low. CEC open-drain behavior is produced by
-; switching the pin direction: output means pull low, input means release.
+;   bit 0 = 0 (drive low):
+;       bits 31:1 hold (loop iterations - 1) for the drive loop. The bus is
+;       pulled low while the loop body runs.
+;
+;   bit 0 = 1 (release):
+;       bit 1 holds the "sample at end of release" flag.
+;       bits 31:2 hold (loop iterations - 1) for the release loop. The pin
+;       direction is set to input so the bus pull-up brings the line high.
+;
+; The C driver pre-loads the pin output value to 0; commands only ever flip
+; the pin direction so the bus stays open-drain.
 
 .wrap_target
+top:
     pull block
-    mov x, osr
-    set pindirs, 1
-low_loop:
-    jmp x-- low_loop
-
-    pull block
-    mov x, osr
+    out y, 1
+    jmp !y drive
+    out y, 1
+    out x, 30
     set pindirs, 0
-high_loop:
-    jmp x-- high_loop
+release_loop:
+    jmp x-- release_loop
+    jmp !y top
+    in pins, 1
+    push block
+    jmp top
+drive:
+    out x, 31
+    set pindirs, 1
+drive_loop:
+    jmp x-- drive_loop
 .wrap
+
+; Reset entry point. The C driver exec()'s `jmp reset_entry` after restarting
+; the SM so the first action it runs is "release the bus", then it falls
+; through to `top` and stalls at the next `pull block` until DMA delivers the
+; first word of a new frame. This guarantees the bus is never accidentally
+; held low across frame boundaries, even if a previous run was aborted.
+reset_entry:
+    set pindirs, 0
+    jmp top

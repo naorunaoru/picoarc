@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "arc.h"
+#include "cec.h"
 #include "pico/stdlib.h"
 #include "spdif.h"
 #include "tusb.h"
@@ -9,6 +10,11 @@
 #define SPDIF_PIN 2
 #define CEC_PIN 3
 #define HPD_PIN 4
+
+static void cec_yield_pump(void) {
+    tud_task();
+    usb_audio_task();
+}
 
 static void wait_for_console_attach(void) {
     absolute_time_t deadline = make_timeout_time_ms(5000);
@@ -34,6 +40,7 @@ int main(void) {
     spdif_start(SPDIF_PIN);
     spdif_set_mode(SPDIF_MODE_SILENCE);
     arc_init(CEC_PIN, HPD_PIN);
+    cec_set_yield(cec_yield_pump);
 
     printf("spdif: GP%d 48k stereo %s\n", SPDIF_PIN, spdif_mode_name(spdif_get_mode()));
     printf("arc: ready\n");

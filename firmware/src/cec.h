@@ -17,7 +17,10 @@ typedef struct {
     bool complete;
 } cec_frame_t;
 
+typedef void (*cec_yield_fn)(void);
+
 void cec_init(unsigned int pin);
+void cec_set_yield(cec_yield_fn fn);
 bool cec_bus_is_high(void);
 void cec_set_logical_address(uint8_t logical_address);
 bool cec_send_frame(const uint8_t *bytes, size_t len);
