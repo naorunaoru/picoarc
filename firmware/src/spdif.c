@@ -395,10 +395,18 @@ void spdif_set_mode(spdif_mode_t mode) {
 }
 
 void spdif_set_sample_rate(uint32_t rate_hz) {
+    if (!spdif_pio) {
+        // Called before spdif_start() — caller booted us out of order. Drop
+        // the request rather than writing into ROM at NULL+0xC8.
+        return;
+    }
+
     const float divider = (float)clock_get_hz(clk_sys) /
                           (float)(rate_hz * SPDIF_HALF_BITS_PER_FRAME);
+    pio_sm_set_enabled(spdif_pio, spdif_sm, false);
     pio_sm_set_clkdiv(spdif_pio, spdif_sm, divider);
     pio_sm_clkdiv_restart(spdif_pio, spdif_sm);
+    pio_sm_set_enabled(spdif_pio, spdif_sm, true);
 }
 
 spdif_mode_t spdif_get_mode(void) {

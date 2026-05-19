@@ -29,6 +29,17 @@ int main(void) {
     tusb_init();
     stdio_init_all();
 
+    // Bring up the audio/CEC hardware before pumping tud_task. The host can
+    // (and macOS does) issue class-specific control transfers — e.g. SET CUR
+    // on the clock source to remember its last selected rate — as soon as
+    // enumeration completes, well before `wait_for_console_attach` returns.
+    // If our audio callbacks fire while spdif_pio is still NULL, they write
+    // to bogus addresses and the device silently runs at the wrong rate.
+    spdif_start(SPDIF_PIN);
+    spdif_set_mode(SPDIF_MODE_SILENCE);
+    arc_init(CEC_PIN, HPD_PIN);
+    cec_set_yield(cec_yield_pump);
+
     const uint led_pin = PICO_DEFAULT_LED_PIN;
     gpio_init(led_pin);
     gpio_set_dir(led_pin, GPIO_OUT);
@@ -36,11 +47,6 @@ int main(void) {
     wait_for_console_attach();
 
     printf("\nPicoARC bring-up\n");
-
-    spdif_start(SPDIF_PIN);
-    spdif_set_mode(SPDIF_MODE_SILENCE);
-    arc_init(CEC_PIN, HPD_PIN);
-    cec_set_yield(cec_yield_pump);
 
     printf("spdif: GP%d 48k stereo %s\n", SPDIF_PIN, spdif_mode_name(spdif_get_mode()));
     printf("arc: ready\n");
