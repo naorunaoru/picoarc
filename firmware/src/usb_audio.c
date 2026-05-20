@@ -52,6 +52,11 @@ static uint64_t next_diag_log_us;
 static uint64_t next_feedback_us;
 static bool audio_gate_open;
 static uint64_t next_gate_log_us;
+static uint64_t last_audio_task_us;
+static uint64_t max_audio_task_gap_us;
+static uint64_t last_audio_read_us;
+static uint64_t max_audio_read_gap_us;
+static uint16_t max_usb_available_bytes;
 
 static bool active_alt_is_iec61937(void) {
     return active_alt == PICOARC_AUDIO_ALT_IEC61937;
@@ -178,7 +183,7 @@ static void notify_host_control_change(uint8_t control_selector) {
     tud_audio_int_write(&data);
 }
 
-void usb_audio_set_cec_audio_status(uint8_t cec_volume, bool muted) {
+void usb_audio_set_cec_audio_status(uint8_t cec_volume, bool muted, bool notify_host) {
     const int8_t usb_mute = muted ? 1 : 0;
     const int16_t usb_volume = cec_volume_to_usb_volume(cec_volume);
     const bool mute_changed = mute[0] != usb_mute;
@@ -186,20 +191,20 @@ void usb_audio_set_cec_audio_status(uint8_t cec_volume, bool muted) {
 
     set_all_mute(usb_mute);
     set_all_volume(usb_volume);
-    if (mute_changed) {
+    if (notify_host && mute_changed) {
         notify_host_control_change(AUDIO_FU_CTRL_MUTE);
     }
-    if (volume_changed) {
+    if (notify_host && volume_changed) {
         notify_host_control_change(AUDIO_FU_CTRL_VOLUME);
     }
 }
 
-void usb_audio_set_cec_mute_status(bool muted) {
+void usb_audio_set_cec_mute_status(bool muted, bool notify_host) {
     const int8_t usb_mute = muted ? 1 : 0;
     const bool mute_changed = mute[0] != usb_mute;
 
     set_all_mute(usb_mute);
-    if (mute_changed) {
+    if (notify_host && mute_changed) {
         notify_host_control_change(AUDIO_FU_CTRL_MUTE);
     }
 }
@@ -364,9 +369,11 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
     if (request->bControlSelector == AUDIO_FU_CTRL_MUTE) {
         const int8_t requested_mute = ((audio_control_cur_1_t const *)buf)->bCur ? 1 : 0;
         set_all_mute(requested_mute);
-        printf("usb-audio: host mute=%s ch=%u\n",
-               requested_mute ? "on" : "off",
-               request->bChannelNumber);
+        if (!streaming) {
+            printf("usb-audio: host mute=%s ch=%u\n",
+                   requested_mute ? "on" : "off",
+                   request->bChannelNumber);
+        }
         arc_request_mute_sync(requested_mute != 0);
         return true;
     }
@@ -375,11 +382,13 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
         const int16_t requested_volume = ((audio_control_cur_2_t const *)buf)->bCur;
         set_all_volume(requested_volume);
         const uint8_t cec_volume = usb_volume_to_cec_volume(requested_volume);
-        printf("usb-audio: host volume=%ld.%02lddB cec=%u ch=%u\n",
-               (long)(requested_volume / 256),
-               (long)(((requested_volume < 0 ? -requested_volume : requested_volume) % 256) * 100 / 256),
-               cec_volume,
-               request->bChannelNumber);
+        if (!streaming) {
+            printf("usb-audio: host volume=%ld.%02lddB cec=%u ch=%u\n",
+                   (long)(requested_volume / 256),
+                   (long)(((requested_volume < 0 ? -requested_volume : requested_volume) % 256) * 100 / 256),
+                   cec_volume,
+                   request->bChannelNumber);
+        }
         arc_request_volume_sync(cec_volume);
         return true;
     }
@@ -408,6 +417,11 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
         next_diag_log_us = time_us_64() + 2000000;
         next_gate_log_us = 0;
         next_feedback_us = 0;
+        last_audio_task_us = 0;
+        max_audio_task_gap_us = 0;
+        last_audio_read_us = 0;
+        max_audio_read_gap_us = 0;
+        max_usb_available_bytes = 0;
         update_feedback(true);
         printf("usb-audio: streaming %s (alt=%u, %lu Hz, %s), spdif=%s gate=%s\n",
                streaming ? "on" : "off", alt,
@@ -439,6 +453,11 @@ void usb_audio_stop_streaming(void) {
     gated_frames = 0;
     audio_gate_open = false;
     next_gate_log_us = 0;
+    last_audio_task_us = 0;
+    max_audio_task_gap_us = 0;
+    last_audio_read_us = 0;
+    max_audio_read_gap_us = 0;
+    max_usb_available_bytes = 0;
     usb_dpram->ep_buf_ctrl[AUDIO_OUT_EP_NUM].out = 0;
     usb_dpram->ep_buf_ctrl[AUDIO_OUT_EP_NUM].in = 0;
 }
@@ -454,6 +473,15 @@ void usb_audio_task(void) {
     if (!streaming) {
         return;
     }
+
+    const uint64_t task_now_us = time_us_64();
+    if (last_audio_task_us != 0) {
+        const uint64_t gap_us = task_now_us - last_audio_task_us;
+        if (gap_us > max_audio_task_gap_us) {
+            max_audio_task_gap_us = gap_us;
+        }
+    }
+    last_audio_task_us = task_now_us;
 
     update_feedback(false);
 
@@ -476,6 +504,9 @@ void usb_audio_task(void) {
 
     while (tud_audio_available() >= bytes_per_frame) {
         uint16_t available = tud_audio_available();
+        if (available > max_usb_available_bytes) {
+            max_usb_available_bytes = available;
+        }
         uint16_t bytes = available;
         if (bytes > sizeof(pcm_bytes)) {
             bytes = sizeof(pcm_bytes);
@@ -487,6 +518,14 @@ void usb_audio_task(void) {
 
         uint16_t read = tud_audio_read(pcm_bytes, bytes);
         unsigned int frames = read / bytes_per_frame;
+        const uint64_t read_now_us = time_us_64();
+        if (last_audio_read_us != 0) {
+            const uint64_t gap_us = read_now_us - last_audio_read_us;
+            if (gap_us > max_audio_read_gap_us) {
+                max_audio_read_gap_us = gap_us;
+            }
+        }
+        last_audio_read_us = read_now_us;
 
         if (!gate_open) {
             gated_frames += frames;
@@ -530,8 +569,17 @@ void usb_audio_task(void) {
     if (now_us >= next_diag_log_us) {
         spdif_usb_stats_t stats;
         spdif_take_usb_stats(&stats);
-        printf("usb-audio: buf=%u hi=%u under=%u drop=%u gated=%u\n",
-               stats.buffered_frames, stats.high_water_frames, stats.underrun_frames, dropped_frames, gated_frames);
+        printf("usb-audio: buf=%u lo=%u hi=%u under=%u dma-late=%u drop=%u gated=%u task-gap=%lluus read-gap=%lluus avail-hi=%u\n",
+               stats.buffered_frames,
+               stats.low_water_frames,
+               stats.high_water_frames,
+               stats.underrun_frames,
+               stats.dma_late_blocks,
+               dropped_frames,
+               gated_frames,
+               (unsigned long long)max_audio_task_gap_us,
+               (unsigned long long)max_audio_read_gap_us,
+               max_usb_available_bytes);
         if (output_enabled && stats.underrun_frames > 0) {
             output_enabled = false;
             refill_target_frames = RECOVER_BUFFER_FRAMES;
@@ -540,6 +588,9 @@ void usb_audio_task(void) {
         }
         dropped_frames = 0;
         gated_frames = 0;
+        max_audio_task_gap_us = 0;
+        max_audio_read_gap_us = 0;
+        max_usb_available_bytes = 0;
         next_diag_log_us = now_us + 2000000;
     }
 

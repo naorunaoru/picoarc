@@ -8,6 +8,7 @@
 #include "hardware/gpio.h"
 #include "picoarc_log.h"
 #include "pico/stdlib.h"
+#include "spdif.h"
 #include "usb_audio.h"
 #include "usb_descriptors.h"
 
@@ -37,6 +38,8 @@ static bool pending_mute_sync;
 static bool pending_mute;
 static bool relative_volume_sync_active;
 static uint8_t relative_volume_target;
+static bool relative_volume_key_held;
+static uint8_t relative_volume_held_key;
 
 typedef enum {
     SAD_QUERY_NOT_STARTED,
@@ -58,6 +61,7 @@ static bool sad_extra_query_requested;
 static absolute_time_t sad_extra_query_deadline;
 
 static const unsigned int max_cec_frames_per_task = 8;
+static const unsigned int streaming_volume_sync_debounce_ms = 250;
 static const uint16_t tv_physical_address = 0x0000;
 
 typedef struct {
@@ -581,9 +585,32 @@ static bool send_user_control_released(void) {
 
 static bool send_user_control_tap(uint8_t key) {
     const bool press_ack = send_user_control_pressed(key);
-    sleep_ms(40);
+    cec_delay_ms(40);
     const bool release_ack = send_user_control_released();
     return press_ack && release_ack;
+}
+
+static bool release_relative_volume_key(void) {
+    if (!relative_volume_key_held) {
+        return true;
+    }
+
+    const bool ack = send_user_control_released();
+    relative_volume_key_held = false;
+    return ack;
+}
+
+static bool send_relative_volume_press(uint8_t key) {
+    if (relative_volume_key_held && relative_volume_held_key != key) {
+        release_relative_volume_key();
+    }
+
+    const bool ack = send_user_control_pressed(key);
+    if (ack) {
+        relative_volume_key_held = true;
+        relative_volume_held_key = key;
+    }
+    return ack;
 }
 
 static bool send_give_system_audio_mode_status(void) {
@@ -806,13 +833,18 @@ static const char *sad_query_state_name(void) {
 static void update_cec_audio_status(uint8_t status) {
     const bool muted = (status & 0x80) != 0;
     const uint8_t volume = status & 0x7f;
+    const bool host_sync_active = pending_volume_sync ||
+                                  pending_mute_sync ||
+                                  relative_volume_sync_active ||
+                                  absolute_volume_verify_pending;
+    const bool notify_host = !audio_is_streaming() && !host_sync_active;
 
     cec_audio_muted = muted;
     cec_audio_mute_known = true;
     if (volume <= 100) {
         cec_audio_volume = volume;
         cec_audio_volume_known = true;
-        usb_audio_set_cec_audio_status(volume, muted);
+        usb_audio_set_cec_audio_status(volume, muted, notify_host);
         if (absolute_volume_verify_pending) {
             absolute_volume_verify_pending = false;
             if (volume != absolute_volume_verify_target) {
@@ -826,7 +858,7 @@ static void update_cec_audio_status(uint8_t status) {
             }
         }
     } else {
-        usb_audio_set_cec_mute_status(muted);
+        usb_audio_set_cec_mute_status(muted, notify_host);
         printf("arc: audio-status volume unknown muted=%s\n", muted ? "yes" : "no");
     }
 }
@@ -849,24 +881,51 @@ static bool continue_relative_volume_sync(bool source_5v, bool bus_high) {
 
     if (cec_audio_volume == relative_volume_target) {
         relative_volume_sync_active = false;
+        release_relative_volume_key();
         return false;
     }
 
     const uint8_t key = relative_volume_target > cec_audio_volume ? 0x41 : 0x42;
-    const bool ack = send_user_control_tap(key);
+    const bool streaming = audio_is_streaming();
+    const uint64_t tx_start_us = time_us_64();
+    const bool ack = send_relative_volume_press(key);
+    const uint64_t tx_end_us = time_us_64();
     if (ack) {
         cec_audio_volume += key == 0x41 ? 1 : -1;
     }
 
-    printf("arc: relative volume step key=%s now=%u target=%u ack=%s src5v=%d idle=%d\n",
-           user_control_name(key),
-           cec_audio_volume,
-           relative_volume_target,
-           ack ? "yes" : "no",
-           source_5v,
-           bus_high);
+    if (streaming) {
+        printf("arc: volume-press +%llums key=%s ack=%s dur=%lluus now=%u target=%u buf=%u\n",
+               (unsigned long long)(tx_start_us / 1000),
+               user_control_name(key),
+               ack ? "yes" : "no",
+               (unsigned long long)(tx_end_us - tx_start_us),
+               cec_audio_volume,
+               relative_volume_target,
+               spdif_buffered_frames());
+    } else {
+        printf("arc: relative volume step key=%s now=%u target=%u ack=%s src5v=%d idle=%d\n",
+               user_control_name(key),
+               cec_audio_volume,
+               relative_volume_target,
+               ack ? "yes" : "no",
+               source_5v,
+               bus_high);
+    }
 
-    send_give_audio_status();
+    if (cec_audio_volume == relative_volume_target) {
+        const uint64_t release_start_us = time_us_64();
+        const bool release_ack = release_relative_volume_key();
+        const uint64_t release_end_us = time_us_64();
+        if (streaming) {
+            printf("arc: volume-release +%llums ack=%s dur=%lluus buf=%u\n",
+                   (unsigned long long)(release_start_us / 1000),
+                   release_ack ? "yes" : "no",
+                   (unsigned long long)(release_end_us - release_start_us),
+                   spdif_buffered_frames());
+        }
+    }
+
     next_volume_sync = make_timeout_time_ms(180);
     return true;
 }
@@ -896,12 +955,29 @@ static bool process_volume_sync(bool source_5v, bool bus_high) {
                 absolute_volume_supported = false;
                 start_relative_volume_sync(desired_volume);
             } else {
-                absolute_volume_verify_pending = true;
-                absolute_volume_verify_target = desired_volume;
-                send_give_audio_status();
+                cec_audio_volume = desired_volume;
+                cec_audio_volume_known = true;
+                if (!audio_is_streaming()) {
+                    absolute_volume_verify_pending = true;
+                    absolute_volume_verify_target = desired_volume;
+                    send_give_audio_status();
+                }
             }
         } else {
             ack = start_relative_volume_sync(desired_volume);
+            if (!ack && !cec_audio_volume_known) {
+                pending_volume = desired_volume;
+                pending_volume_sync = true;
+                const bool status_ack = send_give_audio_status();
+                if (!audio_is_streaming()) {
+                    printf("arc: defer volume sync until audio-status ack=%s src5v=%d idle=%d\n",
+                           status_ack ? "yes" : "no",
+                           source_5v,
+                           bus_high);
+                }
+                next_volume_sync = make_timeout_time_ms(500);
+                return true;
+            }
         }
 
         next_volume_sync = make_timeout_time_ms(150);
@@ -1211,7 +1287,9 @@ void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
     cec_audio_mute_known = false;
     cec_audio_volume = 0;
     cec_audio_muted = false;
-    absolute_volume_supported = true;
+    // Many ARC devices ACK <Set Audio Volume Level> but ignore it. Start with
+    // relative key control; feature-abort handling can still keep us there.
+    absolute_volume_supported = false;
     absolute_volume_verify_pending = false;
     absolute_volume_verify_target = 0;
     pending_volume_sync = false;
@@ -1220,6 +1298,8 @@ void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
     pending_mute = false;
     relative_volume_sync_active = false;
     relative_volume_target = 0;
+    relative_volume_key_held = false;
+    relative_volume_held_key = 0;
     sad_query_state = SAD_QUERY_NOT_STARTED;
     sad_query_deadline = make_timeout_time_ms(0);
     reset_sad_caps();
@@ -1260,6 +1340,7 @@ void arc_task(void) {
             arc_initiated = false;
             system_audio_mode = false;
             relative_volume_sync_active = false;
+            relative_volume_key_held = false;
             sad_query_state = SAD_QUERY_NOT_STARTED;
             reset_sad_caps();
             reset_sad_extra_queries();
@@ -1474,7 +1555,9 @@ void arc_request_volume_sync(uint8_t volume) {
 
     pending_volume = volume;
     pending_volume_sync = true;
-    next_volume_sync = make_timeout_time_ms(0);
+    next_volume_sync = make_timeout_time_ms(audio_is_streaming() ?
+                                            streaming_volume_sync_debounce_ms :
+                                            0);
 }
 
 void arc_request_mute_sync(bool muted) {

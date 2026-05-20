@@ -27,17 +27,17 @@ For now the hardware part exists as a hand-wired abomination. If you want to rep
 ```
 Net CEC_BUS
   Pico 3V3 (pin 36)  — R1 (27 kΩ) — node CEC_BUS
-  node CEC_BUS                    — Pico GP3 (pin 5)
+  Pico GP3 (pin 5)   — R2 (220 Ω) — node CEC_BUS
   node CEC_BUS                    — HDMI pin 13
 
 Net ARC_TX
-  Pico GP2 (pin 4)   — R2 (330 Ω) — node ATT_A
-  node ATT_A         — R3 (56 Ω)  — Pico GND
+  Pico GP2 (pin 4)   — R3 (330 Ω) — node ATT_A
+  node ATT_A         — R4 (56 Ω)  — Pico GND
   node ATT_A         — C1 (10 nF) — HDMI pin 14
 
 Net HDMI_5V_FROM_SOUNDBAR
-  HDMI pin 18        — R5 (1 kΩ)  — HDMI pin 19
-  HDMI pin 18        — R6 (68 kΩ) — node HDMI_5V_SENSE
+  HDMI pin 18        — R5 (1 kΩ)   — HDMI pin 19
+  HDMI pin 18        — R6 (68 kΩ)  — node HDMI_5V_SENSE
   node HDMI_5V_SENSE              — Pico GP4 (pin 6)
   node HDMI_5V_SENSE — R7 (100 kΩ) — Pico GND
 

@@ -4,6 +4,7 @@
 #include "hardware/dma.h"
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
+#include "cec_rx.pio.h"
 #include "cec_tx.pio.h"
 #include "pico/stdlib.h"
 
@@ -14,10 +15,8 @@
 enum {
     CEC_BIT_PERIOD_US = 2400,
     CEC_IDLE_BEFORE_TX_US = 5000,
-    CEC_PASSIVE_GAP_US = 10000,
-    CEC_EDGE_TIMEOUT_US = 6000,
-    CEC_BIT_SAMPLE_US = 1050,
-    CEC_EDGE_RING_SIZE = 512,
+    CEC_RX_DMA_WORDS = 1024,
+    CEC_RX_DMA_RING_BITS = 12,
 
     CEC_MAX_FRAME_BYTES = 16,
     CEC_TX_WORDS_PER_BIT = 2,
@@ -48,23 +47,15 @@ enum {
 
 static const bool cec_trace_tx = false;
 
-typedef struct {
-    uint32_t time_us;
-    bool level;
-} cec_edge_t;
-
-typedef enum {
-    PASSIVE_WAIT_START_FALL,
-    PASSIVE_WAIT_START_RISE,
-    PASSIVE_WAIT_BIT_FALL,
-    PASSIVE_WAIT_BIT_RISE,
-} cec_passive_state_t;
-
 static unsigned int cec_pin;
 static PIO cec_pio;
 static unsigned int cec_tx_sm;
 static unsigned int cec_tx_offset;
 static unsigned int cec_tx_dma_chan;
+static unsigned int cec_ack_dma_chan;
+static dma_channel_config cec_ack_dma_config;
+static PIO cec_rx_pio;
+static unsigned int cec_rx_sm;
 static unsigned int cec_rx_dma_chan;
 static dma_channel_config cec_tx_dma_config;
 static dma_channel_config cec_rx_dma_config;
@@ -72,19 +63,9 @@ static dma_channel_config cec_rx_dma_config;
 static cec_yield_fn cec_yield_fn_ptr;
 
 static uint16_t own_logical_address_mask = 1u << CEC_LOGICAL_TV;
-static volatile cec_edge_t cec_edges[CEC_EDGE_RING_SIZE];
-static volatile unsigned int cec_edge_read;
-static volatile unsigned int cec_edge_write;
-
-static cec_passive_state_t passive_state = PASSIVE_WAIT_START_FALL;
 static cec_frame_t passive_frame;
-static uint32_t passive_fall_us;
-static uint32_t passive_last_edge_us;
-static uint8_t passive_byte;
-static unsigned int passive_bit_index;
-static bool passive_expect_ack;
-static bool passive_should_ack;
-static bool passive_complete_after_ack;
+static volatile uint32_t cec_rx_words[CEC_RX_DMA_WORDS] __attribute__((aligned(1u << CEC_RX_DMA_RING_BITS)));
+static volatile unsigned int cec_rx_read;
 
 static uint32_t cec_tx_words[CEC_MAX_TX_WORDS];
 static uint32_t cec_rx_samples[CEC_MAX_FRAME_BYTES];
@@ -101,6 +82,15 @@ static void cec_yield(void) {
 
 void cec_set_yield(cec_yield_fn fn) {
     cec_yield_fn_ptr = fn;
+}
+
+void cec_delay_ms(uint32_t delay_ms) {
+    const uint64_t deadline = now_us() + (uint64_t)delay_ms * 1000u;
+
+    while (now_us() < deadline) {
+        cec_yield();
+        tight_loop_contents();
+    }
 }
 
 static inline uint32_t encode_drive(uint32_t loop_iters) {
@@ -137,32 +127,24 @@ static size_t emit_ack_slot(uint32_t *buf, size_t idx) {
     return idx;
 }
 
-static void cec_gpio_irq(uint gpio, uint32_t events) {
-    if (gpio != cec_pin || !(events & (GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE))) {
-        return;
-    }
-
-    const unsigned int write = cec_edge_write;
-    const unsigned int next_write = (write + 1) % CEC_EDGE_RING_SIZE;
-    if (next_write == cec_edge_read) {
-        cec_edge_read = (cec_edge_read + 1) % CEC_EDGE_RING_SIZE;
-    }
-
-    cec_edges[write] = (cec_edge_t){
-        .time_us = time_us_32(),
-        .level = gpio_get(cec_pin),
-    };
-    cec_edge_write = next_write;
+static unsigned int rx_dma_write_index(void) {
+    const uintptr_t base = (uintptr_t)cec_rx_words;
+    const uintptr_t write = dma_channel_hw_addr(cec_rx_dma_chan)->write_addr;
+    return (unsigned int)(((write - base) / sizeof(cec_rx_words[0])) & (CEC_RX_DMA_WORDS - 1));
 }
 
-static bool pop_edge(cec_edge_t *edge) {
-    const unsigned int read = cec_edge_read;
-    if (read == cec_edge_write) {
+static void rx_reset_read(void) {
+    cec_rx_read = rx_dma_write_index();
+}
+
+static bool pop_rx_word(uint32_t *word) {
+    const unsigned int read = cec_rx_read;
+    if (read == rx_dma_write_index()) {
         return false;
     }
 
-    *edge = cec_edges[read];
-    cec_edge_read = (read + 1) % CEC_EDGE_RING_SIZE;
+    *word = cec_rx_words[read];
+    cec_rx_read = (read + 1) & (CEC_RX_DMA_WORDS - 1);
     return true;
 }
 
@@ -189,20 +171,14 @@ static bool wait_bus_idle(uint32_t idle_us, uint32_t timeout_us) {
     return false;
 }
 
-static void tx_pin_to_sio(void) {
-    gpio_put(cec_pin, 0);
-    gpio_set_dir(cec_pin, GPIO_IN);
-    gpio_set_function(cec_pin, GPIO_FUNC_SIO);
-}
-
 static void tx_pin_to_pio(void) {
-    gpio_set_function(cec_pin, GPIO_FUNC_PIO0);
+    gpio_set_function(cec_pin, GPIO_FUNC_PIO1);
 }
 
 static void tx_reset_sm(void) {
     pio_sm_set_enabled(cec_pio, cec_tx_sm, false);
     dma_channel_abort(cec_tx_dma_chan);
-    dma_channel_abort(cec_rx_dma_chan);
+    dma_channel_abort(cec_ack_dma_chan);
     pio_sm_clear_fifos(cec_pio, cec_tx_sm);
     pio_sm_restart(cec_pio, cec_tx_sm);
     // The reset_entry label is placed immediately after `.wrap` in cec_tx.pio,
@@ -232,8 +208,8 @@ static void tx_start_async_with_samples(const uint32_t *words, size_t count,
     tx_pin_to_pio();
 
     if (sample_count > 0) {
-        dma_channel_configure(cec_rx_dma_chan,
-                              &cec_rx_dma_config,
+        dma_channel_configure(cec_ack_dma_chan,
+                              &cec_ack_dma_config,
                               samples,
                               &cec_pio->rxf[cec_tx_sm],
                               sample_count,
@@ -249,7 +225,7 @@ static void tx_start_async_with_samples(const uint32_t *words, size_t count,
 }
 
 static void tx_wait_done(void) {
-    while (dma_channel_is_busy(cec_tx_dma_chan) || dma_channel_is_busy(cec_rx_dma_chan)) {
+    while (dma_channel_is_busy(cec_tx_dma_chan) || dma_channel_is_busy(cec_ack_dma_chan)) {
         cec_yield();
         tight_loop_contents();
     }
@@ -269,15 +245,42 @@ void cec_init(unsigned int pin) {
     gpio_init(cec_pin);
     gpio_put(cec_pin, 0);
     gpio_set_dir(cec_pin, GPIO_IN);
-    gpio_set_irq_enabled_with_callback(cec_pin,
-                                       GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,
-                                       true,
-                                       cec_gpio_irq);
 
-    // PIO0 hosts the one-instruction SPDIF program on sm 0; claim a second sm
-    // here for CEC TX. Pre-set the pin output value to 0 so toggling pindirs
-    // alone is enough to drive the open-drain CEC bus.
-    cec_pio = pio0;
+    // PIO0 has room for the one-instruction S/PDIF program plus this passive
+    // CEC RX decoder. RX only samples the pin, so it can observe GP3 even
+    // while PIO1 owns the output mux for TX.
+    cec_rx_pio = pio0;
+    cec_rx_sm = pio_claim_unused_sm(cec_rx_pio, true);
+    const unsigned int rx_offset = pio_add_program(cec_rx_pio, &cec_rx_program);
+
+    pio_sm_config rx_config = cec_rx_program_get_default_config(rx_offset);
+    sm_config_set_in_pins(&rx_config, cec_pin);
+    sm_config_set_jmp_pin(&rx_config, cec_pin);
+    sm_config_set_in_shift(&rx_config, false, false, 32);
+    sm_config_set_fifo_join(&rx_config, PIO_FIFO_JOIN_RX);
+    sm_config_set_clkdiv(&rx_config, (float)clock_get_hz(clk_sys) / cec_rx_CEC_RX_RATE_HZ);
+    pio_sm_init(cec_rx_pio, cec_rx_sm, rx_offset, &rx_config);
+    pio_sm_set_enabled(cec_rx_pio, cec_rx_sm, true);
+
+    cec_rx_dma_chan = dma_claim_unused_channel(true);
+    cec_rx_dma_config = dma_channel_get_default_config(cec_rx_dma_chan);
+    channel_config_set_transfer_data_size(&cec_rx_dma_config, DMA_SIZE_32);
+    channel_config_set_read_increment(&cec_rx_dma_config, false);
+    channel_config_set_write_increment(&cec_rx_dma_config, true);
+    channel_config_set_ring(&cec_rx_dma_config, true, CEC_RX_DMA_RING_BITS);
+    channel_config_set_dreq(&cec_rx_dma_config, pio_get_dreq(cec_rx_pio, cec_rx_sm, false));
+    dma_channel_configure(cec_rx_dma_chan,
+                          &cec_rx_dma_config,
+                          cec_rx_words,
+                          &cec_rx_pio->rxf[cec_rx_sm],
+                          0xffffffffu,
+                          true);
+    rx_reset_read();
+
+    // Keep CEC TX on PIO1 so it does not share a PIO instance with S/PDIF.
+    // Pre-set the pin output value to 0 so toggling pindirs alone is enough
+    // to drive the open-drain CEC bus.
+    cec_pio = pio1;
     cec_tx_sm = pio_claim_unused_sm(cec_pio, true);
     cec_tx_offset = pio_add_program(cec_pio, &cec_tx_program);
 
@@ -288,9 +291,10 @@ void cec_init(unsigned int pin) {
     sm_config_set_in_shift(&config, false /* shift left */, false /* no autopush */, 32);
     sm_config_set_clkdiv(&config, (float)clock_get_hz(clk_sys) / cec_tx_CEC_TX_RATE_HZ);
     pio_sm_init(cec_pio, cec_tx_sm, cec_tx_offset, &config);
+    pio_gpio_init(cec_pio, cec_pin);
     pio_sm_set_pins(cec_pio, cec_tx_sm, 0);
     pio_sm_set_consecutive_pindirs(cec_pio, cec_tx_sm, cec_pin, 1, false);
-    tx_pin_to_sio();
+    tx_pin_to_pio();
 
     cec_tx_dma_chan = dma_claim_unused_channel(true);
     cec_tx_dma_config = dma_channel_get_default_config(cec_tx_dma_chan);
@@ -299,12 +303,12 @@ void cec_init(unsigned int pin) {
     channel_config_set_write_increment(&cec_tx_dma_config, false);
     channel_config_set_dreq(&cec_tx_dma_config, pio_get_dreq(cec_pio, cec_tx_sm, true));
 
-    cec_rx_dma_chan = dma_claim_unused_channel(true);
-    cec_rx_dma_config = dma_channel_get_default_config(cec_rx_dma_chan);
-    channel_config_set_transfer_data_size(&cec_rx_dma_config, DMA_SIZE_32);
-    channel_config_set_read_increment(&cec_rx_dma_config, false);
-    channel_config_set_write_increment(&cec_rx_dma_config, true);
-    channel_config_set_dreq(&cec_rx_dma_config, pio_get_dreq(cec_pio, cec_tx_sm, false));
+    cec_ack_dma_chan = dma_claim_unused_channel(true);
+    cec_ack_dma_config = dma_channel_get_default_config(cec_ack_dma_chan);
+    channel_config_set_transfer_data_size(&cec_ack_dma_config, DMA_SIZE_32);
+    channel_config_set_read_increment(&cec_ack_dma_config, false);
+    channel_config_set_write_increment(&cec_ack_dma_config, true);
+    channel_config_set_dreq(&cec_ack_dma_config, pio_get_dreq(cec_pio, cec_tx_sm, false));
 }
 
 bool cec_bus_is_high(void) {
@@ -368,14 +372,10 @@ static bool cec_send_frame_internal(const uint8_t *bytes, size_t len) {
         cec_rx_samples[i] = 0xffffffffu;
     }
 
-    gpio_set_irq_enabled(cec_pin, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE, false);
-
     tx_start_async_with_samples(cec_tx_words, count, cec_rx_samples, len);
     tx_wait_done();
 
-    tx_pin_to_sio();
     cec_passive_reset();
-    gpio_set_irq_enabled(cec_pin, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE, true);
 
     bool all_acked = true;
     for (size_t i = 0; i < len; i++) {
@@ -397,7 +397,7 @@ bool cec_send_with_retry(const uint8_t *bytes, size_t len, unsigned int attempts
         if (cec_send_frame(bytes, len)) {
             return true;
         }
-        sleep_ms(50);
+        cec_delay_ms(50);
     }
 
     return false;
@@ -424,23 +424,8 @@ bool cec_receive_frame(cec_frame_t *frame, uint32_t timeout_us) {
 }
 
 void cec_passive_reset(void) {
-    cec_edge_read = cec_edge_write;
-    passive_state = PASSIVE_WAIT_START_FALL;
+    rx_reset_read();
     passive_frame = (cec_frame_t){0};
-    passive_byte = 0;
-    passive_bit_index = 0;
-    passive_expect_ack = false;
-    passive_should_ack = false;
-    passive_complete_after_ack = false;
-}
-
-static void passive_start_frame(void) {
-    passive_frame = (cec_frame_t){0};
-    passive_byte = 0;
-    passive_bit_index = 0;
-    passive_expect_ack = false;
-    passive_should_ack = false;
-    passive_complete_after_ack = false;
 }
 
 static void passive_ack_slot(void) {
@@ -450,103 +435,31 @@ static void passive_ack_slot(void) {
     tx_start_async(cec_tx_words, count);
 }
 
-static bool passive_accept_bit(bool bit, cec_frame_t *frame) {
-    if (passive_expect_ack) {
-        passive_expect_ack = false;
-        if (passive_complete_after_ack) {
-            passive_frame.complete = true;
-            *frame = passive_frame;
-            passive_state = PASSIVE_WAIT_START_FALL;
-            return true;
+bool cec_receive_frame_passive(cec_frame_t *frame) {
+    uint32_t word = 0;
+
+    while (pop_rx_word(&word)) {
+        if (passive_frame.len >= sizeof(passive_frame.bytes)) {
+            cec_passive_reset();
+            return false;
         }
 
-        passive_state = PASSIVE_WAIT_BIT_FALL;
-        return false;
-    }
+        const uint8_t byte = (uint8_t)((word >> 1) & 0xffu);
+        const bool eom = (word & 1u) != 0;
+        passive_frame.bytes[passive_frame.len++] = byte;
 
-    if (passive_bit_index < 8) {
-        passive_byte = (uint8_t)((passive_byte << 1) | (bit ? 1u : 0u));
-        passive_bit_index++;
-        return false;
-    }
+        const uint8_t destination = passive_frame.bytes[0] & 0x0f;
+        const bool should_ack = destination != CEC_LOGICAL_BROADCAST &&
+                                (own_logical_address_mask & (1u << destination)) != 0u;
+        if (should_ack) {
+            passive_ack_slot();
+        }
 
-    if (passive_frame.len >= sizeof(passive_frame.bytes)) {
-        passive_state = PASSIVE_WAIT_START_FALL;
-        return false;
-    }
-
-    passive_frame.bytes[passive_frame.len++] = passive_byte;
-    passive_byte = 0;
-    passive_bit_index = 0;
-    passive_expect_ack = true;
-
-    const uint8_t destination = passive_frame.bytes[0] & 0x0f;
-    passive_should_ack = destination != CEC_LOGICAL_BROADCAST &&
-                         (own_logical_address_mask & (1u << destination)) != 0u;
-    passive_complete_after_ack = bit;
-    return false;
-}
-
-bool cec_receive_frame_passive(cec_frame_t *frame) {
-    cec_edge_t edge;
-
-    while (pop_edge(&edge)) {
-        switch (passive_state) {
-        case PASSIVE_WAIT_START_FALL:
-            if (!edge.level) {
-                passive_fall_us = edge.time_us;
-                passive_last_edge_us = edge.time_us;
-                passive_state = PASSIVE_WAIT_START_RISE;
-            }
-            break;
-
-        case PASSIVE_WAIT_START_RISE:
-            if (edge.level) {
-                const uint32_t low_us = edge.time_us - passive_fall_us;
-                passive_last_edge_us = edge.time_us;
-                if (low_us >= 3200 && low_us <= 4300) {
-                    passive_start_frame();
-                    passive_state = PASSIVE_WAIT_BIT_FALL;
-                } else {
-                    passive_state = PASSIVE_WAIT_START_FALL;
-                }
-            } else {
-                passive_fall_us = edge.time_us;
-            }
-            break;
-
-        case PASSIVE_WAIT_BIT_FALL:
-            if (!edge.level) {
-                if ((uint32_t)(edge.time_us - passive_last_edge_us) > CEC_PASSIVE_GAP_US) {
-                    passive_fall_us = edge.time_us;
-                    passive_state = PASSIVE_WAIT_START_RISE;
-                } else {
-                    passive_fall_us = edge.time_us;
-                    passive_state = PASSIVE_WAIT_BIT_RISE;
-                    if (passive_expect_ack && passive_should_ack) {
-                        passive_ack_slot();
-                    }
-                }
-                passive_last_edge_us = edge.time_us;
-            }
-            break;
-
-        case PASSIVE_WAIT_BIT_RISE:
-            if (edge.level) {
-                const uint32_t low_us = edge.time_us - passive_fall_us;
-                passive_last_edge_us = edge.time_us;
-                passive_state = PASSIVE_WAIT_BIT_FALL;
-                if (low_us > CEC_EDGE_TIMEOUT_US) {
-                    passive_state = PASSIVE_WAIT_START_FALL;
-                    break;
-                }
-                if (passive_accept_bit(low_us < CEC_BIT_SAMPLE_US, frame)) {
-                    return true;
-                }
-            } else {
-                passive_fall_us = edge.time_us;
-            }
-            break;
+        if (eom) {
+            passive_frame.complete = true;
+            *frame = passive_frame;
+            passive_frame = (cec_frame_t){0};
+            return true;
         }
     }
 

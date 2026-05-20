@@ -8,6 +8,7 @@
 #include "hardware/pio.h"
 #include "pico/multicore.h"
 #include "pico/stdlib.h"
+#include "picoarc_log.h"
 #include "spdif.pio.h"
 
 enum {
@@ -65,6 +66,8 @@ static volatile unsigned int usb_ring_read;
 static volatile unsigned int usb_ring_write;
 static volatile unsigned int usb_underrun_frames;
 static volatile unsigned int usb_high_water_frames;
+static volatile unsigned int usb_low_water_frames;
+static volatile unsigned int spdif_dma_late_blocks;
 static bmc_byte_t bmc_byte[2][256];
 static uint8_t bmc_tail[2][2][8];
 static uint32_t dma_words[2][SPDIF_WORDS_PER_BLOCK];
@@ -304,6 +307,11 @@ static bool read_usb_frame(int32_t *left, int32_t *right) {
     *left = usb_ring[read][0];
     *right = usb_ring[read][1];
     usb_ring_read = (read + 1) % USB_RING_FRAMES;
+
+    const unsigned int buffered = buffered_frames_from(usb_ring_read, usb_ring_write);
+    if (buffered < usb_low_water_frames) {
+        usb_low_water_frames = buffered;
+    }
     return true;
 }
 
@@ -375,6 +383,9 @@ static void audio_core_main(void) {
 
     while (true) {
         build_dma_block(dma_words[block], &live_frame_index, &live_level);
+        if (!dma_channel_is_busy(spdif_dma_chan)) {
+            spdif_dma_late_blocks++;
+        }
         dma_channel_wait_for_finish_blocking(spdif_dma_chan);
         start_dma_block(dma_words[block]);
         block ^= 1u;
@@ -416,7 +427,15 @@ void spdif_start(unsigned int pin) {
 }
 
 void spdif_set_mode(spdif_mode_t mode) {
+    const spdif_mode_t previous = current_mode;
     current_mode = mode;
+    if (previous != mode) {
+        printf("spdif: mode +%llums %s -> %s buf=%u\n",
+               (unsigned long long)(time_us_64() / 1000),
+               spdif_mode_name(previous),
+               spdif_mode_name(mode),
+               spdif_buffered_frames());
+    }
 }
 
 void spdif_set_sample_rate(uint32_t rate_hz) {
@@ -493,6 +512,8 @@ void spdif_clear_usb_buffer(void) {
     usb_ring_write = 0;
     usb_underrun_frames = 0;
     usb_high_water_frames = 0;
+    usb_low_water_frames = USB_RING_FRAMES;
+    spdif_dma_late_blocks = 0;
 }
 
 void spdif_take_usb_stats(spdif_usb_stats_t *stats) {
@@ -502,8 +523,14 @@ void spdif_take_usb_stats(spdif_usb_stats_t *stats) {
 
     stats->buffered_frames = spdif_buffered_frames();
     stats->high_water_frames = usb_high_water_frames;
+    stats->low_water_frames = usb_low_water_frames == USB_RING_FRAMES ?
+                                  stats->buffered_frames :
+                                  usb_low_water_frames;
     stats->underrun_frames = usb_underrun_frames;
+    stats->dma_late_blocks = spdif_dma_late_blocks;
 
     usb_high_water_frames = stats->buffered_frames;
+    usb_low_water_frames = stats->buffered_frames;
     usb_underrun_frames = 0;
+    spdif_dma_late_blocks = 0;
 }

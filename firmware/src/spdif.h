@@ -17,7 +17,9 @@ typedef enum {
 typedef struct {
     unsigned int buffered_frames;
     unsigned int high_water_frames;
+    unsigned int low_water_frames;
     unsigned int underrun_frames;
+    unsigned int dma_late_blocks;
 } spdif_usb_stats_t;
 
 void spdif_start(unsigned int pin);

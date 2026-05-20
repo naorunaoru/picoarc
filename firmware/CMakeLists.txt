@@ -42,6 +42,7 @@ add_executable(picoarc
 )
 
 pico_generate_pio_header(picoarc ${CMAKE_CURRENT_LIST_DIR}/src/spdif.pio)
+pico_generate_pio_header(picoarc ${CMAKE_CURRENT_LIST_DIR}/src/cec_rx.pio)
 pico_generate_pio_header(picoarc ${CMAKE_CURRENT_LIST_DIR}/src/cec_tx.pio)
 
 target_include_directories(picoarc PRIVATE
