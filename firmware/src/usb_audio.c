@@ -12,14 +12,14 @@
 #include "usb_descriptors.h"
 
 enum {
-    DEFAULT_SAMPLE_RATE = PICOARC_AUDIO_SAMPLE_RATE_LOW,
-    MAX_SAMPLE_RATE = PICOARC_AUDIO_SAMPLE_RATE_HIGH,
+    DEFAULT_SAMPLE_RATE = PICOARC_AUDIO_SAMPLE_RATE_DEFAULT,
+    MAX_SAMPLE_RATE = PICOARC_AUDIO_SAMPLE_RATE_MAX,
     CHANNELS = 2,
     MAX_BYTES_PER_SAMPLE = 3,
     MAX_BYTES_PER_FRAME = CHANNELS * MAX_BYTES_PER_SAMPLE,
     MAX_FRAMES_PER_MS = MAX_SAMPLE_RATE / 1000,
     // Read up to ~2 ms of raw USB bytes per task pass; sized for the highest
-    // supported rate so both 48 kHz and 96 kHz fit in the same buffers.
+    // advertised rate so all supported rates fit in the same buffers.
     READ_FRAMES_BUDGET = 2 * MAX_FRAMES_PER_MS,
     START_BUFFER_FRAMES = 256,
     RECOVER_BUFFER_FRAMES = 256,
@@ -46,27 +46,46 @@ static uint32_t active_sample_rate = DEFAULT_SAMPLE_RATE;
 static bool output_enabled;
 static unsigned int refill_target_frames;
 static unsigned int dropped_frames;
+static unsigned int gated_frames;
 static uint64_t next_diag_log_us;
 static uint64_t next_feedback_us;
+static bool audio_gate_open;
+static uint64_t next_gate_log_us;
 
 static bool active_alt_is_iec61937(void) {
     return active_alt == PICOARC_AUDIO_ALT_IEC61937;
 }
 
-static bool active_alt_is_pcm_24(void) {
-    return active_alt == PICOARC_AUDIO_ALT_PCM_24;
+static bool active_alt_uses_24_bit_subslot(void) {
+    return active_alt == PICOARC_AUDIO_ALT_PCM_20 ||
+           active_alt == PICOARC_AUDIO_ALT_PCM_24;
 }
 
 static const char *active_alt_format_name(void) {
     switch (active_alt) {
     case PICOARC_AUDIO_ALT_PCM_16:
         return "PCM 16-bit";
+    case PICOARC_AUDIO_ALT_PCM_20:
+        return "PCM 20-bit";
     case PICOARC_AUDIO_ALT_PCM_24:
         return "PCM 24-bit";
     case PICOARC_AUDIO_ALT_IEC61937:
         return "IEC 61937 DD/DTS";
     default:
         return "off";
+    }
+}
+
+static bool sample_rate_supported(uint32_t sample_rate) {
+    switch (sample_rate) {
+    case PICOARC_AUDIO_SAMPLE_RATE_32K:
+    case PICOARC_AUDIO_SAMPLE_RATE_44K1:
+    case PICOARC_AUDIO_SAMPLE_RATE_48K:
+    case PICOARC_AUDIO_SAMPLE_RATE_88K2:
+    case PICOARC_AUDIO_SAMPLE_RATE_96K:
+        return true;
+    default:
+        return false;
     }
 }
 
@@ -206,8 +225,8 @@ static void update_feedback(bool force) {
         adjust_q16 = -FEEDBACK_MAX_ADJUST_Q16;
     }
 
-    const uint32_t frames_per_ms = active_sample_rate / 1000;
-    const uint32_t feedback_q16 = (frames_per_ms << 16) + (uint32_t)adjust_q16;
+    const uint32_t nominal_q16 = (uint32_t)(((uint64_t)active_sample_rate << 16) / 1000u);
+    const uint32_t feedback_q16 = nominal_q16 + (uint32_t)adjust_q16;
     tud_audio_n_fb_set(0, feedback_q16);
     next_feedback_us = now_us + FEEDBACK_UPDATE_US;
 }
@@ -219,18 +238,34 @@ static bool clock_get_request(uint8_t rhport, audio_control_request_t const *req
     }
 
     if (request->bControlSelector == AUDIO_CS_CTRL_SAM_FREQ && request->bRequest == AUDIO_CS_REQ_RANGE) {
-        // Two discrete rates: 48 kHz and 96 kHz. Most hosts treat each
+        // Discrete ARC/SPDIF rates that fit every advertised PCM alt over
+        // full-speed USB. Most hosts treat each
         // sub-range whose bMin == bMax as a single supported value.
-        audio_control_range_4_n_t(2) range = {
-            .wNumSubRanges = tu_htole16(2),
+        audio_control_range_4_n_t(5) range = {
+            .wNumSubRanges = tu_htole16(5),
             .subrange[0] = {
-                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_LOW),
-                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_LOW),
+                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_32K),
+                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_32K),
                 .bRes = 0,
             },
             .subrange[1] = {
-                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_HIGH),
-                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_HIGH),
+                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_44K1),
+                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_44K1),
+                .bRes = 0,
+            },
+            .subrange[2] = {
+                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_48K),
+                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_48K),
+                .bRes = 0,
+            },
+            .subrange[3] = {
+                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_88K2),
+                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_88K2),
+                .bRes = 0,
+            },
+            .subrange[4] = {
+                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_96K),
+                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_96K),
                 .bRes = 0,
             },
         };
@@ -300,13 +335,17 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
 
     if (request->bEntityID == UAC2_ENTITY_CLOCK && request->bControlSelector == AUDIO_CS_CTRL_SAM_FREQ) {
         const int32_t requested = ((audio_control_cur_4_t const *)buf)->bCur;
-        if (requested != PICOARC_AUDIO_SAMPLE_RATE_LOW &&
-            requested != PICOARC_AUDIO_SAMPLE_RATE_HIGH) {
+        if (!sample_rate_supported((uint32_t)requested)) {
             return false;
         }
         if ((uint32_t)requested != active_sample_rate) {
             active_sample_rate = (uint32_t)requested;
             spdif_set_sample_rate(active_sample_rate);
+            output_enabled = false;
+            audio_gate_open = false;
+            refill_target_frames = START_BUFFER_FRAMES;
+            spdif_clear_usb_buffer();
+            spdif_set_mode(SPDIF_MODE_SILENCE);
             printf("usb-audio: sample rate set to %lu Hz\n",
                    (unsigned long)active_sample_rate);
         }
@@ -356,6 +395,7 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
         active_alt = alt;
         streaming = alt != PICOARC_AUDIO_ALT_ZERO;
         output_enabled = false;
+        audio_gate_open = false;
         refill_target_frames = START_BUFFER_FRAMES;
         spdif_clear_usb_buffer();
         spdif_set_stream_format(active_alt_is_iec61937() ?
@@ -363,13 +403,16 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
                                 SPDIF_STREAM_FORMAT_PCM);
         spdif_set_mode(SPDIF_MODE_SILENCE);
         dropped_frames = 0;
+        gated_frames = 0;
         next_diag_log_us = time_us_64() + 2000000;
+        next_gate_log_us = 0;
         next_feedback_us = 0;
         update_feedback(true);
-        printf("usb-audio: streaming %s (alt=%u, %lu Hz, %s), spdif=%s\n",
+        printf("usb-audio: streaming %s (alt=%u, %lu Hz, %s), spdif=%s gate=%s\n",
                streaming ? "on" : "off", alt,
                (unsigned long)active_sample_rate, active_alt_format_name(),
-               spdif_mode_name(spdif_get_mode()));
+               spdif_mode_name(spdif_get_mode()),
+               arc_audio_format_supported_quiet(active_alt, active_sample_rate) ? "open" : "closed");
     }
 
     return true;
@@ -378,6 +421,12 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
 bool tud_audio_set_itf_close_EP_cb(uint8_t rhport, tusb_control_request_t const *request) {
     (void)rhport;
     (void)request;
+    usb_audio_stop_streaming();
+    printf("usb-audio: streaming off, spdif=%s\n", spdif_mode_name(spdif_get_mode()));
+    return true;
+}
+
+void usb_audio_stop_streaming(void) {
     streaming = false;
     active_alt = PICOARC_AUDIO_ALT_ZERO;
     output_enabled = false;
@@ -386,10 +435,11 @@ bool tud_audio_set_itf_close_EP_cb(uint8_t rhport, tusb_control_request_t const 
     spdif_set_stream_format(SPDIF_STREAM_FORMAT_PCM);
     spdif_set_mode(SPDIF_MODE_SILENCE);
     dropped_frames = 0;
+    gated_frames = 0;
+    audio_gate_open = false;
+    next_gate_log_us = 0;
     usb_dpram->ep_buf_ctrl[AUDIO_OUT_EP_NUM].out = 0;
     usb_dpram->ep_buf_ctrl[AUDIO_OUT_EP_NUM].in = 0;
-    printf("usb-audio: streaming off, spdif=%s\n", spdif_mode_name(spdif_get_mode()));
-    return true;
 }
 
 void tud_audio_feedback_params_cb(uint8_t func_id, uint8_t alt_itf, audio_feedback_params_t *feedback_param) {
@@ -406,8 +456,22 @@ void usb_audio_task(void) {
 
     update_feedback(false);
 
-    const unsigned int bytes_per_sample = active_alt_is_pcm_24() ? 3u : 2u;
+    const unsigned int bytes_per_sample = active_alt_uses_24_bit_subslot() ? 3u : 2u;
     const unsigned int bytes_per_frame = bytes_per_sample * CHANNELS;
+    const bool gate_open = arc_audio_format_supported_quiet(active_alt, active_sample_rate);
+
+    if (gate_open != audio_gate_open) {
+        audio_gate_open = gate_open;
+        output_enabled = false;
+        refill_target_frames = START_BUFFER_FRAMES;
+        spdif_clear_usb_buffer();
+        spdif_set_mode(SPDIF_MODE_SILENCE);
+        printf("usb-audio: ARC gate %s (alt=%u, %lu Hz, %s)\n",
+               gate_open ? "open" : "closed",
+               active_alt,
+               (unsigned long)active_sample_rate,
+               active_alt_format_name());
+    }
 
     while (tud_audio_available() >= bytes_per_frame) {
         uint16_t available = tud_audio_available();
@@ -423,9 +487,16 @@ void usb_audio_task(void) {
         uint16_t read = tud_audio_read(pcm_bytes, bytes);
         unsigned int frames = read / bytes_per_frame;
 
+        if (!gate_open) {
+            gated_frames += frames;
+            continue;
+        }
+
         if (bytes_per_sample == 3u) {
-            // Unpack interleaved 24-bit little-endian samples into 24-bit
-            // left-aligned int32 (audio MSB at bit 31, audio LSB at bit 8).
+            // Unpack interleaved 20/24-bit little-endian subslots into the
+            // encoder's 24-bit-left-aligned int32 representation. UAC2 PCM is
+            // left-justified within the subslot, so 20-bit trailing padding
+            // naturally stays in the low bits.
             for (unsigned int i = 0; i < frames * CHANNELS; i++) {
                 const uint8_t *p = &pcm_bytes[i * 3];
                 const uint32_t raw = ((uint32_t)p[0] << 8) |
@@ -448,7 +519,7 @@ void usb_audio_task(void) {
         }
     }
 
-    if (!output_enabled && spdif_buffered_frames() >= refill_target_frames) {
+    if (gate_open && !output_enabled && spdif_buffered_frames() >= refill_target_frames) {
         output_enabled = true;
         spdif_set_mode(SPDIF_MODE_USB_AUDIO);
         printf("usb-audio: output on buffered=%u\n", spdif_buffered_frames());
@@ -458,8 +529,8 @@ void usb_audio_task(void) {
     if (now_us >= next_diag_log_us) {
         spdif_usb_stats_t stats;
         spdif_take_usb_stats(&stats);
-        printf("usb-audio: buf=%u hi=%u under=%u drop=%u\n",
-               stats.buffered_frames, stats.high_water_frames, stats.underrun_frames, dropped_frames);
+        printf("usb-audio: buf=%u hi=%u under=%u drop=%u gated=%u\n",
+               stats.buffered_frames, stats.high_water_frames, stats.underrun_frames, dropped_frames, gated_frames);
         if (output_enabled && stats.underrun_frames > 0) {
             output_enabled = false;
             refill_target_frames = RECOVER_BUFFER_FRAMES;
@@ -467,7 +538,13 @@ void usb_audio_task(void) {
             printf("usb-audio: output paused for refill buffered=%u\n", spdif_buffered_frames());
         }
         dropped_frames = 0;
+        gated_frames = 0;
         next_diag_log_us = now_us + 2000000;
+    }
+
+    if (!gate_open && now_us >= next_gate_log_us) {
+        arc_audio_format_supported(active_alt, active_sample_rate);
+        next_gate_log_us = now_us + 1000000;
     }
 
     update_feedback(false);

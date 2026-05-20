@@ -8,6 +8,7 @@
 #include "hardware/gpio.h"
 #include "pico/stdlib.h"
 #include "usb_audio.h"
+#include "usb_descriptors.h"
 
 static unsigned int hdmi_5v_pin;
 static bool arc_initiated;
@@ -16,6 +17,8 @@ static bool last_streaming;
 static bool last_source_5v;
 static unsigned int probe_step;
 static unsigned int streaming_probe_step;
+static unsigned int device_info_probe_step;
+static bool device_info_probe_done;
 static absolute_time_t next_probe;
 static absolute_time_t next_volume_sync;
 static uint64_t next_stream_audio_log_us;
@@ -34,8 +37,57 @@ static bool pending_mute;
 static bool relative_volume_sync_active;
 static uint8_t relative_volume_target;
 
+typedef enum {
+    SAD_QUERY_NOT_STARTED,
+    SAD_QUERY_REQUESTED,
+    SAD_QUERY_REPORTED,
+    SAD_QUERY_UNSUPPORTED,
+    SAD_QUERY_TIMEOUT,
+} sad_query_state_t;
+
+static sad_query_state_t sad_query_state;
+static absolute_time_t sad_query_deadline;
+static uint8_t sad_pcm_rates_16;
+static uint8_t sad_pcm_rates_20;
+static uint8_t sad_pcm_rates_24;
+static uint8_t sad_ac3_rates;
+static uint8_t sad_dts_rates;
+static unsigned int sad_extra_query_index;
+static bool sad_extra_query_requested;
+static absolute_time_t sad_extra_query_deadline;
+
 static const unsigned int max_cec_frames_per_task = 8;
 static const uint16_t tv_physical_address = 0x0000;
+
+typedef struct {
+    const char *label;
+    uint8_t count;
+    uint8_t operands[4];
+} sad_query_batch_t;
+
+static const sad_query_batch_t sad_extra_queries[] = {
+    {"MPEG/AAC", 4, {0x03, 0x04, 0x05, 0x06}},
+    {"ATRAC/OneBit/EAC3/DTS-HD", 4, {0x08, 0x09, 0x0a, 0x0b}},
+    {"MLP/DST/WMAPro", 3, {0x0c, 0x0d, 0x0e}},
+    {"CEA extensions", 3, {0x41, 0x42, 0x43}},
+};
+
+static uint8_t sample_rate_to_sad_bit(uint32_t sample_rate) {
+    switch (sample_rate) {
+    case PICOARC_AUDIO_SAMPLE_RATE_32K:
+        return PICOARC_AUDIO_RATE_BIT_32K;
+    case PICOARC_AUDIO_SAMPLE_RATE_44K1:
+        return PICOARC_AUDIO_RATE_BIT_44K1;
+    case PICOARC_AUDIO_SAMPLE_RATE_48K:
+        return PICOARC_AUDIO_RATE_BIT_48K;
+    case PICOARC_AUDIO_SAMPLE_RATE_88K2:
+        return PICOARC_AUDIO_RATE_BIT_88K2;
+    case PICOARC_AUDIO_SAMPLE_RATE_96K:
+        return PICOARC_AUDIO_RATE_BIT_96K;
+    default:
+        return 0;
+    }
+}
 
 static const char *opcode_name(uint8_t opcode) {
     switch (opcode) {
@@ -107,6 +159,14 @@ static const char *opcode_name(uint8_t opcode) {
         return "get-cec-version";
     case 0xa0:
         return "vendor-command-with-id";
+    case 0xa3:
+        return "report-short-audio-descriptor";
+    case 0xa4:
+        return "request-short-audio-descriptor";
+    case 0xa7:
+        return "request-current-latency";
+    case 0xa8:
+        return "report-current-latency";
     case 0xc0:
         return "initiate-arc";
     case 0xc1:
@@ -228,6 +288,30 @@ static const char *user_control_name(uint8_t code) {
     }
 }
 
+static void print_physical_address(uint16_t physical_address) {
+    printf("%x.%x.%x.%x(0x%04x)",
+           (physical_address >> 12) & 0x0f,
+           (physical_address >> 8) & 0x0f,
+           (physical_address >> 4) & 0x0f,
+           physical_address & 0x0f,
+           physical_address);
+}
+
+static const char *latency_compensation_name(uint8_t audio_out_compensated) {
+    switch (audio_out_compensated) {
+    case 0:
+        return "n/a";
+    case 1:
+        return "delay";
+    case 2:
+        return "no-delay";
+    case 3:
+        return "partial-delay";
+    default:
+        return "invalid";
+    }
+}
+
 static void print_frame(const cec_frame_t *frame) {
     if (frame->len == 0) {
         return;
@@ -257,12 +341,9 @@ static void print_frame(const cec_frame_t *frame) {
         } else if (frame->bytes[1] == 0x84 && frame->len >= 5) {
             const uint16_t physical_address = ((uint16_t)frame->bytes[2] << 8) | frame->bytes[3];
             const uint8_t device_type = frame->bytes[4];
-            printf(" pa=%x.%x.%x.%x(0x%04x) type=%s(0x%02x)",
-                   (physical_address >> 12) & 0x0f,
-                   (physical_address >> 8) & 0x0f,
-                   (physical_address >> 4) & 0x0f,
-                   physical_address & 0x0f,
-                   physical_address,
+            printf(" pa=");
+            print_physical_address(physical_address);
+            printf(" type=%s(0x%02x)",
                    device_type_name(device_type),
                    device_type);
         } else if (frame->bytes[1] == 0x87 && frame->len >= 5) {
@@ -279,6 +360,25 @@ static void print_frame(const cec_frame_t *frame) {
                 putchar(c >= 0x20 && c <= 0x7e ? c : '.');
             }
             printf("\"");
+        } else if (frame->bytes[1] == 0xa7 && frame->len >= 4) {
+            const uint16_t physical_address = ((uint16_t)frame->bytes[2] << 8) | frame->bytes[3];
+            printf(" pa=");
+            print_physical_address(physical_address);
+        } else if (frame->bytes[1] == 0xa8 && frame->len >= 6) {
+            const uint16_t physical_address = ((uint16_t)frame->bytes[2] << 8) | frame->bytes[3];
+            const uint8_t video_latency = frame->bytes[4];
+            const bool low_latency_mode = ((frame->bytes[5] >> 2) & 1u) != 0;
+            const uint8_t audio_out_compensated = frame->bytes[5] & 0x03;
+            printf(" pa=");
+            print_physical_address(physical_address);
+            printf(" video-latency=%ums low-latency-mode=%s audio-out=%s(0x%02x)",
+                   video_latency,
+                   low_latency_mode ? "yes" : "no",
+                   latency_compensation_name(audio_out_compensated),
+                   audio_out_compensated);
+            if (audio_out_compensated == 3 && frame->len >= 7) {
+                printf(" audio-delay=%ums", frame->bytes[6]);
+            }
         } else if (frame->bytes[1] == 0x44 && frame->len >= 3) {
             printf(" key=%s(0x%02x)", user_control_name(frame->bytes[2]), frame->bytes[2]);
         } else if ((frame->bytes[1] == 0x72 || frame->bytes[1] == 0x7e) && frame->len >= 3) {
@@ -392,6 +492,62 @@ static bool send_give_audio_status(void) {
     return cec_send_with_retry(msg, sizeof(msg), 2);
 }
 
+static bool send_give_osd_name(void) {
+    const uint8_t msg[] = {
+        (CEC_LOGICAL_TV << 4) | CEC_LOGICAL_AUDIO_SYSTEM,
+        0x46,
+    };
+    return cec_send_with_retry(msg, sizeof(msg), 2);
+}
+
+static bool send_give_device_vendor_id(void) {
+    const uint8_t msg[] = {
+        (CEC_LOGICAL_TV << 4) | CEC_LOGICAL_AUDIO_SYSTEM,
+        0x8c,
+    };
+    return cec_send_with_retry(msg, sizeof(msg), 2);
+}
+
+static bool send_get_cec_version(void) {
+    const uint8_t msg[] = {
+        (CEC_LOGICAL_TV << 4) | CEC_LOGICAL_AUDIO_SYSTEM,
+        0x9f,
+    };
+    return cec_send_with_retry(msg, sizeof(msg), 2);
+}
+
+static bool send_request_current_latency(void) {
+    const uint8_t msg[] = {
+        (CEC_LOGICAL_TV << 4) | CEC_LOGICAL_BROADCAST,
+        0xa7,
+        tv_physical_address >> 8,
+        tv_physical_address & 0xff,
+    };
+    return cec_send_with_retry(msg, sizeof(msg), 2);
+}
+
+static bool send_request_short_audio_descriptor_operands(const uint8_t *operands, size_t count) {
+    if (count > 4) {
+        count = 4;
+    }
+
+    uint8_t msg[6] = {
+        (CEC_LOGICAL_TV << 4) | CEC_LOGICAL_AUDIO_SYSTEM,
+        0xa4,
+    };
+    memcpy(&msg[2], operands, count);
+    return cec_send_with_retry(msg, count + 2, 2);
+}
+
+static bool send_request_short_audio_descriptor(void) {
+    static const uint8_t primary_operands[] = {
+        0x01, // LPCM
+        0x02, // AC-3
+        0x07, // DTS
+    };
+    return send_request_short_audio_descriptor_operands(primary_operands, sizeof(primary_operands));
+}
+
 static bool send_set_audio_volume_level(uint8_t volume) {
     if (volume > 100) {
         volume = 100;
@@ -463,6 +619,187 @@ static bool send_report_arc_initiated(void) {
 
 static bool audio_is_streaming(void) {
     return usb_audio_is_streaming();
+}
+
+static const char *sad_format_name(uint8_t format_code) {
+    switch (format_code) {
+    case 1:
+        return "LPCM";
+    case 2:
+        return "AC-3";
+    case 3:
+        return "MPEG-1";
+    case 4:
+        return "MP3";
+    case 5:
+        return "MPEG-2";
+    case 6:
+        return "AAC LC";
+    case 7:
+        return "DTS";
+    case 8:
+        return "ATRAC";
+    case 9:
+        return "One Bit Audio";
+    case 10:
+        return "E-AC-3";
+    case 11:
+        return "DTS-HD";
+    case 12:
+        return "MLP";
+    case 13:
+        return "DST";
+    case 14:
+        return "WMA Pro";
+    case 15:
+        return "Extension";
+    default:
+        return "unknown";
+    }
+}
+
+static const char *sad_request_operand_name(uint8_t operand) {
+    const uint8_t format_id = operand >> 6;
+    const uint8_t format_code = operand & 0x3f;
+
+    if (format_id == 0) {
+        return sad_format_name(format_code);
+    }
+
+    if (format_id == 1) {
+        switch (format_code) {
+        case 1:
+            return "HE-AAC";
+        case 2:
+            return "HE-AAC v2";
+        case 3:
+            return "MPEG Surround";
+        default:
+            return "CEA extension";
+        }
+    }
+
+    return "unknown";
+}
+
+static void reset_sad_caps(void) {
+    sad_pcm_rates_16 = 0;
+    sad_pcm_rates_20 = 0;
+    sad_pcm_rates_24 = 0;
+    sad_ac3_rates = 0;
+    sad_dts_rates = 0;
+}
+
+static bool sad_has_usb_usable_format(void) {
+    return ((sad_pcm_rates_16 | sad_pcm_rates_20 | sad_pcm_rates_24 |
+             sad_ac3_rates | sad_dts_rates) & PICOARC_AUDIO_USB_RATE_MASK) != 0;
+}
+
+static void parse_short_audio_descriptors(const cec_frame_t *frame, bool update_core_caps) {
+    if (update_core_caps) {
+        reset_sad_caps();
+    }
+
+    const size_t payload_len = frame->len > 2 ? frame->len - 2 : 0;
+    const size_t descriptor_count = payload_len / 3;
+    if (descriptor_count == 0) {
+        printf("arc: SAD report contained no descriptors\n");
+    }
+    for (size_t i = 0; i < descriptor_count; i++) {
+        const uint8_t byte0 = frame->bytes[2 + i * 3];
+        const uint8_t byte1 = frame->bytes[3 + i * 3];
+        const uint8_t byte2 = frame->bytes[4 + i * 3];
+        const uint8_t format_code = (byte0 >> 3) & 0x0f;
+        const uint8_t channels = (byte0 & 0x07) + 1;
+        const uint8_t rates = byte1 & 0x7f;
+
+        if (format_code == 1) {
+            const bool bits_16 = (byte2 & (1u << 0)) != 0;
+            const bool bits_20 = (byte2 & (1u << 1)) != 0;
+            const bool bits_24 = (byte2 & (1u << 2)) != 0;
+            if (update_core_caps && channels >= 2 && bits_16) {
+                sad_pcm_rates_16 |= rates;
+            }
+            if (update_core_caps && channels >= 2 && bits_20) {
+                sad_pcm_rates_20 |= rates;
+            }
+            if (update_core_caps && channels >= 2 && bits_24) {
+                sad_pcm_rates_24 |= rates;
+            }
+            printf("arc: SAD %s ch=%u rates=0x%02x bits=0x%02x\n",
+                   sad_format_name(format_code),
+                   channels,
+                   byte1,
+                   byte2);
+        } else {
+            if (update_core_caps && format_code == 2 && channels >= 2) {
+                sad_ac3_rates |= rates;
+            } else if (update_core_caps && format_code == 7 && channels >= 2) {
+                sad_dts_rates |= rates;
+            }
+            if (format_code == 2 || format_code == 7) {
+                printf("arc: SAD %s ch=%u rates=0x%02x max=%ukbps\n",
+                       sad_format_name(format_code),
+                       channels,
+                       byte1,
+                       (unsigned int)byte2 * 8u);
+            } else {
+                printf("arc: SAD %s ch=%u rates=0x%02x data=0x%02x\n",
+                       sad_format_name(format_code),
+                       channels,
+                       byte1,
+                       byte2);
+            }
+        }
+    }
+
+    if (update_core_caps) {
+        sad_query_state = SAD_QUERY_REPORTED;
+        printf("arc: audio caps pcm16=0x%02x pcm20=0x%02x pcm24=0x%02x ac3=0x%02x dts=0x%02x usb-mask=0x%02x\n",
+               sad_pcm_rates_16,
+               sad_pcm_rates_20,
+               sad_pcm_rates_24,
+               sad_ac3_rates,
+               sad_dts_rates,
+               PICOARC_AUDIO_USB_RATE_MASK);
+        if (!sad_has_usb_usable_format()) {
+            printf("arc: no USB-advertised ARC audio formats reported; streaming will be refused\n");
+        }
+    }
+}
+
+static void reset_sad_extra_queries(void) {
+    sad_extra_query_index = 0;
+    sad_extra_query_requested = false;
+    sad_extra_query_deadline = make_timeout_time_ms(0);
+}
+
+static void reset_device_info_probe(void) {
+    device_info_probe_step = 0;
+    device_info_probe_done = false;
+}
+
+static bool sad_query_finished(void) {
+    return sad_query_state == SAD_QUERY_REPORTED ||
+           sad_query_state == SAD_QUERY_UNSUPPORTED ||
+           sad_query_state == SAD_QUERY_TIMEOUT;
+}
+
+static const char *sad_query_state_name(void) {
+    switch (sad_query_state) {
+    case SAD_QUERY_NOT_STARTED:
+        return "not-started";
+    case SAD_QUERY_REQUESTED:
+        return "requested";
+    case SAD_QUERY_REPORTED:
+        return "reported";
+    case SAD_QUERY_UNSUPPORTED:
+        return "unsupported";
+    case SAD_QUERY_TIMEOUT:
+        return "timeout";
+    default:
+        return "unknown";
+    }
 }
 
 static void update_cec_audio_status(uint8_t status) {
@@ -608,9 +945,63 @@ static bool process_volume_sync(bool source_5v, bool bus_high) {
     return false;
 }
 
+static bool probe_device_info(bool source_5v, bool bus_high, const char *prefix) {
+    if (device_info_probe_done) {
+        return false;
+    }
+
+    bool ack = false;
+    switch (device_info_probe_step) {
+    case 0:
+        ack = send_give_osd_name();
+        printf("arc: %sgive-osd-name ack=%s src5v=%d idle=%d\n",
+               prefix,
+               ack ? "yes" : "no",
+               source_5v,
+               bus_high);
+        break;
+    case 1:
+        ack = send_give_device_vendor_id();
+        printf("arc: %sgive-device-vendor-id ack=%s src5v=%d idle=%d\n",
+               prefix,
+               ack ? "yes" : "no",
+               source_5v,
+               bus_high);
+        break;
+    case 2:
+        ack = send_get_cec_version();
+        printf("arc: %sget-cec-version ack=%s src5v=%d idle=%d\n",
+               prefix,
+               ack ? "yes" : "no",
+               source_5v,
+               bus_high);
+        break;
+    case 3:
+        ack = send_request_current_latency();
+        printf("arc: %srequest-current-latency 0000 ack=%s src5v=%d idle=%d\n",
+               prefix,
+               ack ? "yes" : "no",
+               source_5v,
+               bus_high);
+        break;
+    default:
+        device_info_probe_done = true;
+        return false;
+    }
+
+    device_info_probe_step++;
+    if (device_info_probe_step >= 4) {
+        device_info_probe_done = true;
+    }
+    next_probe = make_timeout_time_ms(300);
+    return true;
+}
+
 static void probe_arc_while_streaming(bool source_5v, bool bus_high) {
     if (system_audio_mode && arc_initiated) {
-        next_probe = make_timeout_time_ms(10000);
+        if (!probe_device_info(source_5v, bus_high, "streaming ")) {
+            next_probe = make_timeout_time_ms(10000);
+        }
         return;
     }
 
@@ -676,9 +1067,41 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
         }
     }
 
+    if (opcode == 0x00 && frame->len >= 4 && frame->bytes[2] == 0xa4) {
+        if (sad_query_state == SAD_QUERY_REQUESTED) {
+            sad_query_state = SAD_QUERY_UNSUPPORTED;
+            reset_sad_caps();
+            sad_pcm_rates_16 = PICOARC_AUDIO_RATE_BIT_48K;
+            reset_sad_extra_queries();
+            printf("arc: SAD query aborted reason=%s(0x%02x); defaulting to PCM 48k/16\n",
+                   feature_abort_reason_name(frame->bytes[3]),
+                   frame->bytes[3]);
+        } else if (sad_extra_query_requested) {
+            printf("arc: extra SAD query %s aborted reason=%s(0x%02x)\n",
+                   sad_extra_queries[sad_extra_query_index].label,
+                   feature_abort_reason_name(frame->bytes[3]),
+                   frame->bytes[3]);
+            sad_extra_query_requested = false;
+            sad_extra_query_index++;
+        }
+    }
+
     if ((opcode == 0x72 || opcode == 0x7e) && frame->len >= 3) {
         system_audio_mode = frame->bytes[2] != 0;
         printf("arc: system-audio-mode %s\n", system_audio_mode ? "on" : "off");
+    }
+
+    if (opcode == 0xa3 && frame->len >= 2 && initiator == CEC_LOGICAL_AUDIO_SYSTEM) {
+        if (sad_query_state == SAD_QUERY_REQUESTED) {
+            parse_short_audio_descriptors(frame, true);
+            reset_sad_extra_queries();
+        } else {
+            parse_short_audio_descriptors(frame, false);
+            if (sad_extra_query_requested) {
+                sad_extra_query_requested = false;
+                sad_extra_query_index++;
+            }
+        }
     }
 
     if (destination == CEC_LOGICAL_BROADCAST || destination != CEC_LOGICAL_TV) {
@@ -721,6 +1144,7 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
     case 0x7a:
     case 0x7e:
     case 0x90:
+    case 0xa3:
         break;
     case 0xc1:
         if (initiator == CEC_LOGICAL_AUDIO_SYSTEM && !arc_initiated) {
@@ -731,6 +1155,9 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
     case 0xc2:
         if (initiator == CEC_LOGICAL_AUDIO_SYSTEM) {
             arc_initiated = false;
+            sad_query_state = SAD_QUERY_NOT_STARTED;
+            reset_sad_caps();
+            reset_sad_extra_queries();
             printf("arc: terminated by soundbar report\n");
         }
         break;
@@ -738,6 +1165,9 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
     case 0xc5:
         if (initiator == CEC_LOGICAL_AUDIO_SYSTEM) {
             arc_initiated = false;
+            sad_query_state = SAD_QUERY_NOT_STARTED;
+            reset_sad_caps();
+            reset_sad_extra_queries();
             printf("arc: termination requested by soundbar\n");
         }
         break;
@@ -789,6 +1219,11 @@ void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
     pending_mute = false;
     relative_volume_sync_active = false;
     relative_volume_target = 0;
+    sad_query_state = SAD_QUERY_NOT_STARTED;
+    sad_query_deadline = make_timeout_time_ms(0);
+    reset_sad_caps();
+    reset_sad_extra_queries();
+    reset_device_info_probe();
 
     gpio_init(hdmi_5v_pin);
     gpio_set_dir(hdmi_5v_pin, GPIO_IN);
@@ -824,6 +1259,10 @@ void arc_task(void) {
             arc_initiated = false;
             system_audio_mode = false;
             relative_volume_sync_active = false;
+            sad_query_state = SAD_QUERY_NOT_STARTED;
+            reset_sad_caps();
+            reset_sad_extra_queries();
+            reset_device_info_probe();
         }
         printf("arc: HDMI +5V %s\n", source_5v ? "present" : "lost");
     }
@@ -841,12 +1280,63 @@ void arc_task(void) {
         return;
     }
 
+    if (arc_initiated && sad_query_state == SAD_QUERY_REQUESTED &&
+        absolute_time_diff_us(get_absolute_time(), sad_query_deadline) <= 0) {
+        sad_query_state = SAD_QUERY_TIMEOUT;
+        reset_sad_caps();
+        reset_sad_extra_queries();
+        sad_pcm_rates_16 = PICOARC_AUDIO_RATE_BIT_48K;
+        printf("arc: SAD query timed out; defaulting to PCM 48k/16\n");
+    }
+
+    if (arc_initiated && sad_query_state == SAD_QUERY_NOT_STARTED) {
+        const bool ack = send_request_short_audio_descriptor();
+        sad_query_state = SAD_QUERY_REQUESTED;
+        sad_query_deadline = make_timeout_time_ms(1500);
+        printf("arc: request-short-audio-descriptor LPCM/AC3/DTS ack=%s src5v=%d idle=%d\n",
+               ack ? "yes" : "no",
+               source_5v,
+               bus_high);
+        return;
+    }
+
+    if (arc_initiated && sad_query_state == SAD_QUERY_REPORTED) {
+        if (sad_extra_query_requested &&
+            absolute_time_diff_us(get_absolute_time(), sad_extra_query_deadline) <= 0) {
+            printf("arc: extra SAD query %s timed out\n",
+                   sad_extra_queries[sad_extra_query_index].label);
+            sad_extra_query_requested = false;
+            sad_extra_query_index++;
+        }
+
+        if (!sad_extra_query_requested &&
+            sad_extra_query_index < sizeof(sad_extra_queries) / sizeof(sad_extra_queries[0])) {
+            const sad_query_batch_t *query = &sad_extra_queries[sad_extra_query_index];
+            const bool ack = send_request_short_audio_descriptor_operands(query->operands, query->count);
+            sad_extra_query_requested = true;
+            sad_extra_query_deadline = make_timeout_time_ms(1200);
+            printf("arc: extra request-short-audio-descriptor %s", query->label);
+            for (uint8_t i = 0; i < query->count; i++) {
+                printf(" %s", sad_request_operand_name(query->operands[i]));
+            }
+            printf(" ack=%s src5v=%d idle=%d\n",
+                   ack ? "yes" : "no",
+                   source_5v,
+                   bus_high);
+            return;
+        }
+    }
+
     if (absolute_time_diff_us(get_absolute_time(), next_probe) > 0) {
         return;
     }
 
     if (streaming) {
         probe_arc_while_streaming(source_5v, bus_high);
+        return;
+    }
+
+    if (probe_device_info(source_5v, bus_high, "")) {
         return;
     }
 
@@ -892,6 +1382,72 @@ void arc_task(void) {
 
 bool arc_is_initiated(void) {
     return arc_initiated;
+}
+
+static bool audio_format_supported(uint8_t alt, uint32_t sample_rate, bool log_rejection) {
+    if (alt == PICOARC_AUDIO_ALT_ZERO) {
+        return true;
+    }
+
+    if (!arc_initiated) {
+        if (log_rejection) {
+            printf("arc: reject audio alt=%u rate=%lu; ARC not initiated\n",
+                   alt,
+                   (unsigned long)sample_rate);
+        }
+        return false;
+    }
+
+    if (!sad_query_finished()) {
+        if (log_rejection) {
+            printf("arc: reject audio alt=%u rate=%lu; SAD query %s\n",
+                   alt,
+                   (unsigned long)sample_rate,
+                   sad_query_state_name());
+        }
+        return false;
+    }
+
+    const uint8_t rate_bit = sample_rate_to_sad_bit(sample_rate);
+    bool supported = false;
+    switch (alt) {
+    case PICOARC_AUDIO_ALT_PCM_16:
+        supported = (sad_pcm_rates_16 & rate_bit) != 0;
+        break;
+    case PICOARC_AUDIO_ALT_PCM_20:
+        supported = (sad_pcm_rates_20 & rate_bit) != 0;
+        break;
+    case PICOARC_AUDIO_ALT_PCM_24:
+        supported = (sad_pcm_rates_24 & rate_bit) != 0;
+        break;
+    case PICOARC_AUDIO_ALT_IEC61937:
+        supported = ((sad_ac3_rates | sad_dts_rates) & rate_bit) != 0;
+        break;
+    default:
+        supported = false;
+        break;
+    }
+
+    if (!supported && log_rejection) {
+        printf("arc: reject audio alt=%u rate=%lu; caps pcm16=0x%02x pcm20=0x%02x pcm24=0x%02x ac3=0x%02x dts=0x%02x\n",
+               alt,
+               (unsigned long)sample_rate,
+               sad_pcm_rates_16,
+               sad_pcm_rates_20,
+               sad_pcm_rates_24,
+               sad_ac3_rates,
+               sad_dts_rates);
+    }
+
+    return supported;
+}
+
+bool arc_audio_format_supported(uint8_t alt, uint32_t sample_rate) {
+    return audio_format_supported(alt, sample_rate, true);
+}
+
+bool arc_audio_format_supported_quiet(uint8_t alt, uint32_t sample_rate) {
+    return audio_format_supported(alt, sample_rate, false);
 }
 
 void arc_request_volume_sync(uint8_t volume) {

@@ -40,9 +40,9 @@
 #define CFG_TUD_AUDIO_ENABLE_FEEDBACK_FORMAT_CORRECTION 1
 #define CFG_TUD_AUDIO_ENABLE_INTERRUPT_EP 1
 
-#define CFG_TUD_AUDIO_FUNC_1_MAX_SAMPLE_RATE 96000
+#define CFG_TUD_AUDIO_FUNC_1_MAX_SAMPLE_RATE PICOARC_AUDIO_SAMPLE_RATE_MAX
 #define CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_RX 2
-// Sized for the largest streaming alt (24-bit packed, 3 bytes per sample).
+// Sized for the largest streaming alts (20/24-bit packed, 3 bytes per sample).
 // The 16-bit alt fits in the same buffers with bytes to spare.
 #define CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_RX 3
 #define CFG_TUD_AUDIO_FUNC_1_RESOLUTION_RX 24

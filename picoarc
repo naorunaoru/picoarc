@@ -1,0 +1,220 @@
+#!/usr/bin/env python3
+import argparse
+import glob
+import os
+import select
+import signal
+import subprocess
+import sys
+import termios
+import time
+import tty
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parent
+FIRMWARE = ROOT / "firmware"
+BUILD = FIRMWARE / "build-arm"
+UF2 = BUILD / "picoarc.uf2"
+TOOLCHAIN = Path("/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin")
+RECOVERY_HINT = (
+    "Hold BOOTSEL while plugging the Pico into USB, then run this command again. "
+    "That forces ROM bootloader mode so picotool can recover a firmware that "
+    "does not enumerate over USB."
+)
+
+
+def run(cmd, **kwargs):
+    print("+ " + " ".join(str(part) for part in cmd), flush=True)
+    subprocess.run(cmd, check=True, **kwargs)
+
+
+def env():
+    result = os.environ.copy()
+    if TOOLCHAIN.exists():
+        result["PICO_TOOLCHAIN_PATH"] = str(TOOLCHAIN)
+    return result
+
+
+def build(_args):
+    run(["cmake", "-S", FIRMWARE, "-B", BUILD, "-G", "Ninja"], env=env())
+    run(["cmake", "--build", BUILD], env=env())
+
+
+def reset_to_bootsel_via_serial(port=None):
+    ports = [port] if port else serial_ports()
+    if not ports:
+        return False
+
+    reset_port = ports[0]
+    print(f"reset: {reset_port} -> BOOTSEL via 1200 baud")
+    try:
+        fd = os.open(reset_port, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+    except OSError as exc:
+        print(f"reset: could not open {reset_port}: {exc}")
+        return False
+
+    try:
+        configure_serial(fd, 1200)
+    except OSError as exc:
+        print(f"reset: could not set 1200 baud on {reset_port}: {exc}")
+        return False
+    finally:
+        os.close(fd)
+
+    time.sleep(1.0)
+    return True
+
+
+def flash(args):
+    build(args)
+
+    if args.serial_reset:
+        reset_to_bootsel_via_serial(args.port)
+
+    cmd = ["picotool", "load", "-f"]
+    if args.execute:
+        cmd.append("-x")
+    cmd.append(str(UF2))
+    try:
+        run(cmd)
+    except subprocess.CalledProcessError as exc:
+        raise SystemExit(f"flash failed: picotool could not reach the Pico.\n{RECOVERY_HINT}") from exc
+    if not args.execute:
+        run(["picotool", "reboot"])
+
+
+def serial_ports():
+    return sorted(glob.glob("/dev/cu.usbmodem*"))
+
+
+def choose_port(port=None, timeout=10.0):
+    if port:
+        return port
+
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        ports = serial_ports()
+        if ports:
+            return ports[0]
+        time.sleep(0.1)
+
+    raise SystemExit(f"No Pico serial port found at /dev/cu.usbmodem*.\n{RECOVERY_HINT}")
+
+
+def baud_constant(baud):
+    name = f"B{baud}"
+    if not hasattr(termios, name):
+        raise SystemExit(f"Unsupported baud rate: {baud}")
+    return getattr(termios, name)
+
+
+def configure_serial(fd, baud):
+    attrs = termios.tcgetattr(fd)
+    attrs[0] = 0
+    attrs[1] = 0
+    attrs[2] |= termios.CLOCAL | termios.CREAD
+    attrs[2] &= ~termios.CSIZE
+    attrs[2] |= termios.CS8
+    attrs[2] &= ~termios.PARENB
+    attrs[2] &= ~termios.CSTOPB
+    if hasattr(termios, "CRTSCTS"):
+        attrs[2] &= ~termios.CRTSCTS
+    attrs[3] = 0
+    attrs[4] = baud_constant(baud)
+    attrs[5] = baud_constant(baud)
+    attrs[6][termios.VMIN] = 0
+    attrs[6][termios.VTIME] = 1
+    termios.tcsetattr(fd, termios.TCSANOW, attrs)
+
+
+def monitor(args):
+    port = choose_port(args.port, args.timeout)
+    baud = args.baud
+
+    print(f"monitor: {port} @ {baud}")
+    print("exit: Ctrl-]")
+
+    fd = os.open(port, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+    old_stdin = termios.tcgetattr(sys.stdin.fileno())
+    stop = False
+
+    def handle_sigint(_signum, _frame):
+        nonlocal stop
+        stop = True
+
+    old_handler = signal.signal(signal.SIGINT, handle_sigint)
+
+    try:
+        configure_serial(fd, baud)
+        tty.setraw(sys.stdin.fileno())
+
+        while not stop:
+            readable, _, _ = select.select([fd, sys.stdin.fileno()], [], [], 0.2)
+
+            if fd in readable:
+                try:
+                    data = os.read(fd, 4096)
+                except BlockingIOError:
+                    data = b""
+                if data:
+                    os.write(sys.stdout.fileno(), data)
+
+            if sys.stdin.fileno() in readable:
+                data = os.read(sys.stdin.fileno(), 1024)
+                if b"\x1d" in data:
+                    break
+                if data:
+                    os.write(fd, data)
+    finally:
+        termios.tcsetattr(sys.stdin.fileno(), termios.TCSANOW, old_stdin)
+        signal.signal(signal.SIGINT, old_handler)
+        os.close(fd)
+        print("\nmonitor: closed")
+
+
+def run_all(args):
+    flash(args)
+    time.sleep(args.settle)
+    monitor(args)
+
+
+def main():
+    parser = argparse.ArgumentParser(prog="picoarc")
+    parser.set_defaults(func=None)
+    sub = parser.add_subparsers(dest="command")
+
+    build_parser = sub.add_parser("build", help="configure and build firmware")
+    build_parser.set_defaults(func=build)
+
+    flash_parser = sub.add_parser("flash", help="build and flash firmware")
+    flash_parser.add_argument("-p", "--port")
+    flash_parser.add_argument("--no-serial-reset", action="store_false", dest="serial_reset",
+                              help="skip the 1200-baud CDC reset before picotool")
+    flash_parser.add_argument("--no-execute", action="store_false", dest="execute",
+                              help="flash, then reboot with a separate picotool command")
+    flash_parser.set_defaults(func=flash, execute=True, serial_reset=True)
+
+    monitor_parser = sub.add_parser("monitor", help="open USB serial monitor")
+    monitor_parser.add_argument("-p", "--port")
+    monitor_parser.add_argument("-b", "--baud", type=int, default=115200)
+    monitor_parser.add_argument("--timeout", type=float, default=10.0)
+    monitor_parser.set_defaults(func=monitor)
+
+    run_parser = sub.add_parser("run", help="build, flash, and monitor")
+    run_parser.add_argument("-p", "--port")
+    run_parser.add_argument("-b", "--baud", type=int, default=115200)
+    run_parser.add_argument("--timeout", type=float, default=10.0)
+    run_parser.add_argument("--settle", type=float, default=0.75)
+    run_parser.add_argument("--no-serial-reset", action="store_false", dest="serial_reset")
+    run_parser.add_argument("--no-execute", action="store_false", dest="execute")
+    run_parser.set_defaults(func=run_all, execute=True, serial_reset=True)
+
+    args = parser.parse_args()
+    if args.func is None:
+        args = parser.parse_args(["run"])
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

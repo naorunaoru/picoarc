@@ -7,6 +7,8 @@
 void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_pin);
 void arc_task(void);
 bool arc_is_initiated(void);
+bool arc_audio_format_supported(uint8_t alt, uint32_t sample_rate);
+bool arc_audio_format_supported_quiet(uint8_t alt, uint32_t sample_rate);
 void arc_request_volume_sync(uint8_t volume);
 void arc_request_mute_sync(bool muted);
 

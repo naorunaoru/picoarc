@@ -1,5 +1,0 @@
-/Volumes/Tray/projects/picoarc/firmware/build/pioasm-install/pioasm/pioasm
-/Volumes/Tray/projects/picoarc/firmware/build/pioasm-install/pioasm/pioasmTargets.cmake
-/Volumes/Tray/projects/picoarc/firmware/build/pioasm-install/pioasm/pioasmTargets-release.cmake
-/Volumes/Tray/projects/picoarc/firmware/build/pioasm-install/pioasm/pioasmConfig.cmake
-/Volumes/Tray/projects/picoarc/firmware/build/pioasm-install/pioasm/pioasmConfigVersion.cmake
