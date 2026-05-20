@@ -4,6 +4,8 @@ PicoARC is a device that appears to the host as a USB Audio Class 2 audio interf
 
 It also allows you to control the soundbar's volume. Somewhat. Because apparently supporting absolute volume control over CEC is not something that vendors are eager to implement.
 
+Did I tell you it does HDMI-CEC too? Yes, it does, because it's required for ARC negotiation.
+
 ## Why?
 
 There's no off-the-shelf way of doing this exact thing, surprisingly. The closest thing is using S/PDIF, which has limited bandwidth, sometimes incurs additional latency and definitely does not allow you to issue any commands to the soundbar.
