@@ -837,7 +837,7 @@ static void update_cec_audio_status(uint8_t status) {
                                   pending_mute_sync ||
                                   relative_volume_sync_active ||
                                   absolute_volume_verify_pending;
-    const bool notify_host = !audio_is_streaming() && !host_sync_active;
+    const bool notify_host = !host_sync_active;
 
     cec_audio_muted = muted;
     cec_audio_mute_known = true;
