@@ -1,7 +1,9 @@
 #include <string.h>
 
 #include "pico/unique_id.h"
+#if PICOARC_DEBUG_USB
 #include "pico/stdio_usb/reset_interface.h"
+#endif
 #include "tusb.h"
 #include "usb_descriptors.h"
 
@@ -21,9 +23,13 @@ enum {
     STRID_MANUFACTURER,
     STRID_PRODUCT,
     STRID_SERIAL,
+#if PICOARC_DEBUG_USB
     STRID_CDC,
+#endif
     STRID_AUDIO,
+#if PICOARC_DEBUG_USB
     STRID_RESET,
+#endif
 };
 
 tusb_desc_device_t const desc_device = {
@@ -51,17 +57,27 @@ uint8_t const *tud_descriptor_device_cb(void) {
 #define TUD_RPI_RESET_DESCRIPTOR(_itfnum, _stridx) \
     9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUSB_CLASS_VENDOR_SPECIFIC, RESET_INTERFACE_SUBCLASS, RESET_INTERFACE_PROTOCOL, _stridx
 
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_AUDIO_PICOARC_DESC_LEN + TUD_RPI_RESET_DESC_LEN)
+#if PICOARC_DEBUG_USB
+#define DEBUG_USB_DESC_LEN (TUD_CDC_DESC_LEN + TUD_RPI_RESET_DESC_LEN)
+#else
+#define DEBUG_USB_DESC_LEN 0
+#endif
+
+#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + DEBUG_USB_DESC_LEN + TUD_AUDIO_PICOARC_DESC_LEN)
 
 uint8_t const desc_configuration[] = {
     TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 250),
+#if PICOARC_DEBUG_USB
     TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, STRID_CDC, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64),
+#endif
     TUD_AUDIO_PICOARC_DESCRIPTOR(ITF_NUM_AUDIO_CONTROL, STRID_AUDIO,
                                  EPNUM_AUDIO_OUT,
                                  EPNUM_AUDIO_FB,
                                  3,
                                  EPNUM_AUDIO_INT),
+#if PICOARC_DEBUG_USB
     TUD_RPI_RESET_DESCRIPTOR(ITF_NUM_RESET, STRID_RESET),
+#endif
 };
 
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
@@ -76,9 +92,13 @@ static char const *const string_desc_arr[] = {
     [STRID_MANUFACTURER] = "PicoARC",
     [STRID_PRODUCT] = "PicoARC USB Audio",
     [STRID_SERIAL] = serial_str,
+#if PICOARC_DEBUG_USB
     [STRID_CDC] = "PicoARC Debug",
+#endif
     [STRID_AUDIO] = "PicoARC Speaker",
+#if PICOARC_DEBUG_USB
     [STRID_RESET] = "PicoARC Reset",
+#endif
 };
 
 static uint16_t desc_str[32 + 1];

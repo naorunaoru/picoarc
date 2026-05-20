@@ -6,6 +6,7 @@
 
 #include "arc.h"
 #include "hardware/structs/usb.h"
+#include "picoarc_log.h"
 #include "pico/time.h"
 #include "spdif.h"
 #include "tusb.h"

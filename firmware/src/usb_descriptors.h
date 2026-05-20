@@ -1,17 +1,27 @@
 #ifndef PICOARC_USB_DESCRIPTORS_H
 #define PICOARC_USB_DESCRIPTORS_H
 
+#ifndef PICOARC_DEBUG_USB
+#define PICOARC_DEBUG_USB 1
+#endif
+
 #define UAC2_ENTITY_INPUT_TERMINAL      0x01
 #define UAC2_ENTITY_FEATURE_UNIT        0x02
 #define UAC2_ENTITY_OUTPUT_TERMINAL     0x03
 #define UAC2_ENTITY_CLOCK               0x04
 
+#if PICOARC_DEBUG_USB
 #define ITF_NUM_CDC                     0
 #define ITF_NUM_CDC_DATA                1
 #define ITF_NUM_AUDIO_CONTROL           2
 #define ITF_NUM_AUDIO_STREAMING         3
 #define ITF_NUM_RESET                   4
 #define ITF_NUM_TOTAL                   5
+#else
+#define ITF_NUM_AUDIO_CONTROL           0
+#define ITF_NUM_AUDIO_STREAMING         1
+#define ITF_NUM_TOTAL                   2
+#endif
 
 // UAC2 streaming alts exposed on ITF_NUM_AUDIO_STREAMING. Alt 0 is the
 // mandatory zero-bandwidth setting; alt 1 is 16-bit stereo PCM; alt 2 is

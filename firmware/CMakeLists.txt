@@ -17,6 +17,19 @@ project(picoarc C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
+set(PICOARC_VARIANT "debug" CACHE STRING "Firmware variant to build: debug or release")
+set_property(CACHE PICOARC_VARIANT PROPERTY STRINGS debug release)
+
+if(PICOARC_VARIANT STREQUAL "debug")
+    set(PICOARC_LOGGING 1)
+    set(PICOARC_DEBUG_USB 1)
+elseif(PICOARC_VARIANT STREQUAL "release")
+    set(PICOARC_LOGGING 0)
+    set(PICOARC_DEBUG_USB 0)
+else()
+    message(FATAL_ERROR "Unsupported PICOARC_VARIANT '${PICOARC_VARIANT}'. Use 'debug' or 'release'.")
+endif()
+
 pico_sdk_init()
 
 add_executable(picoarc
@@ -36,6 +49,9 @@ target_include_directories(picoarc PRIVATE
 )
 
 target_compile_definitions(picoarc PRIVATE
+    PICOARC_VARIANT="${PICOARC_VARIANT}"
+    PICOARC_LOGGING=${PICOARC_LOGGING}
+    PICOARC_DEBUG_USB=${PICOARC_DEBUG_USB}
     PICO_STDIO_USB_USE_DEFAULT_DESCRIPTORS=0
     PICO_STDIO_USB_ENABLE_IRQ_BACKGROUND_TASK=0
     PICO_STDIO_USB_ENABLE_TINYUSB_INIT=0
@@ -52,13 +68,18 @@ target_compile_definitions(picoarc PRIVATE
 target_link_libraries(picoarc
     pico_stdlib
     pico_multicore
+    pico_unique_id
     hardware_clocks
     hardware_dma
     hardware_pio
     tinyusb_device
 )
 
-pico_enable_stdio_usb(picoarc 1)
+set_target_properties(picoarc PROPERTIES
+    OUTPUT_NAME "picoarc-${PICOARC_VARIANT}"
+)
+
+pico_enable_stdio_usb(picoarc ${PICOARC_DEBUG_USB})
 pico_enable_stdio_uart(picoarc 0)
 
 pico_add_extra_outputs(picoarc)

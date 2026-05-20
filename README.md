@@ -63,12 +63,15 @@ From this directory:
 make build
 ```
 
-This configures and builds the firmware in `firmware/build-arm/`.
-The UF2 output is:
+This configures and builds both firmware variants:
 
 ```text
-firmware/build-arm/picoarc.uf2
+firmware/build-release/picoarc-release.uf2
+firmware/build-debug/picoarc-debug.uf2
 ```
+
+The release variant is audio-only with logging compiled out. The debug variant
+keeps the USB serial log and reset interface for bring-up work.
 
 ## Flash
 
@@ -78,9 +81,9 @@ Connect the Pico over USB, then run:
 make flash
 ```
 
-The helper script builds the firmware first, then uses `picotool` to load and run
-the UF2. If the Pico is not detected, hold BOOTSEL while plugging it in and run the
-command again.
+The helper script builds the release firmware first, then uses `picotool` to
+load and run the UF2. If the Pico is not detected, hold BOOTSEL while plugging
+it in and run the command again.
 
 ## Monitor
 
@@ -95,5 +98,8 @@ To build, flash, and then open the monitor in one step:
 ```sh
 make run
 ```
+
+This flashes the debug variant, because the release variant does not expose a
+USB serial log.
 
 Press `Ctrl-]` to close the monitor.

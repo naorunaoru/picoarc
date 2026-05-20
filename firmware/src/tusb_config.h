@@ -24,7 +24,7 @@
 
 #define CFG_TUD_ENDPOINT0_SIZE 64
 
-#define CFG_TUD_CDC 1
+#define CFG_TUD_CDC PICOARC_DEBUG_USB
 #define CFG_TUD_AUDIO 1
 #define CFG_TUD_HID 0
 #define CFG_TUD_MSC 0

@@ -14,8 +14,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 FIRMWARE = ROOT / "firmware"
-BUILD = FIRMWARE / "build-arm"
-UF2 = BUILD / "picoarc.uf2"
+VARIANTS = ("release", "debug")
+DEFAULT_FLASH_VARIANT = "release"
+DEFAULT_RUN_VARIANT = "debug"
 TOOLCHAIN = Path("/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin")
 RECOVERY_HINT = (
     "Hold BOOTSEL while plugging the Pico into USB, then run this command again. "
@@ -36,9 +37,30 @@ def env():
     return result
 
 
+def build_dir(variant):
+    return FIRMWARE / f"build-{variant}"
+
+
+def firmware_basename(variant):
+    return f"picoarc-{variant}"
+
+
+def firmware_path(variant, suffix):
+    return build_dir(variant) / f"{firmware_basename(variant)}.{suffix}"
+
+
+def selected_variants(variant):
+    if variant == "all":
+        return VARIANTS
+    return (variant,)
+
+
 def build(_args):
-    run(["cmake", "-S", FIRMWARE, "-B", BUILD, "-G", "Ninja"], env=env())
-    run(["cmake", "--build", BUILD], env=env())
+    for variant in selected_variants(_args.variant):
+        build = build_dir(variant)
+        run(["cmake", "-S", FIRMWARE, "-B", build, "-G", "Ninja",
+             f"-DPICOARC_VARIANT={variant}"], env=env())
+        run(["cmake", "--build", build], env=env())
 
 
 def reset_to_bootsel_via_serial(port=None):
@@ -67,7 +89,7 @@ def reset_to_bootsel_via_serial(port=None):
 
 
 def flash(args):
-    build(args)
+    build(argparse.Namespace(variant=args.variant))
 
     if args.serial_reset:
         reset_to_bootsel_via_serial(args.port)
@@ -75,7 +97,7 @@ def flash(args):
     cmd = ["picotool", "load", "-f"]
     if args.execute:
         cmd.append("-x")
-    cmd.append(str(UF2))
+    cmd.append(str(firmware_path(args.variant, "uf2")))
     try:
         run(cmd)
     except subprocess.CalledProcessError as exc:
@@ -185,9 +207,12 @@ def main():
     sub = parser.add_subparsers(dest="command")
 
     build_parser = sub.add_parser("build", help="configure and build firmware")
+    build_parser.add_argument("variant", nargs="?", choices=("all",) + VARIANTS, default="all",
+                              help="firmware variant to build")
     build_parser.set_defaults(func=build)
 
     flash_parser = sub.add_parser("flash", help="build and flash firmware")
+    flash_parser.add_argument("variant", nargs="?", choices=VARIANTS, default=DEFAULT_FLASH_VARIANT)
     flash_parser.add_argument("-p", "--port")
     flash_parser.add_argument("--no-serial-reset", action="store_false", dest="serial_reset",
                               help="skip the 1200-baud CDC reset before picotool")
@@ -202,6 +227,7 @@ def main():
     monitor_parser.set_defaults(func=monitor)
 
     run_parser = sub.add_parser("run", help="build, flash, and monitor")
+    run_parser.add_argument("variant", nargs="?", choices=VARIANTS, default=DEFAULT_RUN_VARIANT)
     run_parser.add_argument("-p", "--port")
     run_parser.add_argument("-b", "--baud", type=int, default=115200)
     run_parser.add_argument("--timeout", type=float, default=10.0)

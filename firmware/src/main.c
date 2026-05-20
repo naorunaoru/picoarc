@@ -2,6 +2,7 @@
 
 #include "arc.h"
 #include "cec.h"
+#include "picoarc_log.h"
 #include "pico/stdlib.h"
 #include "spdif.h"
 #include "tusb.h"
@@ -18,7 +19,9 @@ static void cec_yield_pump(void) {
 
 int main(void) {
     tusb_init();
+#if PICOARC_LOGGING
     stdio_init_all();
+#endif
 
     // Bring up the audio/CEC hardware before pumping tud_task. The host can
     // issue class-specific audio control transfers as soon as enumeration

@@ -6,6 +6,7 @@
 
 #include "cec.h"
 #include "hardware/gpio.h"
+#include "picoarc_log.h"
 #include "pico/stdlib.h"
 #include "usb_audio.h"
 #include "usb_descriptors.h"

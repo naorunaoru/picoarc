@@ -9,6 +9,8 @@
 
 #include <stdio.h>
 
+#include "picoarc_log.h"
+
 enum {
     CEC_BIT_PERIOD_US = 2400,
     CEC_IDLE_BEFORE_TX_US = 5000,
