@@ -1385,6 +1385,22 @@ bool arc_is_initiated(void) {
     return arc_initiated;
 }
 
+bool arc_hdmi_connected(void) {
+    return last_source_5v;
+}
+
+bool arc_system_audio_enabled(void) {
+    return system_audio_mode;
+}
+
+bool arc_audio_caps_ready(void) {
+    return sad_query_finished();
+}
+
+bool arc_ready_for_usb(void) {
+    return arc_initiated && arc_audio_caps_ready();
+}
+
 static bool audio_format_supported(uint8_t alt, uint32_t sample_rate, bool log_rejection) {
     if (alt == PICOARC_AUDIO_ALT_ZERO) {
         return true;

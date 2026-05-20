@@ -70,8 +70,11 @@ firmware/build-release/picoarc-release.uf2
 firmware/build-debug/picoarc-debug.uf2
 ```
 
-The release variant is audio-only with logging compiled out. The debug variant
-keeps the USB serial log and reset interface for bring-up work.
+The release variant is audio-only with logging compiled out. It waits for an
+HDMI ARC device, completes ARC/SAD capability discovery, and then enumerates as
+USB audio. The debug variant keeps the USB serial log and reset interface online
+for bring-up work, so it enumerates immediately with the default audio
+descriptor.
 
 ## Flash
 
