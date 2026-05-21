@@ -6,6 +6,7 @@
 
 #include "arc.h"
 #include "hardware/structs/usb.h"
+#include "picoarc_config.h"
 #include "picoarc_log.h"
 #include "pico/time.h"
 #include "spdif.h"
@@ -60,6 +61,14 @@ static uint16_t max_usb_available_bytes;
 
 static bool active_alt_is_iec61937(void) {
     return active_alt == PICOARC_AUDIO_ALT_IEC61937;
+}
+
+static spdif_mode_t idle_spdif_mode(void) {
+#if PICOARC_IDLE_AUDIO_KEEPALIVE
+    return SPDIF_MODE_SILENCE;
+#else
+    return SPDIF_MODE_OFF;
+#endif
 }
 
 static bool active_alt_uses_24_bit_subslot(void) {
@@ -351,7 +360,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
             audio_gate_open = false;
             refill_target_frames = START_BUFFER_FRAMES;
             spdif_clear_usb_buffer();
-            spdif_set_mode(SPDIF_MODE_SILENCE);
+            spdif_set_mode(idle_spdif_mode());
             printf("usb-audio: sample rate set to %lu Hz\n",
                    (unsigned long)active_sample_rate);
         }
@@ -404,6 +413,8 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
     if (itf == ITF_NUM_AUDIO_STREAMING) {
         active_alt = alt;
         streaming = alt != PICOARC_AUDIO_ALT_ZERO;
+        const bool initial_gate_open = streaming &&
+                                       arc_audio_format_supported_quiet(active_alt, active_sample_rate);
         output_enabled = false;
         audio_gate_open = false;
         refill_target_frames = START_BUFFER_FRAMES;
@@ -411,7 +422,7 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
         spdif_set_stream_format(active_alt_is_iec61937() ?
                                 SPDIF_STREAM_FORMAT_IEC61937 :
                                 SPDIF_STREAM_FORMAT_PCM);
-        spdif_set_mode(SPDIF_MODE_SILENCE);
+        spdif_set_mode(initial_gate_open ? SPDIF_MODE_SILENCE : idle_spdif_mode());
         dropped_frames = 0;
         gated_frames = 0;
         next_diag_log_us = time_us_64() + 2000000;
@@ -427,7 +438,7 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
                streaming ? "on" : "off", alt,
                (unsigned long)active_sample_rate, active_alt_format_name(),
                spdif_mode_name(spdif_get_mode()),
-               arc_audio_format_supported_quiet(active_alt, active_sample_rate) ? "open" : "closed");
+               initial_gate_open ? "open" : "closed");
     }
 
     return true;
@@ -448,7 +459,7 @@ void usb_audio_stop_streaming(void) {
     refill_target_frames = START_BUFFER_FRAMES;
     spdif_clear_usb_buffer();
     spdif_set_stream_format(SPDIF_STREAM_FORMAT_PCM);
-    spdif_set_mode(SPDIF_MODE_SILENCE);
+    spdif_set_mode(idle_spdif_mode());
     dropped_frames = 0;
     gated_frames = 0;
     audio_gate_open = false;
@@ -494,7 +505,7 @@ void usb_audio_task(void) {
         output_enabled = false;
         refill_target_frames = START_BUFFER_FRAMES;
         spdif_clear_usb_buffer();
-        spdif_set_mode(SPDIF_MODE_SILENCE);
+        spdif_set_mode(gate_open ? SPDIF_MODE_SILENCE : idle_spdif_mode());
         printf("usb-audio: ARC gate %s (alt=%u, %lu Hz, %s)\n",
                gate_open ? "open" : "closed",
                active_alt,
@@ -583,7 +594,7 @@ void usb_audio_task(void) {
         if (output_enabled && stats.underrun_frames > 0) {
             output_enabled = false;
             refill_target_frames = RECOVER_BUFFER_FRAMES;
-            spdif_set_mode(SPDIF_MODE_SILENCE);
+            spdif_set_mode(idle_spdif_mode());
             printf("usb-audio: output paused for refill buffered=%u\n", spdif_buffered_frames());
         }
         dropped_frames = 0;

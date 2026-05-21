@@ -342,6 +342,13 @@ static void build_dma_block(uint32_t *words, unsigned int *frame_index, unsigned
         return;
     }
 
+    if (mode == SPDIF_MODE_OFF) {
+        for (size_t i = 0; i < SPDIF_WORDS_PER_BLOCK; i++) {
+            words[i] = 0;
+        }
+        return;
+    }
+
     copy_block(words, mode == SPDIF_MODE_TONE_1KHZ ? tone_words : silence_words);
 }
 
@@ -467,6 +474,8 @@ spdif_stream_format_t spdif_get_stream_format(void) {
 
 const char *spdif_mode_name(spdif_mode_t mode) {
     switch (mode) {
+    case SPDIF_MODE_OFF:
+        return "off";
     case SPDIF_MODE_SILENCE:
         return "silence";
     case SPDIF_MODE_TONE_1KHZ:

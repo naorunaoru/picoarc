@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 typedef enum {
+    SPDIF_MODE_OFF,
     SPDIF_MODE_SILENCE,
     SPDIF_MODE_TONE_1KHZ,
     SPDIF_MODE_USB_AUDIO,

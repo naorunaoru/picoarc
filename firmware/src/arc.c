@@ -813,6 +813,13 @@ static bool sad_query_finished(void) {
            sad_query_state == SAD_QUERY_TIMEOUT;
 }
 
+static bool idle_probe_complete(void) {
+    return arc_initiated &&
+           system_audio_mode &&
+           sad_query_finished() &&
+           cec_audio_mute_known;
+}
+
 static const char *sad_query_state_name(void) {
     switch (sad_query_state) {
     case SAD_QUERY_NOT_STARTED:
@@ -1419,6 +1426,10 @@ void arc_task(void) {
     }
 
     if (probe_device_info(source_5v, bus_high, "")) {
+        return;
+    }
+
+    if (idle_probe_complete()) {
         return;
     }
 

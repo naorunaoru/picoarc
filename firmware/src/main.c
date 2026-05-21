@@ -2,6 +2,7 @@
 
 #include "arc.h"
 #include "cec.h"
+#include "picoarc_config.h"
 #include "picoarc_log.h"
 #include "pico/stdlib.h"
 #include "spdif.h"
@@ -31,6 +32,14 @@ typedef enum {
 static void cec_yield_pump(void) {
     tud_task();
     usb_audio_task();
+}
+
+static spdif_mode_t idle_spdif_mode(void) {
+#if PICOARC_IDLE_AUDIO_KEEPALIVE
+    return SPDIF_MODE_SILENCE;
+#else
+    return SPDIF_MODE_OFF;
+#endif
 }
 
 static const char *adapter_state_name(adapter_state_t state) {
@@ -188,7 +197,7 @@ int main(void) {
     // issue class-specific audio control transfers as soon as enumeration
     // completes, so the S/PDIF path must be ready before USB traffic is served.
     spdif_start(SPDIF_PIN);
-    spdif_set_mode(SPDIF_MODE_SILENCE);
+    spdif_set_mode(idle_spdif_mode());
     arc_init(CEC_PIN, HDMI_5V_PIN);
     cec_set_yield(cec_yield_pump);
 
@@ -199,6 +208,7 @@ int main(void) {
     printf("\nPicoARC bring-up\n");
 
     printf("spdif: GP%d 48k stereo %s\n", SPDIF_PIN, spdif_mode_name(spdif_get_mode()));
+    printf("adapter: idle audio policy=%s\n", PICOARC_IDLE_AUDIO_POLICY);
 #if PICOARC_DEBUG_USB
     printf("adapter: debug USB stays online; audio streaming remains ARC/SAD gated\n");
 #else

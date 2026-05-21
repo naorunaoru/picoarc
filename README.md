@@ -70,6 +70,17 @@ firmware/build-release/picoarc-release.uf2
 firmware/build-debug/picoarc-debug.uf2
 ```
 
+By default PicoARC keeps the ARC/S/PDIF carrier alive with silence while USB
+audio is idle, which helps short notification sounds avoid being swallowed while
+the soundbar wakes. To build firmware that lets the soundbar go to standby when
+USB audio is idle, edit `firmware/src/picoarc_config.h` before building:
+
+```c
+#define PICOARC_IDLE_AUDIO_KEEPALIVE 0
+```
+
+Set it back to `1` to keep the default silence keepalive behavior.
+
 The release variant is audio-only with logging compiled out. It waits for an
 HDMI ARC device, completes ARC/SAD capability discovery, and then enumerates as
 USB audio. The debug variant keeps the USB serial log and reset interface online
