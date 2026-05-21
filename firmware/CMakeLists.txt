@@ -73,6 +73,7 @@ target_link_libraries(picoarc
     hardware_clocks
     hardware_dma
     hardware_pio
+    hardware_pwm
     tinyusb_device
 )
 

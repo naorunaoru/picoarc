@@ -2,6 +2,7 @@
 
 #include "arc.h"
 #include "cec.h"
+#include "hardware/pwm.h"
 #include "picoarc_config.h"
 #include "picoarc_log.h"
 #include "pico/stdlib.h"
@@ -13,6 +14,9 @@
 #define SPDIF_PIN 2
 #define CEC_PIN 3
 #define HDMI_5V_PIN 4
+#define STATUS_LED_WAIT_HDMI_BLINK_MS 1000
+#define STATUS_LED_WAIT_USB_BREATHE_MS 2400
+#define STATUS_LED_PWM_WRAP 255
 
 typedef enum {
     ADAPTER_STATE_BOOT,
@@ -28,6 +32,12 @@ typedef enum {
     ADAPTER_STATE_DEBUG_USB,
 #endif
 } adapter_state_t;
+
+typedef enum {
+    STATUS_LED_OFF,
+    STATUS_LED_WAIT_HDMI,
+    STATUS_LED_WAIT_USB,
+} status_led_mode_t;
 
 static void cec_yield_pump(void) {
     tud_task();
@@ -184,6 +194,96 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
     }
 }
 
+static void status_led_set_gpio(uint led_pin, bool *led_on, bool on) {
+    if (*led_on == on) {
+        return;
+    }
+
+    *led_on = on;
+    gpio_put(led_pin, on);
+}
+
+static void status_led_enable_pwm(uint led_pin) {
+    const uint slice = pwm_gpio_to_slice_num(led_pin);
+    const uint channel = pwm_gpio_to_channel(led_pin);
+
+    gpio_set_function(led_pin, GPIO_FUNC_PWM);
+    pwm_set_wrap(slice, STATUS_LED_PWM_WRAP);
+    pwm_set_chan_level(slice, channel, 0);
+    pwm_set_enabled(slice, true);
+}
+
+static void status_led_disable_pwm(uint led_pin) {
+    const uint slice = pwm_gpio_to_slice_num(led_pin);
+    const uint channel = pwm_gpio_to_channel(led_pin);
+
+    pwm_set_chan_level(slice, channel, 0);
+    pwm_set_enabled(slice, false);
+    gpio_set_function(led_pin, GPIO_FUNC_SIO);
+    gpio_set_dir(led_pin, GPIO_OUT);
+    gpio_put(led_pin, false);
+}
+
+static uint16_t status_led_breath_level(uint32_t elapsed_ms) {
+    const uint32_t phase_ms = elapsed_ms % STATUS_LED_WAIT_USB_BREATHE_MS;
+    const uint32_t half_ms = STATUS_LED_WAIT_USB_BREATHE_MS / 2;
+    const uint32_t ramp_ms = phase_ms < half_ms ? phase_ms : STATUS_LED_WAIT_USB_BREATHE_MS - phase_ms;
+    const uint32_t linear = (ramp_ms * STATUS_LED_PWM_WRAP) / half_ms;
+
+    return (uint16_t)((linear * linear) / STATUS_LED_PWM_WRAP);
+}
+
+static void status_led_update_breath(uint led_pin, uint32_t started_ms) {
+    const uint slice = pwm_gpio_to_slice_num(led_pin);
+    const uint channel = pwm_gpio_to_channel(led_pin);
+    const uint32_t elapsed_ms = to_ms_since_boot(get_absolute_time()) - started_ms;
+
+    pwm_set_chan_level(slice, channel, status_led_breath_level(elapsed_ms));
+}
+
+static void status_led_task(uint led_pin,
+                            status_led_mode_t mode,
+                            status_led_mode_t *active_mode,
+                            bool *led_on,
+                            absolute_time_t *next_transition,
+                            uint32_t *breath_started_ms) {
+    if (*active_mode != mode) {
+        if (*active_mode == STATUS_LED_WAIT_USB) {
+            status_led_disable_pwm(led_pin);
+            *led_on = false;
+        }
+
+        *active_mode = mode;
+
+        if (mode == STATUS_LED_WAIT_USB) {
+            *breath_started_ms = to_ms_since_boot(get_absolute_time());
+            status_led_enable_pwm(led_pin);
+            status_led_update_breath(led_pin, *breath_started_ms);
+        } else {
+            status_led_set_gpio(led_pin, led_on, mode == STATUS_LED_WAIT_HDMI);
+            *next_transition = make_timeout_time_ms(STATUS_LED_WAIT_HDMI_BLINK_MS);
+        }
+        return;
+    }
+
+    if (mode == STATUS_LED_OFF) {
+        if (*led_on) {
+            status_led_set_gpio(led_pin, led_on, false);
+        }
+        return;
+    }
+
+    if (mode == STATUS_LED_WAIT_USB) {
+        status_led_update_breath(led_pin, *breath_started_ms);
+        return;
+    }
+
+    if (absolute_time_diff_us(get_absolute_time(), *next_transition) <= 0) {
+        status_led_set_gpio(led_pin, led_on, !*led_on);
+        *next_transition = make_timeout_time_ms(STATUS_LED_WAIT_HDMI_BLINK_MS);
+    }
+}
+
 int main(void) {
     tusb_init();
 #if !PICOARC_DEBUG_USB
@@ -204,6 +304,7 @@ int main(void) {
     const uint led_pin = PICO_DEFAULT_LED_PIN;
     gpio_init(led_pin);
     gpio_set_dir(led_pin, GPIO_OUT);
+    gpio_put(led_pin, false);
 
     printf("\nPicoARC bring-up\n");
 
@@ -215,8 +316,10 @@ int main(void) {
     printf("adapter: release USB waits for HDMI ARC capabilities and OSD name before enumeration\n");
 #endif
 
-    absolute_time_t next_blink = make_timeout_time_ms(250);
+    absolute_time_t next_led_transition = make_timeout_time_ms(STATUS_LED_WAIT_HDMI_BLINK_MS);
+    uint32_t led_breath_started_ms = 0;
     bool led_on = false;
+    status_led_mode_t led_mode = STATUS_LED_OFF;
     bool usb_attached = PICOARC_DEBUG_USB;
     adapter_state_t adapter_state =
 #if PICOARC_DEBUG_USB
@@ -230,11 +333,11 @@ int main(void) {
         arc_task();
         adapter_task(&adapter_state, &usb_attached);
 
-        if (absolute_time_diff_us(get_absolute_time(), next_blink) <= 0) {
-            led_on = !led_on;
-            gpio_put(led_pin, led_on);
-            next_blink = make_timeout_time_ms(250);
-        }
+        const bool hdmi_connected = arc_hdmi_connected();
+        const bool usb_enumerated = usb_attached && tud_mounted();
+        const status_led_mode_t next_led_mode =
+            !hdmi_connected ? STATUS_LED_WAIT_HDMI : (!usb_enumerated ? STATUS_LED_WAIT_USB : STATUS_LED_OFF);
+        status_led_task(led_pin, next_led_mode, &led_mode, &led_on, &next_led_transition, &led_breath_started_ms);
 
         tight_loop_contents();
     }
