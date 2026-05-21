@@ -82,9 +82,10 @@ USB audio is idle, edit `firmware/src/picoarc_config.h` before building:
 Set it back to `1` to keep the default silence keepalive behavior.
 
 The release variant is audio-only with logging compiled out. It waits for an
-HDMI ARC device, completes ARC/SAD capability discovery, and then enumerates as
-USB audio. The debug variant keeps the USB serial log and reset interface online
-for bring-up work, so it enumerates immediately with the default audio
+HDMI ARC device, completes ARC/SAD capability discovery, asks the soundbar for
+its OSD name, and then enumerates as USB audio using that name when the soundbar
+provides one. The debug variant keeps the USB serial log and reset interface
+online for bring-up work, so it enumerates immediately with the default audio
 descriptor.
 
 ## Flash

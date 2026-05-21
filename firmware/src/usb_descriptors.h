@@ -148,4 +148,7 @@
     TUD_AUDIO_DESC_CS_AS_ISO_EP(AUDIO_CS_AS_ISO_DATA_EP_ATT_NON_MAX_PACKETS_OK, AUDIO_CTRL_NONE, AUDIO_CS_AS_ISO_DATA_EP_LOCK_DELAY_UNIT_MILLISEC, 0x0001),\
     TUD_AUDIO_DESC_STD_AS_ISO_FB_EP(_epfb, _epfbsize, 0x01)
 
+void usb_descriptors_set_audio_name(const char *name);
+void usb_descriptors_reset_audio_name(void);
+
 #endif

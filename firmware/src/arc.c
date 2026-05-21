@@ -40,6 +40,10 @@ static bool relative_volume_sync_active;
 static uint8_t relative_volume_target;
 static bool relative_volume_key_held;
 static uint8_t relative_volume_held_key;
+static char soundbar_osd_name[15];
+static bool soundbar_name_probe_started;
+static bool soundbar_name_ready;
+static absolute_time_t soundbar_name_deadline;
 
 typedef enum {
     SAD_QUERY_NOT_STARTED,
@@ -62,6 +66,7 @@ static absolute_time_t sad_extra_query_deadline;
 
 static const unsigned int max_cec_frames_per_task = 8;
 static const unsigned int streaming_volume_sync_debounce_ms = 250;
+static const unsigned int soundbar_name_response_timeout_ms = 500;
 static const uint16_t tv_physical_address = 0x0000;
 
 typedef struct {
@@ -802,9 +807,82 @@ static void reset_sad_extra_queries(void) {
     sad_extra_query_deadline = make_timeout_time_ms(0);
 }
 
+static void reset_soundbar_osd_name(void) {
+    soundbar_osd_name[0] = '\0';
+    soundbar_name_probe_started = false;
+    soundbar_name_ready = false;
+    soundbar_name_deadline = make_timeout_time_ms(0);
+    usb_descriptors_reset_audio_name();
+}
+
+static bool soundbar_name_ready_for_usb(void) {
+#if PICOARC_DEBUG_USB
+    return true;
+#else
+    return soundbar_name_ready;
+#endif
+}
+
+static bool request_soundbar_osd_name(bool source_5v, bool bus_high, const char *prefix) {
+    if (soundbar_name_ready || soundbar_name_probe_started) {
+        return false;
+    }
+
+    soundbar_name_probe_started = true;
+    soundbar_name_deadline = make_timeout_time_ms(soundbar_name_response_timeout_ms);
+
+    const bool ack = send_give_osd_name();
+    printf("arc: %sgive-osd-name ack=%s src5v=%d idle=%d\n",
+           prefix,
+           ack ? "yes" : "no",
+           source_5v,
+           bus_high);
+    return ack;
+}
+
+static void update_soundbar_name_timeout(void) {
+    if (!soundbar_name_probe_started || soundbar_name_ready ||
+        absolute_time_diff_us(get_absolute_time(), soundbar_name_deadline) > 0) {
+        return;
+    }
+
+    soundbar_name_ready = true;
+    printf("arc: soundbar OSD name unavailable; USB audio descriptor stays default\n");
+}
+
+static void capture_soundbar_osd_name(const cec_frame_t *frame) {
+    char name[sizeof(soundbar_osd_name)];
+    size_t out = 0;
+
+    for (size_t i = 2; i < frame->len && out < sizeof(name) - 1; i++) {
+        const uint8_t raw = frame->bytes[i];
+        const char c = (raw >= 0x20 && raw <= 0x7e) ? (char)raw : ' ';
+        if (c == ' ' && out == 0) {
+            continue;
+        }
+        name[out++] = c;
+    }
+
+    while (out > 0 && name[out - 1] == ' ') {
+        out--;
+    }
+    name[out] = '\0';
+
+    soundbar_name_ready = true;
+    if (out == 0) {
+        printf("arc: soundbar OSD name was empty; USB audio descriptor stays default\n");
+        return;
+    }
+
+    memcpy(soundbar_osd_name, name, out + 1);
+    usb_descriptors_set_audio_name(soundbar_osd_name);
+    printf("arc: soundbar OSD name=\"%s\"; USB audio descriptor will use it\n", soundbar_osd_name);
+}
+
 static void reset_device_info_probe(void) {
     device_info_probe_step = 0;
     device_info_probe_done = false;
+    reset_soundbar_osd_name();
 }
 
 static bool sad_query_finished(void) {
@@ -1037,12 +1115,7 @@ static bool probe_device_info(bool source_5v, bool bus_high, const char *prefix)
     bool ack = false;
     switch (device_info_probe_step) {
     case 0:
-        ack = send_give_osd_name();
-        printf("arc: %sgive-osd-name ack=%s src5v=%d idle=%d\n",
-               prefix,
-               ack ? "yes" : "no",
-               source_5v,
-               bus_high);
+        ack = request_soundbar_osd_name(source_5v, bus_high, prefix);
         break;
     case 1:
         ack = send_give_device_vendor_id();
@@ -1138,6 +1211,11 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
 
     if (opcode == 0x7a && frame->len >= 3) {
         update_cec_audio_status(frame->bytes[2]);
+    }
+
+    if (opcode == 0x47 && frame->len >= 3 &&
+        initiator == CEC_LOGICAL_AUDIO_SYSTEM && destination == CEC_LOGICAL_TV) {
+        capture_soundbar_osd_name(frame);
     }
 
     if (opcode == 0x00 && frame->len >= 4 && frame->bytes[2] == 0x73) {
@@ -1365,6 +1443,8 @@ void arc_task(void) {
         return;
     }
 
+    update_soundbar_name_timeout();
+
     if (process_volume_sync(source_5v, bus_high)) {
         return;
     }
@@ -1388,6 +1468,14 @@ void arc_task(void) {
                bus_high);
         return;
     }
+
+#if !PICOARC_DEBUG_USB
+    if (arc_initiated && sad_query_finished() &&
+        !soundbar_name_ready && !soundbar_name_probe_started) {
+        request_soundbar_osd_name(source_5v, bus_high, "pre-usb ");
+        return;
+    }
+#endif
 
     if (arc_initiated && sad_query_state == SAD_QUERY_REPORTED) {
         if (sad_extra_query_requested &&
@@ -1490,7 +1578,7 @@ bool arc_audio_caps_ready(void) {
 }
 
 bool arc_ready_for_usb(void) {
-    return arc_initiated && arc_audio_caps_ready();
+    return arc_initiated && arc_audio_caps_ready() && soundbar_name_ready_for_usb();
 }
 
 static bool audio_format_supported(uint8_t alt, uint32_t sample_rate, bool log_rejection) {

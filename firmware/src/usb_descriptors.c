@@ -10,6 +10,7 @@
 #define USB_VID 0xcafe
 #define USB_PID 0x4011
 #define USB_BCD 0x0100
+#define USB_STRING_MAX_CHARS 32
 
 #define EPNUM_CDC_NOTIF 0x81
 #define EPNUM_CDC_OUT   0x02
@@ -86,22 +87,55 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
 }
 
 static char serial_str[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
+static char product_str[USB_STRING_MAX_CHARS + 1] = "PicoARC USB Audio";
+static char audio_str[USB_STRING_MAX_CHARS + 1] = "PicoARC Speaker";
 
 static char const *const string_desc_arr[] = {
     [STRID_LANGID] = (const char[]){0x09, 0x04},
     [STRID_MANUFACTURER] = "PicoARC",
-    [STRID_PRODUCT] = "PicoARC USB Audio",
+    [STRID_PRODUCT] = product_str,
     [STRID_SERIAL] = serial_str,
 #if PICOARC_DEBUG_USB
     [STRID_CDC] = "PicoARC Debug",
 #endif
-    [STRID_AUDIO] = "PicoARC Speaker",
+    [STRID_AUDIO] = audio_str,
 #if PICOARC_DEBUG_USB
     [STRID_RESET] = "PicoARC Reset",
 #endif
 };
 
-static uint16_t desc_str[32 + 1];
+void usb_descriptors_reset_audio_name(void) {
+    strcpy(product_str, "PicoARC USB Audio");
+    strcpy(audio_str, "PicoARC Speaker");
+}
+
+void usb_descriptors_set_audio_name(const char *name) {
+#if PICOARC_DEBUG_USB
+    (void)name;
+#else
+    if (name == NULL || name[0] == '\0') {
+        usb_descriptors_reset_audio_name();
+        return;
+    }
+
+    size_t len = strlen(name);
+    if (len > USB_STRING_MAX_CHARS) {
+        len = USB_STRING_MAX_CHARS;
+    }
+
+    if (len == 0) {
+        usb_descriptors_reset_audio_name();
+        return;
+    }
+
+    memcpy(product_str, name, len);
+    product_str[len] = '\0';
+    memcpy(audio_str, name, len);
+    audio_str[len] = '\0';
+#endif
+}
+
+static uint16_t desc_str[USB_STRING_MAX_CHARS + 1];
 
 uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     (void)langid;
@@ -121,8 +155,8 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 
         const char *str = string_desc_arr[index];
         chr_count = strlen(str);
-        if (chr_count > 32) {
-            chr_count = 32;
+        if (chr_count > USB_STRING_MAX_CHARS) {
+            chr_count = USB_STRING_MAX_CHARS;
         }
 
         for (size_t i = 0; i < chr_count; i++) {

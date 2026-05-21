@@ -212,7 +212,7 @@ int main(void) {
 #if PICOARC_DEBUG_USB
     printf("adapter: debug USB stays online; audio streaming remains ARC/SAD gated\n");
 #else
-    printf("adapter: release USB waits for HDMI ARC capabilities before enumeration\n");
+    printf("adapter: release USB waits for HDMI ARC capabilities and OSD name before enumeration\n");
 #endif
 
     absolute_time_t next_blink = make_timeout_time_ms(250);
