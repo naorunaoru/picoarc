@@ -8,7 +8,13 @@ Did I tell you it does HDMI-CEC too? Yes, it does, because it's required for ARC
 
 ## Why?
 
-There's no off-the-shelf way of doing this exact thing, surprisingly. The closest thing is using S/PDIF, which has limited bandwidth, sometimes incurs additional latency and definitely does not allow you to issue any commands to the soundbar.
+There's no off-the-shelf way of doing this exact thing, surprisingly. The closest thing is using S/PDIF, which has limited bandwidth, sometimes incurs additional latency and definitely does not allow you to control the soundbar from the host.
+
+## How does it work?
+
+On the USB side, it acts as an audio interface, grabs the audio stream and passes it through.
+
+On the HDMI side, it pretends to be a TV: responds to DDC queries with a plausible EDID, negotiates ARC with the connected audio system over CEC and drives the ARC line within the constraints defined by the HDMI 1.4 spec.
 
 ## Supported audio formats
 
@@ -23,6 +29,7 @@ For now the hardware part exists as a hand-wired abomination. If you want to rep
 - Pi Pico dev board
 - HDMI breakout
 - Few passives you probably have laying around
+- 3.3 V <-> 5 V I2C level shifter for HDMI DDC/EDID (or not, if you're brave)
 
 ```
 Net CEC_BUS
@@ -41,9 +48,15 @@ Net HDMI_5V_FROM_SOUNDBAR
   node HDMI_5V_SENSE              — Pico GP4 (pin 6)
   node HDMI_5V_SENSE — R7 (100 kΩ) — Pico GND
 
+Net DDC_EDID
+  HDMI pin 15 (SCL)  — level shifter — Pico GP7 (pin 10)
+  HDMI pin 16 (SDA)  — level shifter — Pico GP6 (pin 9)
+
 Net GND
   Pico GND (pin 38)               — HDMI pin 17
 ```
+
+Note about DDC_EDID: while omitting a level shifter works as a bench-only direct GPIO bodge, keep in mind that HDMI DDC is a 5V bus and RP2040 IO is not exactly 5V tolerant.
 
 ## Build requirements
 
