@@ -45,7 +45,7 @@ enum {
     CEC_LOOP_ACK_RELEASE_POST = 1336,    // remaining release to close the 2400 us bit period
 };
 
-static const bool cec_trace_tx = false;
+static const bool cec_trace_tx = true;
 
 static unsigned int cec_pin;
 static PIO cec_pio;

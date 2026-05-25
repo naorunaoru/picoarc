@@ -36,6 +36,7 @@ add_executable(picoarc
     src/main.c
     src/arc.c
     src/cec.c
+    src/ddc_edid.c
     src/spdif.c
     src/usb_audio.c
     src/usb_descriptors.c
@@ -68,10 +69,12 @@ target_compile_definitions(picoarc PRIVATE
 
 target_link_libraries(picoarc
     pico_stdlib
+    pico_i2c_slave
     pico_multicore
     pico_unique_id
     hardware_clocks
     hardware_dma
+    hardware_i2c
     hardware_pio
     hardware_pwm
     tinyusb_device

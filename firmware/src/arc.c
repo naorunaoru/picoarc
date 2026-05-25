@@ -5,7 +5,9 @@
 #include <string.h>
 
 #include "cec.h"
+#include "ddc_edid.h"
 #include "hardware/gpio.h"
+#include "picoarc_config.h"
 #include "picoarc_log.h"
 #include "pico/stdlib.h"
 #include "spdif.h"
@@ -19,6 +21,13 @@ static bool last_streaming;
 static bool last_source_5v;
 static unsigned int probe_step;
 static unsigned int streaming_probe_step;
+static unsigned int logical_scan_address;
+static uint16_t logical_scan_seen_mask;
+static bool logical_scan_started;
+static bool logical_scan_done;
+static bool logical_scan_diagnostic;
+static bool ddc_cec_wait_logged;
+static absolute_time_t next_logical_scan;
 static unsigned int device_info_probe_step;
 static bool device_info_probe_done;
 static absolute_time_t next_probe;
@@ -66,7 +75,9 @@ static absolute_time_t sad_extra_query_deadline;
 
 static const unsigned int max_cec_frames_per_task = 8;
 static const unsigned int streaming_volume_sync_debounce_ms = 250;
-static const unsigned int soundbar_name_response_timeout_ms = 500;
+static const unsigned int soundbar_name_response_timeout_ms = 2000;
+static const unsigned int logical_scan_interval_ms = 150;
+static const unsigned int logical_scan_retry_ms = 5000;
 static const uint16_t tv_physical_address = 0x0000;
 
 typedef struct {
@@ -240,6 +251,45 @@ static const char *cec_version_name(uint8_t version) {
         return "1.4";
     case 0x06:
         return "2.0";
+    default:
+        return "unknown";
+    }
+}
+
+static const char *logical_address_name(uint8_t address) {
+    switch (address) {
+    case 0x0:
+        return "tv";
+    case 0x1:
+        return "recording-1";
+    case 0x2:
+        return "recording-2";
+    case 0x3:
+        return "tuner-1";
+    case 0x4:
+        return "playback-1";
+    case 0x5:
+        return "audio-system";
+    case 0x6:
+        return "tuner-2";
+    case 0x7:
+        return "tuner-3";
+    case 0x8:
+        return "playback-2";
+    case 0x9:
+        return "recording-3";
+    case 0xa:
+        return "tuner-4";
+    case 0xb:
+        return "playback-3";
+    case 0xc:
+        return "reserved-1";
+    case 0xd:
+        return "reserved-2";
+    case 0xe:
+        return "free-use";
+    case 0xf:
+        return "broadcast";
     default:
         return "unknown";
     }
@@ -885,6 +935,132 @@ static void reset_device_info_probe(void) {
     reset_soundbar_osd_name();
 }
 
+static void reset_logical_address_scan(void) {
+    logical_scan_address = 1;
+    logical_scan_seen_mask = 0;
+    logical_scan_started = false;
+    logical_scan_done = false;
+    logical_scan_diagnostic = false;
+    next_logical_scan = make_timeout_time_ms(0);
+}
+
+static bool logical_scan_any_device_seen(void) {
+    return (logical_scan_seen_mask & ~(1u << CEC_LOGICAL_TV)) != 0;
+}
+
+static bool logical_scan_audio_system_seen(void) {
+    return (logical_scan_seen_mask & (1u << CEC_LOGICAL_AUDIO_SYSTEM)) != 0;
+}
+
+static void note_logical_address_seen(uint8_t address) {
+    if (address < CEC_LOGICAL_BROADCAST) {
+        logical_scan_seen_mask |= (uint16_t)(1u << address);
+    }
+}
+
+static bool service_logical_address_scan(bool source_5v, bool bus_high) {
+    if (!logical_scan_done && logical_scan_audio_system_seen()) {
+        logical_scan_done = true;
+        next_probe = make_timeout_time_ms(100);
+        printf("arc: logical-address acquisition complete mask=0x%04x audio-system=yes src5v=%d idle=%d\n",
+               logical_scan_seen_mask,
+               source_5v,
+               bus_high);
+        return false;
+    }
+
+    if (logical_scan_done) {
+        if (logical_scan_audio_system_seen()) {
+            return false;
+        }
+
+        if (absolute_time_diff_us(get_absolute_time(), next_logical_scan) > 0) {
+            return true;
+        }
+
+        printf("arc: retrying logical-address scan src5v=%d idle=%d\n",
+               source_5v,
+               bus_high);
+        reset_logical_address_scan();
+    }
+
+    if (absolute_time_diff_us(get_absolute_time(), next_logical_scan) > 0) {
+        return true;
+    }
+
+    if (!logical_scan_started) {
+        logical_scan_started = true;
+        printf("arc: audio-system logical-address probe start src5v=%d idle=%d\n",
+               source_5v,
+               bus_high);
+    }
+
+    if (!logical_scan_diagnostic) {
+        const bool ack = cec_poll(CEC_LOGICAL_TV, CEC_LOGICAL_AUDIO_SYSTEM);
+        if (ack) {
+            note_logical_address_seen(CEC_LOGICAL_AUDIO_SYSTEM);
+            logical_scan_done = true;
+            next_probe = make_timeout_time_ms(100);
+        } else {
+            logical_scan_diagnostic = true;
+            logical_scan_address = 1;
+            next_logical_scan = make_timeout_time_ms(logical_scan_interval_ms);
+        }
+
+        printf("arc: audio-system probe ack=%s src5v=%d idle=%d\n",
+               ack ? "yes" : "no",
+               source_5v,
+               bus_high);
+        if (!ack) {
+            printf("arc: audio-system silent; starting diagnostic logical-address scan src5v=%d idle=%d\n",
+                   source_5v,
+                   bus_high);
+        }
+        return true;
+    }
+
+    while (logical_scan_address == CEC_LOGICAL_TV ||
+           logical_scan_address == CEC_LOGICAL_BROADCAST) {
+        logical_scan_address++;
+    }
+
+    if (logical_scan_address >= CEC_LOGICAL_BROADCAST) {
+        logical_scan_done = true;
+        if (logical_scan_audio_system_seen()) {
+            next_probe = make_timeout_time_ms(250);
+            printf("arc: logical-address scan complete mask=0x%04x audio-system=yes src5v=%d idle=%d\n",
+                   logical_scan_seen_mask,
+                   source_5v,
+                   bus_high);
+        } else {
+            next_logical_scan = make_timeout_time_ms(logical_scan_retry_ms);
+            printf("arc: logical-address scan complete mask=0x%04x audio-system=no; holding ARC probes and retrying in %ums src5v=%d idle=%d\n",
+                   logical_scan_seen_mask,
+                   logical_scan_retry_ms,
+                   source_5v,
+                   bus_high);
+            if (!logical_scan_any_device_seen()) {
+                printf("arc: no CEC devices answered; check CEC continuity, HPD, and whether the soundbar requires DDC/EDID\n");
+            }
+        }
+        return true;
+    }
+
+    const uint8_t address = (uint8_t)logical_scan_address++;
+    const bool ack = cec_poll(CEC_LOGICAL_TV, address);
+    if (ack) {
+        note_logical_address_seen(address);
+    }
+    printf("arc: diagnostic logical-address scan addr=%x(%s) ack=%s src5v=%d idle=%d\n",
+           address,
+           logical_address_name(address),
+           ack ? "yes" : "no",
+           source_5v,
+           bus_high);
+    next_logical_scan = make_timeout_time_ms(logical_scan_interval_ms);
+    return true;
+}
+
 static bool sad_query_finished(void) {
     return sad_query_state == SAD_QUERY_REPORTED ||
            sad_query_state == SAD_QUERY_UNSUPPORTED ||
@@ -1208,6 +1384,7 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
     const uint8_t initiator = frame->bytes[0] >> 4;
     const uint8_t destination = frame->bytes[0] & 0x0f;
     const uint8_t opcode = frame->bytes[1];
+    note_logical_address_seen(initiator);
 
     if (opcode == 0x7a && frame->len >= 3) {
         update_cec_audio_status(frame->bytes[2]);
@@ -1302,10 +1479,12 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
         }
         break;
     case 0x00:
+    case 0x47:
     case 0x72:
     case 0x7a:
     case 0x7e:
     case 0x90:
+    case 0x9e:
     case 0xa3:
         break;
     case 0xc1:
@@ -1364,6 +1543,7 @@ void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
     last_source_5v = false;
     probe_step = 0;
     streaming_probe_step = 0;
+    reset_logical_address_scan();
     next_probe = make_timeout_time_ms(1000);
     next_volume_sync = make_timeout_time_ms(0);
     next_stream_audio_log_us = 0;
@@ -1420,6 +1600,8 @@ void arc_task(void) {
         last_source_5v = source_5v;
         probe_step = 0;
         streaming_probe_step = 0;
+        reset_logical_address_scan();
+        ddc_cec_wait_logged = false;
         next_probe = make_timeout_time_ms(source_5v ? 250 : 2000);
         if (!source_5v) {
             arc_initiated = false;
@@ -1430,6 +1612,10 @@ void arc_task(void) {
             reset_sad_caps();
             reset_sad_extra_queries();
             reset_device_info_probe();
+        } else {
+#if PICOARC_DDC_EDID_ENABLE
+            ddc_edid_note_hotplug();
+#endif
         }
         printf("arc: HDMI +5V %s\n", source_5v ? "present" : "lost");
     }
@@ -1444,6 +1630,24 @@ void arc_task(void) {
     }
 
     update_soundbar_name_timeout();
+
+#if PICOARC_DDC_EDID_ENABLE
+    if (!ddc_edid_ready_for_cec()) {
+        if (!ddc_cec_wait_logged) {
+            ddc_cec_wait_logged = true;
+            printf("arc: waiting for DDC EDID read/settle before CEC scan\n");
+        }
+        return;
+    }
+    if (ddc_cec_wait_logged) {
+        ddc_cec_wait_logged = false;
+        printf("arc: DDC settled; starting CEC scan\n");
+    }
+#endif
+
+    if (service_logical_address_scan(source_5v, bus_high)) {
+        return;
+    }
 
     if (process_volume_sync(source_5v, bus_high)) {
         return;
@@ -1477,6 +1681,7 @@ void arc_task(void) {
     }
 #endif
 
+#if PICOARC_CEC_QUERY_EXTRA_SADS
     if (arc_initiated && sad_query_state == SAD_QUERY_REPORTED) {
         if (sad_extra_query_requested &&
             absolute_time_diff_us(get_absolute_time(), sad_extra_query_deadline) <= 0) {
@@ -1503,6 +1708,7 @@ void arc_task(void) {
             return;
         }
     }
+#endif
 
     if (absolute_time_diff_us(get_absolute_time(), next_probe) > 0) {
         return;
@@ -1567,6 +1773,18 @@ bool arc_is_initiated(void) {
 
 bool arc_hdmi_connected(void) {
     return last_source_5v;
+}
+
+bool arc_cec_scan_complete(void) {
+    return logical_scan_done;
+}
+
+bool arc_cec_any_device_found(void) {
+    return logical_scan_any_device_seen();
+}
+
+bool arc_cec_audio_system_found(void) {
+    return logical_scan_audio_system_seen();
 }
 
 bool arc_system_audio_enabled(void) {

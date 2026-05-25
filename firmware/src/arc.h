@@ -7,6 +7,9 @@
 void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_pin);
 void arc_task(void);
 bool arc_hdmi_connected(void);
+bool arc_cec_scan_complete(void);
+bool arc_cec_any_device_found(void);
+bool arc_cec_audio_system_found(void);
 bool arc_system_audio_enabled(void);
 bool arc_is_initiated(void);
 bool arc_audio_caps_ready(void);

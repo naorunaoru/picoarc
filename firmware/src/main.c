@@ -2,6 +2,7 @@
 
 #include "arc.h"
 #include "cec.h"
+#include "ddc_edid.h"
 #include "hardware/pwm.h"
 #include "picoarc_config.h"
 #include "picoarc_log.h"
@@ -11,16 +12,12 @@
 #include "usb_audio.h"
 #include "usb_descriptors.h"
 
-#define SPDIF_PIN 2
-#define CEC_PIN 3
-#define HDMI_5V_PIN 4
-#define STATUS_LED_WAIT_HDMI_BLINK_MS 1000
-#define STATUS_LED_WAIT_USB_BREATHE_MS 2400
 #define STATUS_LED_PWM_WRAP 255
 
 typedef enum {
     ADAPTER_STATE_BOOT,
     ADAPTER_STATE_WAIT_HDMI,
+    ADAPTER_STATE_CEC_SCAN,
     ADAPTER_STATE_CEC_DISCOVER,
     ADAPTER_STATE_ARC_INIT,
     ADAPTER_STATE_QUERY_CAPS,
@@ -58,6 +55,8 @@ static const char *adapter_state_name(adapter_state_t state) {
         return "boot";
     case ADAPTER_STATE_WAIT_HDMI:
         return "wait-hdmi";
+    case ADAPTER_STATE_CEC_SCAN:
+        return "cec-scan";
     case ADAPTER_STATE_CEC_DISCOVER:
         return "cec-discover";
     case ADAPTER_STATE_ARC_INIT:
@@ -101,6 +100,7 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
 #endif
 
     const bool hdmi_connected = arc_hdmi_connected();
+    const bool audio_system_found = arc_cec_audio_system_found();
     const bool arc_initiated = arc_is_initiated();
     const bool caps_ready = arc_audio_caps_ready();
     const bool usb_ready = arc_ready_for_usb();
@@ -116,6 +116,14 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
 
     case ADAPTER_STATE_WAIT_HDMI:
         if (hdmi_connected) {
+            adapter_set_state(state, ADAPTER_STATE_CEC_SCAN);
+        }
+        break;
+
+    case ADAPTER_STATE_CEC_SCAN:
+        if (!hdmi_connected) {
+            adapter_set_state(state, ADAPTER_STATE_WAIT_HDMI);
+        } else if (audio_system_found) {
             adapter_set_state(state, ADAPTER_STATE_CEC_DISCOVER);
         }
         break;
@@ -123,6 +131,8 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
     case ADAPTER_STATE_CEC_DISCOVER:
         if (!hdmi_connected) {
             adapter_set_state(state, ADAPTER_STATE_WAIT_HDMI);
+        } else if (!audio_system_found) {
+            adapter_set_state(state, ADAPTER_STATE_CEC_SCAN);
         } else if (arc_system_audio_enabled() || arc_initiated) {
             adapter_set_state(state, ADAPTER_STATE_ARC_INIT);
         }
@@ -131,6 +141,8 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
     case ADAPTER_STATE_ARC_INIT:
         if (!hdmi_connected) {
             adapter_set_state(state, ADAPTER_STATE_WAIT_HDMI);
+        } else if (!audio_system_found) {
+            adapter_set_state(state, ADAPTER_STATE_CEC_SCAN);
         } else if (arc_initiated) {
             adapter_set_state(state, ADAPTER_STATE_QUERY_CAPS);
         }
@@ -180,6 +192,8 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
         }
         if (!hdmi_connected) {
             adapter_set_state(state, ADAPTER_STATE_WAIT_HDMI);
+        } else if (!audio_system_found) {
+            adapter_set_state(state, ADAPTER_STATE_CEC_SCAN);
         } else if (!arc_initiated) {
             adapter_set_state(state, ADAPTER_STATE_ARC_INIT);
         } else {
@@ -225,9 +239,9 @@ static void status_led_disable_pwm(uint led_pin) {
 }
 
 static uint16_t status_led_breath_level(uint32_t elapsed_ms) {
-    const uint32_t phase_ms = elapsed_ms % STATUS_LED_WAIT_USB_BREATHE_MS;
-    const uint32_t half_ms = STATUS_LED_WAIT_USB_BREATHE_MS / 2;
-    const uint32_t ramp_ms = phase_ms < half_ms ? phase_ms : STATUS_LED_WAIT_USB_BREATHE_MS - phase_ms;
+    const uint32_t phase_ms = elapsed_ms % PICOARC_STATUS_LED_WAIT_USB_BREATHE_MS;
+    const uint32_t half_ms = PICOARC_STATUS_LED_WAIT_USB_BREATHE_MS / 2;
+    const uint32_t ramp_ms = phase_ms < half_ms ? phase_ms : PICOARC_STATUS_LED_WAIT_USB_BREATHE_MS - phase_ms;
     const uint32_t linear = (ramp_ms * STATUS_LED_PWM_WRAP) / half_ms;
 
     return (uint16_t)((linear * linear) / STATUS_LED_PWM_WRAP);
@@ -261,7 +275,7 @@ static void status_led_task(uint led_pin,
             status_led_update_breath(led_pin, *breath_started_ms);
         } else {
             status_led_set_gpio(led_pin, led_on, mode == STATUS_LED_WAIT_HDMI);
-            *next_transition = make_timeout_time_ms(STATUS_LED_WAIT_HDMI_BLINK_MS);
+            *next_transition = make_timeout_time_ms(PICOARC_STATUS_LED_WAIT_HDMI_BLINK_MS);
         }
         return;
     }
@@ -280,7 +294,7 @@ static void status_led_task(uint led_pin,
 
     if (absolute_time_diff_us(get_absolute_time(), *next_transition) <= 0) {
         status_led_set_gpio(led_pin, led_on, !*led_on);
-        *next_transition = make_timeout_time_ms(STATUS_LED_WAIT_HDMI_BLINK_MS);
+        *next_transition = make_timeout_time_ms(PICOARC_STATUS_LED_WAIT_HDMI_BLINK_MS);
     }
 }
 
@@ -296,9 +310,12 @@ int main(void) {
     // Bring up the audio/CEC hardware before pumping tud_task. The host can
     // issue class-specific audio control transfers as soon as enumeration
     // completes, so the S/PDIF path must be ready before USB traffic is served.
-    spdif_start(SPDIF_PIN);
+    spdif_start(PICOARC_SPDIF_PIN);
     spdif_set_mode(idle_spdif_mode());
-    arc_init(CEC_PIN, HDMI_5V_PIN);
+#if PICOARC_DDC_EDID_ENABLE
+    ddc_edid_init(PICOARC_DDC_EDID_SDA_PIN, PICOARC_DDC_EDID_SCL_PIN);
+#endif
+    arc_init(PICOARC_CEC_PIN, PICOARC_HDMI_5V_PIN);
     cec_set_yield(cec_yield_pump);
 
     const uint led_pin = PICO_DEFAULT_LED_PIN;
@@ -308,7 +325,7 @@ int main(void) {
 
     printf("\nPicoARC bring-up\n");
 
-    printf("spdif: GP%d 48k stereo %s\n", SPDIF_PIN, spdif_mode_name(spdif_get_mode()));
+    printf("spdif: GP%d 48k stereo %s\n", PICOARC_SPDIF_PIN, spdif_mode_name(spdif_get_mode()));
     printf("adapter: idle audio policy=%s\n", PICOARC_IDLE_AUDIO_POLICY);
 #if PICOARC_DEBUG_USB
     printf("adapter: debug USB stays online; audio streaming remains ARC/SAD gated\n");
@@ -316,7 +333,7 @@ int main(void) {
     printf("adapter: release USB waits for HDMI ARC capabilities and OSD name before enumeration\n");
 #endif
 
-    absolute_time_t next_led_transition = make_timeout_time_ms(STATUS_LED_WAIT_HDMI_BLINK_MS);
+    absolute_time_t next_led_transition = make_timeout_time_ms(PICOARC_STATUS_LED_WAIT_HDMI_BLINK_MS);
     uint32_t led_breath_started_ms = 0;
     bool led_on = false;
     status_led_mode_t led_mode = STATUS_LED_OFF;
@@ -330,6 +347,9 @@ int main(void) {
 
     while (true) {
         tud_task();
+#if PICOARC_DDC_EDID_ENABLE
+        ddc_edid_task();
+#endif
         arc_task();
         adapter_task(&adapter_state, &usb_attached);
 
