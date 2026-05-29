@@ -1,6 +1,6 @@
 """W25Q16JVSS - 16Mbit (2MB) Serial Flash, Quad SPI, SOIC-8. For RP2040 QSPI boot."""
 
-load("@stdlib/interfaces.zen", "Qspi", "Power", "Ground")
+load("@stdlib/interfaces.zen", "Qspi")
 
 Capacitor = Module("@stdlib/generics/Capacitor.zen")
 

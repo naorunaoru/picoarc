@@ -30,7 +30,7 @@ GND: HDMI pin17 + shield → GND
 TMDS pins (1-12 + shields): no-connect
 """
 
-load("@stdlib/interfaces.zen", "Power", "Ground", "Gpio")
+load("@stdlib/interfaces.zen", "Gpio")
 
 Resistor  = Module("@stdlib/generics/Resistor.zen")
 Capacitor = Module("@stdlib/generics/Capacitor.zen")

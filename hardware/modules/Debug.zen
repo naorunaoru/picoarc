@@ -1,5 +1,5 @@
 """User status LED on GP25 (firmware drives PWM breathe/blink/off)."""
-load("@stdlib/interfaces.zen", "Ground", "Gpio")
+load("@stdlib/interfaces.zen", "Gpio")
 
 Resistor = Module("@stdlib/generics/Resistor.zen")
 Led = Module("@stdlib/generics/Led.zen")

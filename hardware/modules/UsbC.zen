@@ -1,6 +1,6 @@
 """USB-C receptacle (USB 2.0, 16P) with CC Rd pulldowns and USBLC6-2SC6 ESD protection."""
 
-load("@stdlib/interfaces.zen", "Usb2", "Power", "Ground")
+load("@stdlib/interfaces.zen", "Usb2")
 
 Resistor = Module("@stdlib/generics/Resistor.zen")
 
