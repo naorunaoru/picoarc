@@ -1,8 +1,43 @@
 """PicoARC — RP2040 USB-Audio-to-HDMI-ARC bridge board."""
 
+load("@stdlib/interfaces.zen", "Usb2", "Swd", "Gpio", "Analog")
+
 VDD_5V = Power("VDD_5V")
 VDD_3V3 = Power("VDD_3V3")
 GND = Ground("GND")
+
+VDD_1V1 = Power("VDD_1V1")
+ARC_TX = Gpio("ARC_TX")
+CEC_BUS = Gpio("CEC_BUS")
+HDMI_5V_SENSE = Gpio("HDMI_5V_SENSE")
+DDC_SDA = Gpio("DDC_SDA")
+DDC_SCL = Gpio("DDC_SCL")
+STATUS_LED = Gpio("STATUS_LED")
+RUN = Net("RUN")
+usb = Usb2("USB")
+swd = Swd("SWD")
+
+RP2040 = Module("@kicad/MCU_RaspberryPi/RP2040.zen")
+RP2040(
+    name="U_MCU",
+    VDD_3V3=VDD_3V3, VDD_1V1=VDD_1V1, GND=GND,
+    usb=usb, swd=swd, RUN=RUN,
+    add_qspi_flash=True, add_crystal=True, add_bootsel_button=True,
+    add_swd_test_points=True, add_gpio_headers=False,
+    gpio0=Gpio("GPIO0"), gpio1=Gpio("GPIO1"),
+    gpio2=ARC_TX, gpio3=CEC_BUS, gpio4=HDMI_5V_SENSE,
+    gpio5=Gpio("GPIO5"),
+    gpio6=DDC_SDA, gpio7=DDC_SCL,
+    gpio8=Gpio("GPIO8"), gpio9=Gpio("GPIO9"), gpio10=Gpio("GPIO10"),
+    gpio11=Gpio("GPIO11"), gpio12=Gpio("GPIO12"), gpio13=Gpio("GPIO13"),
+    gpio14=Gpio("GPIO14"), gpio15=Gpio("GPIO15"), gpio16=Gpio("GPIO16"),
+    gpio17=Gpio("GPIO17"), gpio18=Gpio("GPIO18"), gpio19=Gpio("GPIO19"),
+    gpio20=Gpio("GPIO20"), gpio21=Gpio("GPIO21"), gpio22=Gpio("GPIO22"),
+    gpio23=Gpio("GPIO23"), gpio24=Gpio("GPIO24"),
+    gpio25=STATUS_LED,
+    gpio26_adc0=Analog("GPIO26_ADC0"), gpio27_adc1=Analog("GPIO27_ADC1"),
+    gpio28_adc2=Analog("GPIO28_ADC2"), gpio29_adc3=Analog("GPIO29_ADC3"),
+)
 
 Board(
     name="picoarc",
