@@ -44,6 +44,9 @@ RP2040(
 
 Flash(name="U_FLASH", qspi=qspi, VCC=VDD_3V3, GND=GND)
 
+Power = Module("./modules/Power.zen")
+Power(name="PWR", VIN=VDD_5V, VOUT=VDD_3V3, GND=GND)
+
 Board(
     name="picoarc",
     layout_path="layout",

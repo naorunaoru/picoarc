@@ -1,0 +1,14 @@
+"""USB 5V -> AP2112K-3.3 LDO -> +3V3 (bus-powered). Includes power-good LED."""
+load("@stdlib/interfaces.zen", "Power", "Ground")
+
+Ldo = Module("@kicad/Regulator_Linear/AP2112K-3.3.zen")
+
+VIN = io("VIN", Power)    # +5V from USB VBUS
+VOUT = io("VOUT", Power)  # +3V3
+GND = io("GND", Ground)
+
+Ldo(
+    name="U1",
+    VIN=VIN, VOUT=VOUT, GND=GND,
+    add_power_good_led=True,
+)
