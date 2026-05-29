@@ -94,6 +94,7 @@ Component(
         "CK-":  Net("NC_CKN"),
         "CKS":  Net("NC_CKS"),
     },
+    part=Part(mpn="208658-1001", manufacturer="Molex"),
 )
 
 # ── CEC network ───────────────────────────────────────────────────────────────
@@ -146,6 +147,7 @@ Component(
         "VREF2": _HDMI_5V,
         "EN":    VDD_3V3,
     },
+    part=Part(mpn="PCA9306DCTR", manufacturer="Texas Instruments"),
 )
 
 # ── ESD protection array: PESD5V0L4UF (SOT-886, 5V, 4-ch common-anode) ───────
@@ -169,4 +171,5 @@ Component(
         "K3": DDC_SCL_5V,
         "K4": DDC_SDA_5V,
     },
+    part=Part(mpn="PESD5V0L4UF", manufacturer="Nexperia"),
 )

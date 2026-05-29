@@ -34,6 +34,7 @@ Component(
         "SBU1":   Net("NC_SBU1"),
         "SBU2":   Net("NC_SBU2"),
     },
+    part=Part(mpn="USB4105-GF-A-060", manufacturer="GCT"),
 )
 
 # CC Rd pulldowns — 5.1 kΩ to GND marks this as a USB device (UFP / sink)
@@ -56,4 +57,5 @@ Component(
         "VBUS": VBUS,
         "GND":  GND,
     },
+    part=Part(mpn="USBLC6-2SC6", manufacturer="STMicroelectronics"),
 )

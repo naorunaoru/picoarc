@@ -22,6 +22,7 @@ Component(
         "VCC": VCC,
         "GND": GND,
     },
+    part=Part(mpn="W25Q16JVSSIQ", manufacturer="Winbond"),
 )
 
 Capacitor(name="C_DEC", value="100nF", package="0402", P1=VCC, P2=GND)
