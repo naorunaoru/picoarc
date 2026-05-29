@@ -63,6 +63,19 @@ HdmiArc(name="HDMI", VDD_3V3=VDD_3V3, GND=GND,
 Debug = Module("./modules/Debug.zen")
 Debug(name="DBG", STATUS_LED=STATUS_LED, GND=GND)
 
+# Design-rule check: the 68k/100k divider must keep HDMI +5V sense below RP2040 IO max.
+def _check_5v_sense_divider(module, vbus, rtop, rbot, vio_max):
+    v = vbus * rbot / (rtop + rbot)
+    check(v <= vio_max,
+          "HDMI 5V-sense divider = {}V exceeds RP2040 IO max {}V".format(v, vio_max))
+
+builtin.add_electrical_check(
+    name="hdmi_5v_sense_divider",
+    check_fn=_check_5v_sense_divider,
+    inputs={"vbus": 5.0, "rtop": 68000.0, "rbot": 100000.0, "vio_max": 3.3},
+    severity="error",
+)
+
 # Bring-up test points (groups: power rails, ARC+CEC, DDC both sides)
 TestPoint = Module("@stdlib/generics/TestPoint.zen")
 # Power rails
