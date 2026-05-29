@@ -63,6 +63,23 @@ HdmiArc(name="HDMI", VDD_3V3=VDD_3V3, GND=GND,
 Debug = Module("./modules/Debug.zen")
 Debug(name="DBG", STATUS_LED=STATUS_LED, GND=GND)
 
+# Bring-up test points (groups: power rails, ARC+CEC, DDC both sides)
+TestPoint = Module("@stdlib/generics/TestPoint.zen")
+# Power rails
+TestPoint(name="TP_5V", variant="Pad_D1.5mm", P1=VDD_5V)
+TestPoint(name="TP_3V3", variant="Pad_D1.5mm", P1=VDD_3V3)
+TestPoint(name="TP_1V1", variant="Pad_D1.5mm", P1=VDD_1V1)
+TestPoint(name="TP_GND1", variant="Pad_D1.5mm", P1=GND)
+TestPoint(name="TP_GND2", variant="Pad_D1.5mm", P1=GND)
+# ARC + CEC
+TestPoint(name="TP_ATT_A", variant="Pad_D1.5mm", P1=ATT_A)
+TestPoint(name="TP_CEC", variant="Pad_D1.5mm", P1=CEC_NODE)
+# DDC both sides (3V3 = GP6/GP7, 5V = HDMI side)
+TestPoint(name="TP_SDA_3V3", variant="Pad_D1.5mm", P1=DDC_SDA)
+TestPoint(name="TP_SCL_3V3", variant="Pad_D1.5mm", P1=DDC_SCL)
+TestPoint(name="TP_SDA_5V", variant="Pad_D1.5mm", P1=DDC_SDA_5V)
+TestPoint(name="TP_SCL_5V", variant="Pad_D1.5mm", P1=DDC_SCL_5V)
+
 Board(
     name="picoarc",
     layout_path="layout",
