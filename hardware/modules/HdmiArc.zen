@@ -1,0 +1,172 @@
+"""HDMI ARC/CEC/DDC front-end module.
+
+Netlist (source of truth: project README):
+
+CEC (HDMI pin 13):
+  VDD_3V3 —R1(27k)— _CEC_NODE
+  CEC_BUS(GP3) —R2(220Ω)— _CEC_NODE
+  _CEC_NODE — HDMI pin 13
+
+ARC (HDMI pin 14):
+  ARC_TX(GP2) —R3(330Ω)— ATT_A
+  ATT_A —R4(56Ω)— GND
+  ATT_A —C1(10nF)— HDMI pin 14  (AC coupling)
+
+HDMI +5V / HPD / sense:
+  _HDMI_5V(pin18) —R5(1k)— _HPD(pin19)
+  _HDMI_5V(pin18) —R6(68k)— HDMI_5V_SENSE(GP4)
+  HDMI_5V_SENSE(GP4) —R7(100k)— GND
+
+DDC via PCA9306 (3V3 ↔ 5V level shift):
+  low side:  SCL1=DDC_SCL(GP7), SDA1=DDC_SDA(GP6), VREF1=VDD_3V3
+  high side: SCL2=DDC_SCL_5V(→pin15), SDA2=DDC_SDA_5V(→pin16), VREF2=_HDMI_5V
+  EN=VDD_3V3, GND=GND
+  pull-ups: DDC_SCL—2.2k—VDD_3V3, DDC_SDA—2.2k—VDD_3V3
+            DDC_SCL_5V—2.2k—_HDMI_5V, DDC_SDA_5V—2.2k—_HDMI_5V
+
+ESD: PESD5V0L4UF (5V, 4-channel) on _CEC_NODE, _HPD, DDC_SCL_5V, DDC_SDA_5V → GND
+
+GND: HDMI pin17 + shield → GND
+TMDS pins (1-12 + shields): no-connect
+"""
+
+load("@stdlib/interfaces.zen", "Power", "Ground", "Gpio")
+
+Resistor  = Module("@stdlib/generics/Resistor.zen")
+Capacitor = Module("@stdlib/generics/Capacitor.zen")
+
+# ── Module IOs ────────────────────────────────────────────────────────────────
+VDD_3V3        = io("VDD_3V3",        Power)
+GND            = io("GND",            Ground)
+ARC_TX         = io("ARC_TX",         Gpio)
+CEC_BUS        = io("CEC_BUS",        Gpio)
+HDMI_5V_SENSE  = io("HDMI_5V_SENSE",  Gpio)
+DDC_SDA        = io("DDC_SDA",        Gpio)
+DDC_SCL        = io("DDC_SCL",        Gpio)
+
+# Exposed test-point nodes (outputs)
+ATT_A      = io("ATT_A",      Net)
+CEC_NODE   = io("CEC_NODE",   Net)
+DDC_SDA_5V = io("DDC_SDA_5V", Net)
+DDC_SCL_5V = io("DDC_SCL_5V", Net)
+
+# ── Internal nets ─────────────────────────────────────────────────────────────
+_HDMI_5V = Net("_HDMI_5V")
+_HPD     = Net("_HPD")
+_ARC14   = Net("_ARC14")
+
+# ── HDMI Type-A receptacle ────────────────────────────────────────────────────
+# Connector.kicad_sym HDMI_A_1.4 pin map (verified by extraction):
+#   1=D2+  2=D2S  3=D2-  4=D1+  5=D1S  6=D1-
+#   7=D0+  8=D0S  9=D0-  10=CK+ 11=CKS 12=CK-
+#   13=CEC  14=UTILITY/HEAC+  15=SCL  16=SDA
+#   17=GND  18=+5V  19=HPD/HEAC-  SH=SH
+Component(
+    name="J_HDMI",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Connector.kicad_sym",
+        name="HDMI_A_1.4",
+    ),
+    footprint=File(
+        "gitlab.com/kicad/libraries/kicad-footprints/Connector_Video.pretty/HDMI_A_Molex_208658-1001_Horizontal.kicad_mod"
+    ),
+    pins={
+        # CEC / ARC / DDC / power / sense
+        "CEC":            CEC_NODE,
+        "UTILITY/HEAC+":  _ARC14,
+        "SCL":            DDC_SCL_5V,
+        "SDA":            DDC_SDA_5V,
+        "GND":            GND,
+        "+5V":            _HDMI_5V,
+        "HPD/HEAC-":      _HPD,
+        "SH":             GND,
+        # TMDS data / clock — all no-connect (fresh nets)
+        "D2+":  Net("NC_D2P"),
+        "D2-":  Net("NC_D2N"),
+        "D2S":  Net("NC_D2S"),
+        "D1+":  Net("NC_D1P"),
+        "D1-":  Net("NC_D1N"),
+        "D1S":  Net("NC_D1S"),
+        "D0+":  Net("NC_D0P"),
+        "D0-":  Net("NC_D0N"),
+        "D0S":  Net("NC_D0S"),
+        "CK+":  Net("NC_CKP"),
+        "CK-":  Net("NC_CKN"),
+        "CKS":  Net("NC_CKS"),
+    },
+)
+
+# ── CEC network ───────────────────────────────────────────────────────────────
+# VDD_3V3 —R1(27k)— CEC_NODE
+Resistor(name="R1", value="27kohm", package="0402", P1=VDD_3V3, P2=CEC_NODE)
+# CEC_BUS(GP3) —R2(220Ω)— CEC_NODE
+Resistor(name="R2", value="220ohm", package="0402", P1=CEC_BUS, P2=CEC_NODE)
+
+# ── ARC network ───────────────────────────────────────────────────────────────
+# ARC_TX(GP2) —R3(330Ω)— ATT_A
+Resistor(name="R3", value="330ohm", package="0402", P1=ARC_TX, P2=ATT_A)
+# ATT_A —R4(56Ω)— GND
+Resistor(name="R4", value="56ohm",  package="0402", P1=ATT_A,  P2=GND)
+# ATT_A —C1(10nF)— _ARC14 (AC coupling to HDMI pin14)
+Capacitor(name="C1", value="10nF",  package="0402", voltage="50V", P1=ATT_A, P2=_ARC14)
+
+# ── +5V / HPD / sense network ─────────────────────────────────────────────────
+# _HDMI_5V —R5(1k)— _HPD
+Resistor(name="R5", value="1kohm",   package="0402", P1=_HDMI_5V, P2=_HPD)
+# _HDMI_5V —R6(68k)— HDMI_5V_SENSE(GP4)
+Resistor(name="R6", value="68kohm",  package="0402", P1=_HDMI_5V, P2=HDMI_5V_SENSE)
+# HDMI_5V_SENSE(GP4) —R7(100k)— GND
+Resistor(name="R7", value="100kohm", package="0402", P1=HDMI_5V_SENSE, P2=GND)
+
+# ── DDC level translator: PCA9306 ────────────────────────────────────────────
+# PCA9306 pin map (verified, Interface.kicad_sym):
+#   1=GND  2=VREF1  3=SCL1  4=SDA1  5=SDA2  6=SCL2  7=VREF2  8=EN
+# 3V3 pull-ups on low side (SCL1/SDA1), 5V pull-ups on high side (SCL2/SDA2)
+Resistor(name="R8",  value="2.2kohm", package="0402", P1=DDC_SCL, P2=VDD_3V3)
+Resistor(name="R9",  value="2.2kohm", package="0402", P1=DDC_SDA, P2=VDD_3V3)
+Resistor(name="R10", value="2.2kohm", package="0402", P1=DDC_SCL_5V, P2=_HDMI_5V)
+Resistor(name="R11", value="2.2kohm", package="0402", P1=DDC_SDA_5V, P2=_HDMI_5V)
+
+Component(
+    name="U_DDC",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Interface.kicad_sym",
+        name="PCA9306",
+    ),
+    footprint=File(
+        "gitlab.com/kicad/libraries/kicad-footprints/Package_SO.pretty/VSSOP-8_2.3x2mm_P0.5mm.kicad_mod"
+    ),
+    pins={
+        "GND":   GND,
+        "VREF1": VDD_3V3,
+        "SCL1":  DDC_SCL,
+        "SDA1":  DDC_SDA,
+        "SDA2":  DDC_SDA_5V,
+        "SCL2":  DDC_SCL_5V,
+        "VREF2": _HDMI_5V,
+        "EN":    VDD_3V3,
+    },
+)
+
+# ── ESD protection array: PESD5V0L4UF (SOT-886, 5V, 4-ch common-anode) ───────
+# Pin map (verified via PESD3V3L4UF parent, Power_Protection.kicad_sym):
+#   1=K1  2=A  3=K2  4=K3  5=A  6=K4
+# K1-K4 = cathodes → signal lines; A = common anode → GND
+# Channels: K1=_CEC_NODE, K2=_HPD, K3=DDC_SCL_5V, K4=DDC_SDA_5V
+Component(
+    name="D_ESD",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Power_Protection.kicad_sym",
+        name="PESD5V0L4UF",
+    ),
+    footprint=File(
+        "gitlab.com/kicad/libraries/kicad-footprints/Package_TO_SOT_SMD.pretty/SOT-886.kicad_mod"
+    ),
+    pins={
+        "K1": CEC_NODE,
+        "A":  GND,
+        "K2": _HPD,
+        "K3": DDC_SCL_5V,
+        "K4": DDC_SDA_5V,
+    },
+)

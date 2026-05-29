@@ -50,6 +50,16 @@ Power(name="PWR", VIN=VDD_5V, VOUT=VDD_3V3, GND=GND)
 UsbC = Module("./modules/UsbC.zen")
 UsbC(name="USBC", VBUS=VDD_5V, GND=GND, usb=usb)
 
+HdmiArc = Module("./modules/HdmiArc.zen")
+ATT_A      = Net("ATT_A")
+CEC_NODE   = Net("CEC_NODE")
+DDC_SDA_5V = Net("DDC_SDA_5V")
+DDC_SCL_5V = Net("DDC_SCL_5V")
+HdmiArc(name="HDMI", VDD_3V3=VDD_3V3, GND=GND,
+        ARC_TX=ARC_TX, CEC_BUS=CEC_BUS, HDMI_5V_SENSE=HDMI_5V_SENSE,
+        DDC_SDA=DDC_SDA, DDC_SCL=DDC_SCL,
+        ATT_A=ATT_A, CEC_NODE=CEC_NODE, DDC_SDA_5V=DDC_SDA_5V, DDC_SCL_5V=DDC_SCL_5V)
+
 Board(
     name="picoarc",
     layout_path="layout",
