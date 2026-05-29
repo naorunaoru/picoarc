@@ -1,2 +1,5 @@
 # Zener/pcb tool generated artifacts
 .pcb/
+
+# KiCad layout generation log (disposable)
+layout/*.log
