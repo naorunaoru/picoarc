@@ -10,6 +10,8 @@ description = "RP2040 USB-Audio-to-HDMI-ARC bridge board."
 
 [dependencies]
 "github.com/diodeinc/kicad" = "0.2.2"
+"gitlab.com/kicad/libraries/kicad-symbols" = "9.0.3"
+"gitlab.com/kicad/libraries/kicad-footprints" = "9.0.3"
 
 [dependencies.indirect]
 "gitlab.com/kicad/libraries/kicad-footprints@9" = "9.0.3"

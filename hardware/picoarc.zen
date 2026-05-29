@@ -1,6 +1,6 @@
 """PicoARC — RP2040 USB-Audio-to-HDMI-ARC bridge board."""
 
-load("@stdlib/interfaces.zen", "Usb2", "Swd", "Gpio", "Analog")
+load("@stdlib/interfaces.zen", "Usb2", "Swd", "Gpio", "Analog", "Qspi")
 
 VDD_5V = Power("VDD_5V")
 VDD_3V3 = Power("VDD_3V3")
@@ -16,13 +16,16 @@ STATUS_LED = Gpio("STATUS_LED")
 RUN = Net("RUN")
 usb = Usb2("USB")
 swd = Swd("SWD")
+qspi = Qspi("QSPI")
 
 RP2040 = Module("@kicad/MCU_RaspberryPi/RP2040.zen")
+Flash = Module("./components/W25Q16JVSS.zen")
+
 RP2040(
     name="U_MCU",
     VDD_3V3=VDD_3V3, VDD_1V1=VDD_1V1, GND=GND,
     usb=usb, swd=swd, RUN=RUN,
-    add_qspi_flash=True, add_crystal=True, add_bootsel_button=True,
+    add_qspi_flash=False, qspi=qspi, add_crystal=True, add_bootsel_button=True,
     add_swd_test_points=True, add_gpio_headers=False,
     gpio0=Gpio("GPIO0"), gpio1=Gpio("GPIO1"),
     gpio2=ARC_TX, gpio3=CEC_BUS, gpio4=HDMI_5V_SENSE,
@@ -38,6 +41,8 @@ RP2040(
     gpio26_adc0=Analog("GPIO26_ADC0"), gpio27_adc1=Analog("GPIO27_ADC1"),
     gpio28_adc2=Analog("GPIO28_ADC2"), gpio29_adc3=Analog("GPIO29_ADC3"),
 )
+
+Flash(name="U_FLASH", qspi=qspi, VCC=VDD_3V3, GND=GND)
 
 Board(
     name="picoarc",

@@ -1,0 +1,27 @@
+"""W25Q16JVSS - 16Mbit (2MB) Serial Flash, Quad SPI, SOIC-8. For RP2040 QSPI boot."""
+
+load("@stdlib/interfaces.zen", "Qspi", "Power", "Ground")
+
+Capacitor = Module("@stdlib/generics/Capacitor.zen")
+
+qspi = io("qspi", Qspi)
+VCC = io("VCC", Power)
+GND = io("GND", Ground)
+
+Component(
+    name="W25Q16JVSS",
+    symbol=Symbol(library="gitlab.com/kicad/libraries/kicad-symbols/Memory_Flash.kicad_sym", name="W25Q16JVSS"),
+    footprint=File("gitlab.com/kicad/libraries/kicad-footprints/Package_SO.pretty/SOIC-8_5.3x5.3mm_P1.27mm.kicad_mod"),
+    pins={
+        "~{CS}": qspi.CS,
+        "CLK": qspi.CLK,
+        "DI/IO_{0}": qspi.IO0,
+        "DO/IO_{1}": qspi.IO1,
+        "~{WP}/IO_{2}": qspi.IO2,
+        "~{HOLD}/~{RESET}/IO_{3}": qspi.IO3,
+        "VCC": VCC,
+        "GND": GND,
+    },
+)
+
+Capacitor(name="C_DEC", value="100nF", package="0402", P1=VCC, P2=GND)
