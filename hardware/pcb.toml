@@ -1,0 +1,17 @@
+[workspace]
+repository = "github.com/naoru/picoarc"
+pcb-version = "0.3"
+vendor = ["github.com/diodeinc/registry/**"]
+
+[board]
+name = "picoarc"
+path = "picoarc.zen"
+description = "RP2040 USB-Audio-to-HDMI-ARC bridge board."
+
+[dependencies.indirect]
+"gitlab.com/kicad/libraries/kicad-footprints@9" = "9.0.3"
+"gitlab.com/kicad/libraries/kicad-packages3D@9" = "9.0.3"
+"gitlab.com/kicad/libraries/kicad-symbols@9" = "9.0.3"
+
+[access]
+allow = ["*"]

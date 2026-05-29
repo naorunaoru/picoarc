@@ -1,0 +1,11 @@
+"""PicoARC — RP2040 USB-Audio-to-HDMI-ARC bridge board."""
+
+VDD_5V = Power("VDD_5V")
+VDD_3V3 = Power("VDD_3V3")
+GND = Ground("GND")
+
+Board(
+    name="picoarc",
+    layout_path="layout",
+    layers=4,
+)
