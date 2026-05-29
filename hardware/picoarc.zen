@@ -60,6 +60,9 @@ HdmiArc(name="HDMI", VDD_3V3=VDD_3V3, GND=GND,
         DDC_SDA=DDC_SDA, DDC_SCL=DDC_SCL,
         ATT_A=ATT_A, CEC_NODE=CEC_NODE, DDC_SDA_5V=DDC_SDA_5V, DDC_SCL_5V=DDC_SCL_5V)
 
+Debug = Module("./modules/Debug.zen")
+Debug(name="DBG", STATUS_LED=STATUS_LED, GND=GND)
+
 Board(
     name="picoarc",
     layout_path="layout",
