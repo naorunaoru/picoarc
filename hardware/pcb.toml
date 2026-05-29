@@ -1,5 +1,5 @@
 [workspace]
-repository = "github.com/naoru/picoarc"
+repository = "github.com/naorunaoru/picoarc"
 pcb-version = "0.3"
 vendor = ["github.com/diodeinc/registry/**"]
 
