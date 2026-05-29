@@ -47,6 +47,9 @@ Flash(name="U_FLASH", qspi=qspi, VCC=VDD_3V3, GND=GND)
 Power = Module("./modules/Power.zen")
 Power(name="PWR", VIN=VDD_5V, VOUT=VDD_3V3, GND=GND)
 
+UsbC = Module("./modules/UsbC.zen")
+UsbC(name="USBC", VBUS=VDD_5V, GND=GND, usb=usb)
+
 Board(
     name="picoarc",
     layout_path="layout",

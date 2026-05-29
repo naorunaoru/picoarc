@@ -1,0 +1,59 @@
+"""USB-C receptacle (USB 2.0, 16P) with CC Rd pulldowns and USBLC6-2SC6 ESD protection."""
+
+load("@stdlib/interfaces.zen", "Usb2", "Power", "Ground")
+
+Resistor = Module("@stdlib/generics/Resistor.zen")
+
+VBUS = io("VBUS", Power)
+GND  = io("GND",  Ground)
+usb  = io("usb",  Usb2)
+
+_dp  = usb.D.P
+_dn  = usb.D.N
+_cc1 = Net("CC1")
+_cc2 = Net("CC2")
+
+# USB-C receptacle — GCT USB4105-xx-A, 16P top-mount horizontal
+Component(
+    name="J_USB",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Connector.kicad_sym",
+        name="USB_C_Receptacle_USB2.0_16P",
+    ),
+    footprint=File(
+        "gitlab.com/kicad/libraries/kicad-footprints/Connector_USB.pretty/USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal.kicad_mod"
+    ),
+    pins={
+        "VBUS":   VBUS,
+        "GND":    GND,
+        "SHIELD": GND,
+        "CC1":    _cc1,
+        "CC2":    _cc2,
+        "D+":     _dp,
+        "D-":     _dn,
+        "SBU1":   Net("NC_SBU1"),
+        "SBU2":   Net("NC_SBU2"),
+    },
+)
+
+# CC Rd pulldowns — 5.1 kΩ to GND marks this as a USB device (UFP / sink)
+Resistor(name="R_CC1", value="5.1kohm", package="0402", P1=_cc1, P2=GND)
+Resistor(name="R_CC2", value="5.1kohm", package="0402", P1=_cc2, P2=GND)
+
+# USBLC6-2SC6 ESD shunt clamp on the data pair
+Component(
+    name="U_ESD",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Power_Protection.kicad_sym",
+        name="USBLC6-2SC6",
+    ),
+    footprint=File(
+        "gitlab.com/kicad/libraries/kicad-footprints/Package_TO_SOT_SMD.pretty/SOT-23-6.kicad_mod"
+    ),
+    pins={
+        "I/O1": _dp,
+        "I/O2": _dn,
+        "VBUS": VBUS,
+        "GND":  GND,
+    },
+)
