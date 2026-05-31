@@ -24,4 +24,9 @@
 	(fp_line (start 1.95 1.46) (end -1.95 1.46) (layer F.CrtYd) (width 0.05))
 	(fp_line (start -1.95 1.46) (end -1.95 -1.46) (layer F.CrtYd) (width 0.05))
 	(fp_line (start -1.95 -1.46) (end 1.95 -1.46) (layer F.CrtYd) (width 0.05))
+	(model "${KIPRJMOD}/../footprints/picoarc.3dshapes/SW-SMD_L3.9-W2.9-H2.0-LS4.8.wrl"
+		(offset (xyz 0 0 0))
+		(scale (xyz 1 1 1))
+		(rotate (xyz 0 0 0))
+	)
 )
