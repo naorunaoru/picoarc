@@ -25,7 +25,7 @@ RP2040(
     name="U_MCU",
     VDD_3V3=VDD_3V3, VDD_1V1=VDD_1V1, GND=GND,
     usb=usb, swd=swd, RUN=RUN,
-    add_qspi_flash=False, qspi=qspi, add_crystal=True, add_bootsel_button=True,
+    add_qspi_flash=False, qspi=qspi, add_crystal=True, add_bootsel_button=False,
     add_swd_test_points=True, add_gpio_headers=False,
     gpio0=Gpio("GPIO0"), gpio1=Gpio("GPIO1"),
     gpio2=ARC_TX, gpio3=CEC_BUS, gpio4=HDMI_5V_SENSE,
@@ -40,6 +40,21 @@ RP2040(
     gpio25=STATUS_LED,
     gpio26_adc0=Analog("GPIO26_ADC0"), gpio27_adc1=Analog("GPIO27_ADC1"),
     gpio28_adc2=Analog("GPIO28_ADC2"), gpio29_adc3=Analog("GPIO29_ADC3"),
+)
+
+# BOOTSEL button — small SMD tactile (replaces the RP2040 module's 6mm THT button).
+# Pressing holds QSPI_CS low at power-up so the RP2040 enters its USB bootloader.
+Component(
+    name="SW_BOOT",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Switch.kicad_sym",
+        name="SW_Push",
+    ),
+    footprint=File(
+        "gitlab.com/kicad/libraries/kicad-footprints/Button_Switch_SMD.pretty/SW_SPST_B3U-1000P.kicad_mod"
+    ),
+    pins={"1": qspi.CS, "2": GND},
+    part=Part(mpn="B3U-1000P", manufacturer="Omron"),
 )
 
 Flash(name="U_FLASH", qspi=qspi, VCC=VDD_3V3, GND=GND)

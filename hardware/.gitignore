@@ -7,3 +7,6 @@ layout/*.log
 # VSCode Local History extension artifacts
 layout/.history/
 .history/
+
+# pre-promotion layout backup (redundant with git history)
+layout/_pre-promote-backup/

@@ -1,6 +1,6 @@
 (fp_lib_table
   (version 7)
-  (lib (name "kicad_libraries_kicad-footprints_Button_Switch_THT@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Button_Switch_THT.pretty") (options "") (descr ""))
+  (lib (name "kicad_libraries_kicad-footprints_Button_Switch_SMD@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Button_Switch_SMD.pretty") (options "") (descr ""))
   (lib (name "kicad_libraries_kicad-footprints_Capacitor_SMD@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Capacitor_SMD.pretty") (options "") (descr ""))
   (lib (name "kicad_libraries_kicad-footprints_Connector_PinSocket_2.54mm@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Connector_PinSocket_2.54mm.pretty") (options "") (descr ""))
   (lib (name "kicad_libraries_kicad-footprints_Connector_USB@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Connector_USB.pretty") (options "") (descr ""))

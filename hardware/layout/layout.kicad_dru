@@ -1,0 +1,19 @@
+(version 1)
+
+# Fine-pitch parts have intrinsic pad-to-pad gaps smaller than the 0.2mm
+# board clearance (e.g. PCA9306 U2 pads are 0.15mm apart by the part's own
+# geometry). Relax pad<->pad clearance to 0.13mm *only* inside these parts'
+# courtyards. 0.13mm is well within JLCPCB/PCBWay standard capability
+# (>=0.0889mm). General routing clearance stays 0.2mm everywhere else.
+(rule "fine_pitch_intrinsic_pad_clearance"
+	(constraint clearance (min 0.13mm))
+	(condition "A.Type == 'Pad' && B.Type == 'Pad' && A.intersectsCourtyard('U2') && B.intersectsCourtyard('U2')"))
+
+# RP2040 (U5) is a 0.4mm-pitch QFN-56; the 0.2mm default clearance is too big
+# for its power-pin fan-out (a drop via to the 3V3 plane must sit ~0.35mm from
+# the neighbouring 1V1 pin). Relax copper clearance to 0.13mm ONLY where BOTH
+# items are inside U5's courtyard. 0.13mm is within JLCPCB/PCBWay standard
+# capability. Escapes leaving the courtyard keep the full 0.2mm.
+(rule "U5_qfn_fanout_clearance"
+	(constraint clearance (min 0.13mm))
+	(condition "A.intersectsCourtyard('U5') && B.intersectsCourtyard('U5')"))
