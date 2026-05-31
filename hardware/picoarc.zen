@@ -39,10 +39,12 @@ Component(
         name="SW_Push",
     ),
     footprint=File(
-        "gitlab.com/kicad/libraries/kicad-footprints/Button_Switch_SMD.pretty/SW_Push_1P1T_XKB_TS-1187A.kicad_mod"
+        "gitlab.com/kicad/libraries/kicad-footprints/Button_Switch_SMD.pretty/SW_SPST_B3U-1000P.kicad_mod"
     ),
     pins={"1": qspi.CS, "2": GND},
-    part=Part(mpn="TS-1187A-B-A-B", manufacturer="XKB Connection"),
+    # The only JLC-Basic SMD tact is the 5.1x5.1mm TS-1187A; no small one is Basic.
+    # Keep the small 3x2.5mm Omron B3U (Extended, ~$3) — board space > the fee here.
+    part=Part(mpn="B3U-1000P", manufacturer="Omron"),
 )
 
 Flash(name="U_FLASH", qspi=qspi, VCC=VDD_3V3, GND=GND)
