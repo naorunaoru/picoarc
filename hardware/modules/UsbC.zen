@@ -38,8 +38,8 @@ Component(
 )
 
 # CC Rd pulldowns — 5.1 kΩ to GND marks this as a USB device (UFP / sink)
-Resistor(name="R_CC1", value="5.1kohm", package="0402", P1=_cc1, P2=GND)
-Resistor(name="R_CC2", value="5.1kohm", package="0402", P1=_cc2, P2=GND)
+Resistor(name="R_CC1", value="5.1kohm", package="0402", mpn="0402WGF5101TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=_cc1, P2=GND)
+Resistor(name="R_CC2", value="5.1kohm", package="0402", mpn="0402WGF5101TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=_cc2, P2=GND)
 
 # USBLC6-2SC6 ESD shunt clamp on the data pair
 Component(

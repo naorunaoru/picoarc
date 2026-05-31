@@ -25,4 +25,4 @@ Component(
     part=Part(mpn="W25Q16JVSSIQ", manufacturer="Winbond"),
 )
 
-Capacitor(name="C_DEC", value="100nF", package="0402", P1=VCC, P2=GND)
+Capacitor(name="C_DEC", value="100nF", package="0402", mpn="CL05B104KB54PNC", manufacturer="Samsung Electro-Mechanics", P1=VCC, P2=GND)

@@ -1,0 +1,298 @@
+"""RP2040 - Local clone-and-trim of @kicad/MCU_RaspberryPi/RP2040.zen for picoarc.
+
+Child component names, footprints, values, and topology are kept IDENTICAL to the
+vendored module so a later `pcb layout` re-sync matches existing placement. Every
+support passive is pinned to a JLCPCB Basic MPN. The GPIO header, QSPI flash, and
+BOOTSEL button blocks are dropped (this board carries those externally). Only the
+GPIO pins this board uses (gpio2/3/4/6/7/25) are exposed as io(); the rest are tied
+to internal floating NC_GPIOxx nets.
+
+Hardcoded config for picoarc: qspi external (no flash), no bootsel, no header,
+crystal on, swd test points on.
+
+Datasheet: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
+"""
+
+load("@stdlib/interfaces.zen", "Gpio", "Usb2", "Qspi", "OscPair", "Swd")
+
+Resistor = Module("@stdlib/generics/Resistor.zen")
+Capacitor = Module("@stdlib/generics/Capacitor.zen")
+Crystal = Module("@stdlib/generics/Crystal.zen")
+TestPoint = Module("@stdlib/generics/TestPoint.zen")
+
+# Power / ground
+VDD_1V1 = io("VDD_1V1", Power)
+VDD_3V3 = io("VDD_3V3", Power)
+GND = io("GND", Ground)
+
+# Interfaces (qspi is external on this board, so it is an io, not flash-local)
+qspi = io("qspi", Qspi)
+usb = io("usb", Usb2)
+swd = io("swd", Swd)
+oscpair = OscPair("oscpair")
+RUN = io("RUN", Net)
+
+# USB series-resistor internal nodes (chip side of the 33ohm series resistors)
+_usb = Usb2("RP_USB")
+
+# Exposed GPIO (only the pins this board uses)
+gpio2 = io("gpio2", Gpio)
+gpio3 = io("gpio3", Gpio)
+gpio4 = io("gpio4", Gpio)
+gpio6 = io("gpio6", Gpio)
+gpio7 = io("gpio7", Gpio)
+gpio25 = io("gpio25", Gpio)
+
+# Unused GPIO / ADC chip pins -> internal floating nets (no header, not exposed)
+NC_GPIO0 = Net("NC_GPIO0")
+NC_GPIO1 = Net("NC_GPIO1")
+NC_GPIO5 = Net("NC_GPIO5")
+NC_GPIO8 = Net("NC_GPIO8")
+NC_GPIO9 = Net("NC_GPIO9")
+NC_GPIO10 = Net("NC_GPIO10")
+NC_GPIO11 = Net("NC_GPIO11")
+NC_GPIO12 = Net("NC_GPIO12")
+NC_GPIO13 = Net("NC_GPIO13")
+NC_GPIO14 = Net("NC_GPIO14")
+NC_GPIO15 = Net("NC_GPIO15")
+NC_GPIO16 = Net("NC_GPIO16")
+NC_GPIO17 = Net("NC_GPIO17")
+NC_GPIO18 = Net("NC_GPIO18")
+NC_GPIO19 = Net("NC_GPIO19")
+NC_GPIO20 = Net("NC_GPIO20")
+NC_GPIO21 = Net("NC_GPIO21")
+NC_GPIO22 = Net("NC_GPIO22")
+NC_GPIO23 = Net("NC_GPIO23")
+NC_GPIO24 = Net("NC_GPIO24")
+NC_GPIO26 = Net("NC_GPIO26")
+NC_GPIO27 = Net("NC_GPIO27")
+NC_GPIO28 = Net("NC_GPIO28")
+NC_GPIO29 = Net("NC_GPIO29")
+
+Component(
+    name="RP2040",
+    symbol=Symbol(library="@kicad-symbols/MCU_RaspberryPi.kicad_sym", name="RP2040"),
+    footprint=File("@kicad-footprints/Package_DFN_QFN.pretty/QFN-56-1EP_7x7mm_P0.4mm_EP3.2x3.2mm.kicad_mod"),
+    pins={
+        "RUN": RUN,
+        "USB_DP": _usb.D.P,
+        "USB_DM": _usb.D.N,
+        "QSPI_SS": qspi.CS,
+        "QSPI_SD0": qspi.IO0,
+        "QSPI_SD1": qspi.IO1,
+        "QSPI_SD2": qspi.IO2,
+        "QSPI_SD3": qspi.IO3,
+        "QSPI_SCLK": qspi.CLK,
+        "XIN": oscpair.XIN,
+        "XOUT": oscpair.XOUT,
+        "SWCLK": swd.SWCLK,
+        "SWD": swd.SWDIO,
+        "TESTEN": GND,
+        "VREG_IN": VDD_3V3,
+        "VREG_VOUT": VDD_1V1,
+        "GND": GND,
+        "IOVDD": VDD_3V3,
+        "USB_VDD": VDD_3V3,
+        "ADC_AVDD": VDD_3V3,
+        "DVDD": VDD_1V1,
+        "GPIO0": NC_GPIO0,
+        "GPIO1": NC_GPIO1,
+        "GPIO2": gpio2,
+        "GPIO3": gpio3,
+        "GPIO4": gpio4,
+        "GPIO5": NC_GPIO5,
+        "GPIO6": gpio6,
+        "GPIO7": gpio7,
+        "GPIO8": NC_GPIO8,
+        "GPIO9": NC_GPIO9,
+        "GPIO10": NC_GPIO10,
+        "GPIO11": NC_GPIO11,
+        "GPIO12": NC_GPIO12,
+        "GPIO13": NC_GPIO13,
+        "GPIO14": NC_GPIO14,
+        "GPIO15": NC_GPIO15,
+        "GPIO16": NC_GPIO16,
+        "GPIO17": NC_GPIO17,
+        "GPIO18": NC_GPIO18,
+        "GPIO19": NC_GPIO19,
+        "GPIO20": NC_GPIO20,
+        "GPIO21": NC_GPIO21,
+        "GPIO22": NC_GPIO22,
+        "GPIO23": NC_GPIO23,
+        "GPIO24": NC_GPIO24,
+        "GPIO25": gpio25,
+        "GPIO26_ADC0": NC_GPIO26,
+        "GPIO27_ADC1": NC_GPIO27,
+        "GPIO28_ADC2": NC_GPIO28,
+        "GPIO29_ADC3": NC_GPIO29,
+    },
+    part=Part(mpn="RP2040", manufacturer="Raspberry Pi"),
+)
+
+Resistor(
+    name="r_run_pullup",
+    value="10kohm 5%",
+    package="0402",
+    mpn="0402WGF1002TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=RUN,
+    P2=VDD_3V3,
+)
+
+Resistor(
+    name="r_qss_pullup",
+    value="10kohm 5%",
+    package="0402",
+    mpn="0402WGF1002TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=qspi.CS,
+    P2=VDD_3V3,
+)
+
+Capacitor(
+    name="c_bulk_3v3",
+    value="1uF",
+    voltage="6.3V",
+    package="0402",
+    mpn="CL05A105KA5NQNC",
+    manufacturer="Samsung Electro-Mechanics",
+    P1=VDD_3V3,
+    P2=GND,
+)
+Capacitor(
+    name="c_bulk_1v1",
+    value="1uF",
+    voltage="6.3V",
+    package="0402",
+    mpn="CL05A105KA5NQNC",
+    manufacturer="Samsung Electro-Mechanics",
+    P1=VDD_1V1,
+    P2=GND,
+)
+
+for i in range(1, 5):
+    Capacitor(
+        name=f"c_bypass_3v3_{i}",
+        value="100nF",
+        voltage="6.3V",
+        package="0402",
+        mpn="CL05B104KB54PNC",
+        manufacturer="Samsung Electro-Mechanics",
+        P1=VDD_3V3,
+        P2=GND,
+    )
+for i in range(1, 3):
+    Capacitor(
+        name=f"c_bypass_1v1_{i}",
+        value="100nF",
+        voltage="6.3V",
+        package="0402",
+        mpn="CL05B104KB54PNC",
+        manufacturer="Samsung Electro-Mechanics",
+        P1=VDD_1V1,
+        P2=GND,
+    )
+
+_R_OSC = Net("_R_OSC")
+Crystal(
+    name="crystal",
+    frequency="12MHz",
+    package="3225_4Pin",
+    mpn="X322512MSB4SI",
+    manufacturer="YXC",
+    XIN=oscpair.XIN,
+    XOUT=_R_OSC,
+    GND=GND,
+)
+
+Capacitor(
+    name="c_xin",
+    value="15pF",
+    package="0402",
+    mpn="0402CG150J500NT",
+    manufacturer="FH (Guangdong Fenghua Advanced Tech)",
+    P1=oscpair.XIN,
+    P2=GND,
+)
+
+Capacitor(
+    name="c_xout",
+    value="15pF",
+    package="0402",
+    mpn="0402CG150J500NT",
+    manufacturer="FH (Guangdong Fenghua Advanced Tech)",
+    P1=_R_OSC,
+    P2=GND,
+)
+
+Resistor(
+    name="r_xout",
+    value="1kohm 5%",
+    package="0402",
+    mpn="0402WGF1001TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=_R_OSC,
+    P2=oscpair.XOUT,
+)
+
+# USB series resistors: value-subbed 27ohm -> 33ohm (27ohm has no JLC Basic part;
+# 33ohm is a standard full-speed-USB series value).
+Resistor(
+    name="r_usb_dp",
+    value="33ohm",
+    package="0402",
+    mpn="0402WGF330JTCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=_usb.D.P,
+    P2=usb.D.P,
+)
+Resistor(
+    name="r_usb_dm",
+    value="33ohm",
+    package="0402",
+    mpn="0402WGF330JTCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=_usb.D.N,
+    P2=usb.D.N,
+)
+
+TestPoint(
+    name="tp_swd_io",
+    variant="THTPad_D2.0mm_Drill1.0mm",
+    P1=swd.SWDIO,
+)
+TestPoint(
+    name="tp_swd_clk",
+    variant="THTPad_D2.0mm_Drill1.0mm",
+    P1=swd.SWCLK,
+)
+
+# pcb:sch RP2040 x=697.5000 y=2793.0000 rot=0
+# pcb:sch c_bulk_1v1.C x=766.0800 y=2627.9000 rot=0
+# pcb:sch c_bulk_3v3.C x=1070.8800 y=2640.6000 rot=0
+# pcb:sch c_bypass_1v1_1.C x=626.3800 y=2627.9000 rot=0
+# pcb:sch c_bypass_1v1_2.C x=499.3800 y=2627.9000 rot=0
+# pcb:sch c_bypass_3v3_1.C x=1185.1800 y=2640.6000 rot=0
+# pcb:sch c_bypass_3v3_2.C x=1312.1800 y=2640.6000 rot=0
+# pcb:sch c_bypass_3v3_3.C x=1439.1800 y=2640.6000 rot=0
+# pcb:sch c_bypass_3v3_4.C x=1566.1800 y=2640.6000 rot=0
+# pcb:sch c_xin.C x=562.8800 y=3339.1000 rot=0
+# pcb:sch c_xout.C x=385.0800 y=3491.5000 rot=0
+# pcb:sch crystal.Y x=405.4000 y=3326.4000 rot=90
+# pcb:sch r_qss_pullup.R x=522.2400 y=3008.9000 rot=90
+# pcb:sch r_run_pullup.R x=522.2400 y=2831.1000 rot=90
+# pcb:sch r_usb_dm.R x=522.2400 y=2932.7000 rot=90
+# pcb:sch r_usb_dp.R x=522.2400 y=2907.3000 rot=90
+# pcb:sch r_xout.R x=547.6400 y=3453.4000 rot=270
+# pcb:sch tp_swd_clk.TP x=575.5800 y=3661.6800 rot=180
+# pcb:sch tp_swd_io.TP x=613.6800 y=3661.6800 rot=180
+# pcb:sch GND.1 x=938.8000 y=3758.2000 rot=0
+# pcb:sch VDD_3V3.1 x=1007.3800 y=2729.5000 rot=0
+# pcb:sch GND.2 x=646.7000 y=2767.6000 rot=0
+# pcb:sch VDD_3V3.3 x=397.7800 y=2780.3000 rot=0
+# pcb:sch GND.4 x=392.7000 y=3593.1000 rot=0
+# pcb:sch GND.5 x=176.8000 y=3364.5000 rot=0
+# pcb:sch GND.6 x=570.5000 y=3428.0000 rot=0
+# pcb:sch GND.8 x=354.6000 y=3440.7000 rot=0
+# pcb:sch VDD_3V3.4 x=1083.5800 y=2602.5000 rot=0
+# pcb:sch GND.9 x=1078.5000 y=2754.9000 rot=0

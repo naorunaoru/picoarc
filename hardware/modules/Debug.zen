@@ -8,5 +8,5 @@ STATUS_LED = io("STATUS_LED", Gpio)
 GND = io("GND", Ground)
 
 _a = Net("STATUS_LED_A")
-Resistor(name="R_LED", value="1kohm", package="0402", P1=STATUS_LED, P2=_a)
-Led(name="D_STATUS", package="0603", color="blue", A=_a, K=GND)
+Resistor(name="R_LED", value="1kohm", package="0402", mpn="0402WGF1001TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=STATUS_LED, P2=_a)
+Led(name="D_STATUS", package="0603", color="red", mpn="KT-0603R", manufacturer="Hubei KENTO Elec", A=_a, K=GND)

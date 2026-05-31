@@ -98,35 +98,37 @@ Component(
 )
 
 # ── CEC network ───────────────────────────────────────────────────────────────
-# VDD_3V3 —R1(27k)— CEC_NODE
-Resistor(name="R1", value="27kohm", package="0402", P1=VDD_3V3, P2=CEC_NODE)
+# VDD_3V3 —R1(22k)— CEC_NODE
+Resistor(name="R1", value="22kohm", package="0402", mpn="0402WGF2202TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=VDD_3V3, P2=CEC_NODE)
 # CEC_BUS(GP3) —R2(220Ω)— CEC_NODE
-Resistor(name="R2", value="220ohm", package="0402", P1=CEC_BUS, P2=CEC_NODE)
+Resistor(name="R2", value="220ohm", package="0402", mpn="0402WGF2200TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=CEC_BUS, P2=CEC_NODE)
 
 # ── ARC network ───────────────────────────────────────────────────────────────
 # ARC_TX(GP2) —R3(330Ω)— ATT_A
-Resistor(name="R3", value="330ohm", package="0402", P1=ARC_TX, P2=ATT_A)
-# ATT_A —R4(56Ω)— GND
-Resistor(name="R4", value="56ohm",  package="0402", P1=ATT_A,  P2=GND)
+Resistor(name="R3", value="330ohm", package="0402", mpn="0402WGF3300TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=ARC_TX, P2=ATT_A)
+# ATT_A — (R4a 100Ω ∥ R4b 120Ω = ~54.5Ω) — GND  (HEAC ARC L-pad shunt, synthesized
+# from two Basic resistors; Zout = R3∥54.5 = 46.8Ω, amplitude 0.468V)
+Resistor(name="R4a", value="100ohm", package="0402", mpn="0402WGF1000TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=ATT_A, P2=GND)
+Resistor(name="R4b", value="120ohm", package="0402", mpn="0402WGF1200TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=ATT_A, P2=GND)
 # ATT_A —C1(10nF)— _ARC14 (AC coupling to HDMI pin14)
-Capacitor(name="C1", value="10nF",  package="0402", voltage="50V", P1=ATT_A, P2=_ARC14)
+Capacitor(name="C1", value="10nF",  package="0402", voltage="50V", mpn="CL05B103KB5NNNC", manufacturer="Samsung Electro-Mechanics", P1=ATT_A, P2=_ARC14)
 
 # ── +5V / HPD / sense network ─────────────────────────────────────────────────
 # _HDMI_5V —R5(1k)— _HPD
-Resistor(name="R5", value="1kohm",   package="0402", P1=_HDMI_5V, P2=_HPD)
-# _HDMI_5V —R6(68k)— HDMI_5V_SENSE(GP4)
-Resistor(name="R6", value="68kohm",  package="0402", P1=_HDMI_5V, P2=HDMI_5V_SENSE)
+Resistor(name="R5", value="1kohm",   package="0402", mpn="0402WGF1001TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=_HDMI_5V, P2=_HPD)
+# _HDMI_5V —R6(100k)— HDMI_5V_SENSE(GP4)  (100k/100k divider → 2.5V at +5V)
+Resistor(name="R6", value="100kohm", package="0402", mpn="0402WGF1003TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=_HDMI_5V, P2=HDMI_5V_SENSE)
 # HDMI_5V_SENSE(GP4) —R7(100k)— GND
-Resistor(name="R7", value="100kohm", package="0402", P1=HDMI_5V_SENSE, P2=GND)
+Resistor(name="R7", value="100kohm", package="0402", mpn="0402WGF1003TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=HDMI_5V_SENSE, P2=GND)
 
 # ── DDC level translator: PCA9306 ────────────────────────────────────────────
 # PCA9306 pin map (verified, Interface.kicad_sym):
 #   1=GND  2=VREF1  3=SCL1  4=SDA1  5=SDA2  6=SCL2  7=VREF2  8=EN
 # 3V3 pull-ups on low side (SCL1/SDA1), 5V pull-ups on high side (SCL2/SDA2)
-Resistor(name="R8",  value="2.2kohm", package="0402", P1=DDC_SCL, P2=VDD_3V3)
-Resistor(name="R9",  value="2.2kohm", package="0402", P1=DDC_SDA, P2=VDD_3V3)
-Resistor(name="R10", value="2.2kohm", package="0402", P1=DDC_SCL_5V, P2=_HDMI_5V)
-Resistor(name="R11", value="2.2kohm", package="0402", P1=DDC_SDA_5V, P2=_HDMI_5V)
+Resistor(name="R8",  value="2.2kohm", package="0402", mpn="0402WGF2201TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=DDC_SCL, P2=VDD_3V3)
+Resistor(name="R9",  value="2.2kohm", package="0402", mpn="0402WGF2201TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=DDC_SDA, P2=VDD_3V3)
+Resistor(name="R10", value="2.2kohm", package="0402", mpn="0402WGF2201TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=DDC_SCL_5V, P2=_HDMI_5V)
+Resistor(name="R11", value="2.2kohm", package="0402", mpn="0402WGF2201TCE", manufacturer="UNI-ROYAL(Uniroyal Elec)", P1=DDC_SDA_5V, P2=_HDMI_5V)
 
 Component(
     name="U_DDC",
@@ -172,4 +174,26 @@ Component(
         "K4": DDC_SDA_5V,
     },
     part=Part(mpn="PESD5V0L4UF", manufacturer="Nexperia"),
+)
+
+# ── ESD: ARC + HDMI-5V (PESD5V0S2BT, SOT-23, 5V bidirectional, 2-line) ────────
+# Covers the two connector-facing lines the 4-ch D_ESD does not: ARC (pin14) and
+# the cable +5V (pin18). Bidirectional → correct for the AC-coupled ARC swing.
+# PESD5V0S2BT pinout: K1, K2 = protected I/O; A (pad 3) = common → GND.
+# Symbol RCLAMP0502B is the matching 2-line SOT-23 array with distinct K1/K2/A pins.
+Component(
+    name="D_ESD_ARC",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Power_Protection.kicad_sym",
+        name="RCLAMP0502B",
+    ),
+    footprint=File(
+        "gitlab.com/kicad/libraries/kicad-footprints/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod"
+    ),
+    pins={
+        "K1": _ARC14,
+        "K2": _HDMI_5V,
+        "A":  GND,
+    },
+    part=Part(mpn="PESD5V0S2BT,215", manufacturer="Nexperia"),
 )

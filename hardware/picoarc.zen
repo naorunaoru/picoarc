@@ -18,28 +18,16 @@ usb = Usb2("USB")
 swd = Swd("SWD")
 qspi = Qspi("QSPI")
 
-RP2040 = Module("@kicad/MCU_RaspberryPi/RP2040.zen")
+RP2040 = Module("./components/RP2040.zen")
 Flash = Module("./components/W25Q16JVSS.zen")
 
 RP2040(
     name="U_MCU",
     VDD_3V3=VDD_3V3, VDD_1V1=VDD_1V1, GND=GND,
-    usb=usb, swd=swd, RUN=RUN,
-    add_qspi_flash=False, qspi=qspi, add_crystal=True, add_bootsel_button=False,
-    add_swd_test_points=True, add_gpio_headers=False,
-    gpio0=Gpio("GPIO0"), gpio1=Gpio("GPIO1"),
+    usb=usb, swd=swd, RUN=RUN, qspi=qspi,
     gpio2=ARC_TX, gpio3=CEC_BUS, gpio4=HDMI_5V_SENSE,
-    gpio5=Gpio("GPIO5"),
     gpio6=DDC_SDA, gpio7=DDC_SCL,
-    gpio8=Gpio("GPIO8"), gpio9=Gpio("GPIO9"), gpio10=Gpio("GPIO10"),
-    gpio11=Gpio("GPIO11"), gpio12=Gpio("GPIO12"), gpio13=Gpio("GPIO13"),
-    gpio14=Gpio("GPIO14"), gpio15=Gpio("GPIO15"), gpio16=Gpio("GPIO16"),
-    gpio17=Gpio("GPIO17"), gpio18=Gpio("GPIO18"), gpio19=Gpio("GPIO19"),
-    gpio20=Gpio("GPIO20"), gpio21=Gpio("GPIO21"), gpio22=Gpio("GPIO22"),
-    gpio23=Gpio("GPIO23"), gpio24=Gpio("GPIO24"),
     gpio25=STATUS_LED,
-    gpio26_adc0=Analog("GPIO26_ADC0"), gpio27_adc1=Analog("GPIO27_ADC1"),
-    gpio28_adc2=Analog("GPIO28_ADC2"), gpio29_adc3=Analog("GPIO29_ADC3"),
 )
 
 # BOOTSEL button — small SMD tactile (replaces the RP2040 module's 6mm THT button).
@@ -51,10 +39,10 @@ Component(
         name="SW_Push",
     ),
     footprint=File(
-        "gitlab.com/kicad/libraries/kicad-footprints/Button_Switch_SMD.pretty/SW_SPST_B3U-1000P.kicad_mod"
+        "gitlab.com/kicad/libraries/kicad-footprints/Button_Switch_SMD.pretty/SW_Push_1P1T_XKB_TS-1187A.kicad_mod"
     ),
     pins={"1": qspi.CS, "2": GND},
-    part=Part(mpn="B3U-1000P", manufacturer="Omron"),
+    part=Part(mpn="TS-1187A-B-A-B", manufacturer="XKB Connection"),
 )
 
 Flash(name="U_FLASH", qspi=qspi, VCC=VDD_3V3, GND=GND)
@@ -78,7 +66,7 @@ HdmiArc(name="HDMI", VDD_3V3=VDD_3V3, GND=GND,
 Debug = Module("./modules/Debug.zen")
 Debug(name="DBG", STATUS_LED=STATUS_LED, GND=GND)
 
-# Design-rule check: the 68k/100k divider must keep HDMI +5V sense below RP2040 IO max.
+# Design-rule check: the 100k/100k divider must keep HDMI +5V sense below RP2040 IO max.
 def _check_5v_sense_divider(module, vbus, rtop, rbot, vio_max):
     v = vbus * rbot / (rtop + rbot)
     check(v <= vio_max,
@@ -87,7 +75,7 @@ def _check_5v_sense_divider(module, vbus, rtop, rbot, vio_max):
 builtin.add_electrical_check(
     name="hdmi_5v_sense_divider",
     check_fn=_check_5v_sense_divider,
-    inputs={"vbus": 5.0, "rtop": 68000.0, "rbot": 100000.0, "vio_max": 3.3},
+    inputs={"vbus": 5.0, "rtop": 100000.0, "rbot": 100000.0, "vio_max": 3.3},
     severity="error",
 )
 
