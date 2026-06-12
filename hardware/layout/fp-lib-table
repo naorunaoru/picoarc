@@ -1,8 +1,6 @@
 (fp_lib_table
   (version 7)
-  (lib (name "kicad_libraries_kicad-footprints_Button_Switch_SMD@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Button_Switch_SMD.pretty") (options "") (descr ""))
   (lib (name "kicad_libraries_kicad-footprints_Capacitor_SMD@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Capacitor_SMD.pretty") (options "") (descr ""))
-  (lib (name "kicad_libraries_kicad-footprints_Connector_PinSocket_2.54mm@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Connector_PinSocket_2.54mm.pretty") (options "") (descr ""))
   (lib (name "kicad_libraries_kicad-footprints_Connector_USB@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Connector_USB.pretty") (options "") (descr ""))
   (lib (name "kicad_libraries_kicad-footprints_Connector_Video@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Connector_Video.pretty") (options "") (descr ""))
   (lib (name "kicad_libraries_kicad-footprints_Crystal@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Crystal.pretty") (options "") (descr ""))
@@ -12,4 +10,5 @@
   (lib (name "kicad_libraries_kicad-footprints_Package_TO_SOT_SMD@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Package_TO_SOT_SMD.pretty") (options "") (descr ""))
   (lib (name "kicad_libraries_kicad-footprints_Resistor_SMD@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Resistor_SMD.pretty") (options "") (descr ""))
   (lib (name "kicad_libraries_kicad-footprints_TestPoint@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/TestPoint.pretty") (options "") (descr ""))
+  (lib (name "naorunaoru_picoarc_footprints_picoarc") (type "KiCad") (uri "${KIPRJMOD}/../footprints/picoarc.pretty") (options "") (descr ""))
 )

@@ -14,6 +14,18 @@ DDC_SDA = Gpio("DDC_SDA")
 DDC_SCL = Gpio("DDC_SCL")
 STATUS_LED = Gpio("STATUS_LED")
 RUN = Net("RUN")
+
+# Backside expansion pads: south-row GPIOs incl. all four ADC inputs (GP26-29)
+GP17 = Gpio("GP17")
+GP18 = Gpio("GP18")
+GP19 = Gpio("GP19")
+GP20 = Gpio("GP20")
+GP21 = Gpio("GP21")
+GP22 = Gpio("GP22")
+GP26 = Gpio("GP26")
+GP27 = Gpio("GP27")
+GP28 = Gpio("GP28")
+GP29 = Gpio("GP29")
 usb = Usb2("USB")
 swd = Swd("SWD")
 qspi = Qspi("QSPI")
@@ -23,11 +35,29 @@ Flash = Module("./components/W25Q16JVSS.zen")
 
 RP2040(
     name="U_MCU",
-    VDD_3V3=VDD_3V3, VDD_1V1=VDD_1V1, GND=GND,
-    usb=usb, swd=swd, RUN=RUN, qspi=qspi,
-    gpio2=ARC_TX, gpio3=CEC_BUS, gpio4=HDMI_5V_SENSE,
-    gpio6=DDC_SDA, gpio7=DDC_SCL,
+    VDD_3V3=VDD_3V3,
+    VDD_1V1=VDD_1V1,
+    GND=GND,
+    usb=usb,
+    swd=swd,
+    RUN=RUN,
+    qspi=qspi,
+    gpio2=ARC_TX,
+    gpio3=CEC_BUS,
+    gpio4=HDMI_5V_SENSE,
+    gpio6=DDC_SDA,
+    gpio7=DDC_SCL,
     gpio25=STATUS_LED,
+    gpio17=GP17,
+    gpio18=GP18,
+    gpio19=GP19,
+    gpio20=GP20,
+    gpio21=GP21,
+    gpio22=GP22,
+    gpio26=GP26,
+    gpio27=GP27,
+    gpio28=GP28,
+    gpio29=GP29,
 )
 
 # BOOTSEL button — small SMD tactile (replaces the RP2040 module's 6mm THT button).
@@ -54,23 +84,34 @@ UsbC = Module("./modules/UsbC.zen")
 UsbC(name="USBC", VBUS=VDD_5V, GND=GND, usb=usb)
 
 HdmiArc = Module("./modules/HdmiArc.zen")
-ATT_A      = Net("ATT_A")
-CEC_NODE   = Net("CEC_NODE")
+ATT_A = Net("ATT_A")
+CEC_NODE = Net("CEC_NODE")
 DDC_SDA_5V = Net("DDC_SDA_5V")
 DDC_SCL_5V = Net("DDC_SCL_5V")
-HdmiArc(name="HDMI", VDD_3V3=VDD_3V3, GND=GND,
-        ARC_TX=ARC_TX, CEC_BUS=CEC_BUS, HDMI_5V_SENSE=HDMI_5V_SENSE,
-        DDC_SDA=DDC_SDA, DDC_SCL=DDC_SCL,
-        ATT_A=ATT_A, CEC_NODE=CEC_NODE, DDC_SDA_5V=DDC_SDA_5V, DDC_SCL_5V=DDC_SCL_5V)
+HdmiArc(
+    name="HDMI",
+    VDD_3V3=VDD_3V3,
+    GND=GND,
+    ARC_TX=ARC_TX,
+    CEC_BUS=CEC_BUS,
+    HDMI_5V_SENSE=HDMI_5V_SENSE,
+    DDC_SDA=DDC_SDA,
+    DDC_SCL=DDC_SCL,
+    ATT_A=ATT_A,
+    CEC_NODE=CEC_NODE,
+    DDC_SDA_5V=DDC_SDA_5V,
+    DDC_SCL_5V=DDC_SCL_5V,
+)
 
 Debug = Module("./modules/Debug.zen")
 Debug(name="DBG", STATUS_LED=STATUS_LED, GND=GND)
 
+
 # Design-rule check: the 100k/100k divider must keep HDMI +5V sense below RP2040 IO max.
 def _check_5v_sense_divider(module, vbus, rtop, rbot, vio_max):
     v = vbus * rbot / (rtop + rbot)
-    check(v <= vio_max,
-          "HDMI 5V-sense divider = {}V exceeds RP2040 IO max {}V".format(v, vio_max))
+    check(v <= vio_max, "HDMI 5V-sense divider = {}V exceeds RP2040 IO max {}V".format(v, vio_max))
+
 
 builtin.add_electrical_check(
     name="hdmi_5v_sense_divider",
@@ -82,19 +123,46 @@ builtin.add_electrical_check(
 # Bring-up test points (groups: power rails, ARC+CEC, DDC both sides)
 TestPoint = Module("@stdlib/generics/TestPoint.zen")
 # Power rails
-TestPoint(name="TP_5V", variant="Pad_D1.5mm", P1=VDD_5V)
-TestPoint(name="TP_3V3", variant="Pad_D1.5mm", P1=VDD_3V3)
-TestPoint(name="TP_1V1", variant="Pad_D1.5mm", P1=VDD_1V1)
-TestPoint(name="TP_GND1", variant="Pad_D1.5mm", P1=GND)
-TestPoint(name="TP_GND2", variant="Pad_D1.5mm", P1=GND)
+TestPoint(name="TP_5V", variant="Pad_D1.0mm", P1=VDD_5V)
+TestPoint(name="TP_3V3", variant="Pad_D1.0mm", P1=VDD_3V3)
+TestPoint(name="TP_1V1", variant="Pad_D1.0mm", P1=VDD_1V1)
+TestPoint(name="TP_GND1", variant="Pad_D1.0mm", P1=GND)
+TestPoint(name="TP_GND2", variant="Pad_D1.0mm", P1=GND)
 # ARC + CEC
-TestPoint(name="TP_ATT_A", variant="Pad_D1.5mm", P1=ATT_A)
-TestPoint(name="TP_CEC", variant="Pad_D1.5mm", P1=CEC_NODE)
-# DDC both sides (3V3 = GP6/GP7, 5V = HDMI side)
-TestPoint(name="TP_SDA_3V3", variant="Pad_D1.5mm", P1=DDC_SDA)
-TestPoint(name="TP_SCL_3V3", variant="Pad_D1.5mm", P1=DDC_SCL)
-TestPoint(name="TP_SDA_5V", variant="Pad_D1.5mm", P1=DDC_SDA_5V)
-TestPoint(name="TP_SCL_5V", variant="Pad_D1.5mm", P1=DDC_SCL_5V)
+TestPoint(name="TP_ATT_A", variant="Pad_D1.0mm", P1=ATT_A)
+TestPoint(name="TP_CEC", variant="Pad_D1.0mm", P1=CEC_NODE)
+
+# Backside expansion pads: 1x1mm rounded-rect SMD pads (place on B.Cu, south of
+# U_MCU, clear of the EP via field where ARC_TX/CEC run on B.Cu). GP26-29 are the
+# ADC inputs; GP17-22 give UART0 RX / I2C1 / SPI0 / PWM coverage.
+_PAD_FP = File("footprints/picoarc.pretty/TestPad_1.0x1.0mm_RoundRect.kicad_mod")
+_PAD_SYM = Symbol(
+    library="gitlab.com/kicad/libraries/kicad-symbols/Connector.kicad_sym",
+    name="TestPoint",
+)
+for _pad_name, _pad_net in {
+    "PAD_GP17": GP17,
+    "PAD_GP18": GP18,
+    "PAD_GP19": GP19,
+    "PAD_GP20": GP20,
+    "PAD_GP21": GP21,
+    "PAD_GP22": GP22,
+    "PAD_GP26": GP26,
+    "PAD_GP27": GP27,
+    "PAD_GP28": GP28,
+    "PAD_GP29": GP29,
+    "PAD_3V3": VDD_3V3,
+    "PAD_5V": VDD_5V,
+    "PAD_GND1": GND,
+    "PAD_GND2": GND,
+}.items():
+    Component(
+        name=_pad_name,
+        symbol=_PAD_SYM,
+        footprint=_PAD_FP,
+        pins={"1": _pad_net},
+        skip_bom=True,
+    )
 
 Board(
     name="picoarc",

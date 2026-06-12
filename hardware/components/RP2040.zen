@@ -4,8 +4,9 @@ Child component names, footprints, values, and topology are kept IDENTICAL to th
 vendored module so a later `pcb layout` re-sync matches existing placement. Every
 support passive is pinned to a JLCPCB Basic MPN. The GPIO header, QSPI flash, and
 BOOTSEL button blocks are dropped (this board carries those externally). Only the
-GPIO pins this board uses (gpio2/3/4/6/7/25) are exposed as io(); the rest are tied
-to internal floating NC_GPIOxx nets.
+GPIO pins this board uses (gpio2/3/4/6/7/25) plus the backside expansion-pad GPIOs
+(gpio17-22, gpio26-29 incl. all four ADC inputs) are exposed as io(); the rest are
+tied to internal floating NC_GPIOxx nets.
 
 Hardcoded config for picoarc: qspi external (no flash), no bootsel, no header,
 crystal on, swd test points on.
@@ -43,6 +44,18 @@ gpio6 = io("gpio6", Gpio)
 gpio7 = io("gpio7", Gpio)
 gpio25 = io("gpio25", Gpio)
 
+# Backside expansion pads (south row of the QFN at the board's rot-90 placement)
+gpio17 = io("gpio17", Gpio)
+gpio18 = io("gpio18", Gpio)
+gpio19 = io("gpio19", Gpio)
+gpio20 = io("gpio20", Gpio)
+gpio21 = io("gpio21", Gpio)
+gpio22 = io("gpio22", Gpio)
+gpio26 = io("gpio26", Gpio)
+gpio27 = io("gpio27", Gpio)
+gpio28 = io("gpio28", Gpio)
+gpio29 = io("gpio29", Gpio)
+
 # Unused GPIO / ADC chip pins -> internal floating nets (no header, not exposed)
 NC_GPIO0 = Net("NC_GPIO0")
 NC_GPIO1 = Net("NC_GPIO1")
@@ -56,18 +69,8 @@ NC_GPIO13 = Net("NC_GPIO13")
 NC_GPIO14 = Net("NC_GPIO14")
 NC_GPIO15 = Net("NC_GPIO15")
 NC_GPIO16 = Net("NC_GPIO16")
-NC_GPIO17 = Net("NC_GPIO17")
-NC_GPIO18 = Net("NC_GPIO18")
-NC_GPIO19 = Net("NC_GPIO19")
-NC_GPIO20 = Net("NC_GPIO20")
-NC_GPIO21 = Net("NC_GPIO21")
-NC_GPIO22 = Net("NC_GPIO22")
 NC_GPIO23 = Net("NC_GPIO23")
 NC_GPIO24 = Net("NC_GPIO24")
-NC_GPIO26 = Net("NC_GPIO26")
-NC_GPIO27 = Net("NC_GPIO27")
-NC_GPIO28 = Net("NC_GPIO28")
-NC_GPIO29 = Net("NC_GPIO29")
 
 Component(
     name="RP2040",
@@ -112,19 +115,19 @@ Component(
         "GPIO14": NC_GPIO14,
         "GPIO15": NC_GPIO15,
         "GPIO16": NC_GPIO16,
-        "GPIO17": NC_GPIO17,
-        "GPIO18": NC_GPIO18,
-        "GPIO19": NC_GPIO19,
-        "GPIO20": NC_GPIO20,
-        "GPIO21": NC_GPIO21,
-        "GPIO22": NC_GPIO22,
+        "GPIO17": gpio17,
+        "GPIO18": gpio18,
+        "GPIO19": gpio19,
+        "GPIO20": gpio20,
+        "GPIO21": gpio21,
+        "GPIO22": gpio22,
         "GPIO23": NC_GPIO23,
         "GPIO24": NC_GPIO24,
         "GPIO25": gpio25,
-        "GPIO26_ADC0": NC_GPIO26,
-        "GPIO27_ADC1": NC_GPIO27,
-        "GPIO28_ADC2": NC_GPIO28,
-        "GPIO29_ADC3": NC_GPIO29,
+        "GPIO26_ADC0": gpio26,
+        "GPIO27_ADC1": gpio27,
+        "GPIO28_ADC2": gpio28,
+        "GPIO29_ADC3": gpio29,
     },
     part=Part(mpn="RP2040", manufacturer="Raspberry Pi"),
 )
@@ -258,12 +261,12 @@ Resistor(
 
 TestPoint(
     name="tp_swd_io",
-    variant="THTPad_D2.0mm_Drill1.0mm",
+    variant="Pad_1.0x1.0mm",
     P1=swd.SWDIO,
 )
 TestPoint(
     name="tp_swd_clk",
-    variant="THTPad_D2.0mm_Drill1.0mm",
+    variant="Pad_1.0x1.0mm",
     P1=swd.SWCLK,
 )
 

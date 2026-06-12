@@ -1,13 +1,16 @@
 (version 1)
 
 # Fine-pitch parts have intrinsic pad-to-pad gaps smaller than the 0.2mm
-# board clearance (e.g. PCA9306 U2 pads are 0.15mm apart by the part's own
+# board clearance (e.g. PCA9306 U1 pads are 0.15mm apart by the part's own
 # geometry). Relax pad<->pad clearance to 0.13mm *only* inside these parts'
 # courtyards. 0.13mm is well within JLCPCB/PCBWay standard capability
 # (>=0.0889mm). General routing clearance stays 0.2mm everywhere else.
+# CAUTION: these rules key on reference designators, which `pcb layout`
+# re-syncs can renumber (the PCA9306 was U2 before the RP2040 refactor) —
+# re-check after every netlist re-sync.
 (rule "fine_pitch_intrinsic_pad_clearance"
 	(constraint clearance (min 0.13mm))
-	(condition "A.Type == 'Pad' && B.Type == 'Pad' && A.intersectsCourtyard('U2') && B.intersectsCourtyard('U2')"))
+	(condition "A.Type == 'Pad' && B.Type == 'Pad' && A.intersectsCourtyard('U1') && B.intersectsCourtyard('U1')"))
 
 # RP2040 (U5) is a 0.4mm-pitch QFN-56; the 0.2mm default clearance is too big
 # for its power-pin fan-out (a drop via to the 3V3 plane must sit ~0.35mm from
@@ -17,3 +20,15 @@
 (rule "U5_qfn_fanout_clearance"
 	(constraint clearance (min 0.13mm))
 	(condition "A.intersectsCourtyard('U5') && B.intersectsCourtyard('U5')"))
+
+# The 90Ohm Diff class routes the USB pair at a 0.127mm intra-pair gap,
+# below the 0.2mm class clearance. KiCad exempts coupled diff-pair
+# segments from the clearance check, but only down to the class
+# diff_pair_gap; any tighter (e.g. a manual nudge during tuning) flags
+# against the full 0.2mm. This rule pins the pair's real floor at
+# 0.125mm — comfortably above JLCPCB's 0.09mm minimum spacing — and is
+# independent of later edits to the class gap. Clearance to everything
+# *outside* the pair stays at the full netclass value.
+(rule "diff_pair_intra_gap"
+	(constraint clearance (min 0.125mm))
+	(condition "AB.isCoupledDiffPair()"))
