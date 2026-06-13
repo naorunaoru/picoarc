@@ -10,6 +10,7 @@ VDD_1V1 = Power("VDD_1V1")
 ARC_TX = Gpio("ARC_TX")
 CEC_BUS = Gpio("CEC_BUS")
 HDMI_5V_SENSE = Gpio("HDMI_5V_SENSE")
+HPD_GATE = Gpio("HPD_GATE")
 DDC_SDA = Gpio("DDC_SDA")
 DDC_SCL = Gpio("DDC_SCL")
 STATUS_LED = Gpio("STATUS_LED")
@@ -45,6 +46,7 @@ RP2040(
     gpio2=ARC_TX,
     gpio3=CEC_BUS,
     gpio4=HDMI_5V_SENSE,
+    gpio5=HPD_GATE,
     gpio6=DDC_SDA,
     gpio7=DDC_SCL,
     gpio25=STATUS_LED,
@@ -62,6 +64,19 @@ RP2040(
 
 # BOOTSEL button — small SMD tactile (replaces the RP2040 module's 6mm THT button).
 # Pressing holds QSPI_CS low at power-up so the RP2040 enters its USB bootloader.
+# R_BOOT (1k, per the RP2040 hardware design guide) limits the current when the
+# button is pressed while QSPI_CS is actively driven during normal operation.
+Resistor = Module("@stdlib/generics/Resistor.zen")
+_BOOTSEL_SW = Net("BOOTSEL_SW")
+Resistor(
+    name="R_BOOT",
+    value="1kohm",
+    package="0402",
+    mpn="0402WGF1001TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=qspi.CS,
+    P2=_BOOTSEL_SW,
+)
 Component(
     name="SW_BOOT",
     symbol=Symbol(
@@ -71,14 +86,14 @@ Component(
     # TS-1088-AR02016: 4x3mm JLC-Basic SMD tact (free). Footprint from easyeda2kicad
     # (LCSC C720477); 2 pads (1,2) match SW_Push. 3D-model ref stripped.
     footprint=File("footprints/picoarc.pretty/SW-SMD_L3.9-W3.0-P4.45.kicad_mod"),
-    pins={"1": qspi.CS, "2": GND},
+    pins={"1": _BOOTSEL_SW, "2": GND},
     part=Part(mpn="TS-1088-AR02016", manufacturer="XUNPU"),
 )
 
 Flash(name="U_FLASH", qspi=qspi, VCC=VDD_3V3, GND=GND)
 
-Power = Module("./modules/Power.zen")
-Power(name="PWR", VIN=VDD_5V, VOUT=VDD_3V3, GND=GND)
+PowerModule = Module("./modules/Power.zen")  # not `Power` — would shadow the builtin
+PowerModule(name="PWR", VIN=VDD_5V, VOUT=VDD_3V3, GND=GND)
 
 UsbC = Module("./modules/UsbC.zen")
 UsbC(name="USBC", VBUS=VDD_5V, GND=GND, usb=usb)
@@ -95,6 +110,7 @@ HdmiArc(
     ARC_TX=ARC_TX,
     CEC_BUS=CEC_BUS,
     HDMI_5V_SENSE=HDMI_5V_SENSE,
+    HPD_GATE=HPD_GATE,
     DDC_SDA=DDC_SDA,
     DDC_SCL=DDC_SCL,
     ATT_A=ATT_A,

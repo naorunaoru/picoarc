@@ -4,7 +4,7 @@ Child component names, footprints, values, and topology are kept IDENTICAL to th
 vendored module so a later `pcb layout` re-sync matches existing placement. Every
 support passive is pinned to a JLCPCB Basic MPN. The GPIO header, QSPI flash, and
 BOOTSEL button blocks are dropped (this board carries those externally). Only the
-GPIO pins this board uses (gpio2/3/4/6/7/25) plus the backside expansion-pad GPIOs
+GPIO pins this board uses (gpio2/3/4/5/6/7/25) plus the backside expansion-pad GPIOs
 (gpio17-22, gpio26-29 incl. all four ADC inputs) are exposed as io(); the rest are
 tied to internal floating NC_GPIOxx nets.
 
@@ -40,6 +40,7 @@ _usb = Usb2("RP_USB")
 gpio2 = io("gpio2", Gpio)
 gpio3 = io("gpio3", Gpio)
 gpio4 = io("gpio4", Gpio)
+gpio5 = io("gpio5", Gpio)
 gpio6 = io("gpio6", Gpio)
 gpio7 = io("gpio7", Gpio)
 gpio25 = io("gpio25", Gpio)
@@ -59,7 +60,6 @@ gpio29 = io("gpio29", Gpio)
 # Unused GPIO / ADC chip pins -> internal floating nets (no header, not exposed)
 NC_GPIO0 = Net("NC_GPIO0")
 NC_GPIO1 = Net("NC_GPIO1")
-NC_GPIO5 = Net("NC_GPIO5")
 NC_GPIO8 = Net("NC_GPIO8")
 NC_GPIO9 = Net("NC_GPIO9")
 NC_GPIO10 = Net("NC_GPIO10")
@@ -103,7 +103,7 @@ Component(
         "GPIO2": gpio2,
         "GPIO3": gpio3,
         "GPIO4": gpio4,
-        "GPIO5": NC_GPIO5,
+        "GPIO5": gpio5,
         "GPIO6": gpio6,
         "GPIO7": gpio7,
         "GPIO8": NC_GPIO8,
@@ -208,11 +208,13 @@ Crystal(
     GND=GND,
 )
 
+# Load caps sized for the YXC X322512MSB4SI (CL=20pF): 33/2 + ~3pF stray ≈ 19.5pF.
+# (The vendored module's 15pF suited the Pico's ABM8-272-T3, CL=10pF.)
 Capacitor(
     name="c_xin",
-    value="15pF",
+    value="33pF",
     package="0402",
-    mpn="0402CG150J500NT",
+    mpn="0402CG330J500NT",
     manufacturer="FH (Guangdong Fenghua Advanced Tech)",
     P1=oscpair.XIN,
     P2=GND,
@@ -220,9 +222,9 @@ Capacitor(
 
 Capacitor(
     name="c_xout",
-    value="15pF",
+    value="33pF",
     package="0402",
-    mpn="0402CG150J500NT",
+    mpn="0402CG330J500NT",
     manufacturer="FH (Guangdong Fenghua Advanced Tech)",
     P1=_R_OSC,
     P2=GND,

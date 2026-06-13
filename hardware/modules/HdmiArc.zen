@@ -16,13 +16,19 @@ ARC (HDMI pin 14):
 
 HDMI +5V / HPD / sense:
   _HDMI_5V(pin18) —R5(1k)— _HPD(pin19)
+  _HPD —Q1(2N7002 D-S)— GND, gate _HPD_GATE: HPD_GATE(GP5) ∥ R13(100k)—VDD_3V3
+    (gate pulled up → HPD held low while board is powered until firmware drives
+    GP5 low; releases HPD only once the EDID I2C slave is ready. Board
+    unpowered → Q1 off → HPD asserts passively via R5, as before.)
   _HDMI_5V(pin18) —R6(100k)— HDMI_5V_SENSE(GP4)  (100k/100k divider → 2.5V)
   HDMI_5V_SENSE(GP4) —R7(100k)— GND
 
 DDC via PCA9306 (3V3 ↔ 5V level shift):
   low side:  SCL1=DDC_SCL(GP7), SDA1=DDC_SDA(GP6), VREF1=VDD_3V3
-  high side: SCL2=DDC_SCL_5V(→pin15), SDA2=DDC_SDA_5V(→pin16), VREF2=_HDMI_5V
-  EN=VDD_3V3, GND=GND
+  high side: SCL2=DDC_SCL_5V(→pin15), SDA2=DDC_SDA_5V(→pin16)
+  EN+VREF2 shorted = _VREF2_EN —R12(200k)— _HDMI_5V, —C2(100pF)— GND
+    (per TI SCPS113O §9.2.2.1/§10: EN must be tied to VREF2 and the pair pulled
+    to the high-side rail through ~200k; a hard tie risks pass-FET damage)
   pull-ups: DDC_SCL—2.2k—VDD_3V3, DDC_SDA—2.2k—VDD_3V3
             DDC_SCL_5V—2.2k—_HDMI_5V, DDC_SDA_5V—2.2k—_HDMI_5V
 
@@ -43,6 +49,7 @@ GND = io("GND", Ground)
 ARC_TX = io("ARC_TX", Gpio)
 CEC_BUS = io("CEC_BUS", Gpio)
 HDMI_5V_SENSE = io("HDMI_5V_SENSE", Gpio)
+HPD_GATE = io("HPD_GATE", Gpio)
 DDC_SDA = io("DDC_SDA", Gpio)
 DDC_SCL = io("DDC_SCL", Gpio)
 
@@ -56,6 +63,7 @@ DDC_SCL_5V = io("DDC_SCL_5V", Net)
 _HDMI_5V = Net("_HDMI_5V")
 _HPD = Net("_HPD")
 _ARC14 = Net("_ARC14")
+_VREF2_EN = Net("_VREF2_EN")
 
 # ── HDMI Type-A receptacle ────────────────────────────────────────────────────
 # Connector.kicad_sym HDMI_A_1.4 pin map (verified by extraction):
@@ -196,10 +204,45 @@ Resistor(
     P2=GND,
 )
 
+# ── HPD gate: hold HPD low until the EDID slave is ready ─────────────────────
+# Q1 (2N7002, JLC Basic C8545) shorts _HPD to GND while its gate is high. R13
+# pulls the gate to VDD_3V3, so a powered board deasserts HPD by default;
+# firmware drives HPD_GATE(GP5) low to release HPD once EDID is servable. The
+# source sees a fresh HPD rising edge and (re-)reads EDID. Unpowered board:
+# gate floats low → Q1 off → HPD asserts passively through R5 (legacy behavior).
+Component(
+    name="Q1",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Transistor_FET.kicad_sym",
+        name="2N7002",
+    ),
+    footprint=File("gitlab.com/kicad/libraries/kicad-footprints/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod"),
+    pins={
+        "D": _HPD,
+        "S": GND,
+        "G": HPD_GATE,
+    },
+    part=Part(mpn="2N7002", manufacturer="Jiangsu Changjing Electronics Technology (CJ)"),
+)
+Resistor(
+    name="R13",
+    value="100kohm",
+    package="0402",
+    mpn="0402WGF1003TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=HPD_GATE,
+    P2=VDD_3V3,
+)
+
 # ── DDC level translator: PCA9306 ────────────────────────────────────────────
 # PCA9306 pin map (verified, Interface.kicad_sym):
 #   1=GND  2=VREF1  3=SCL1  4=SDA1  5=SDA2  6=SCL2  7=VREF2  8=EN
-# 3V3 pull-ups on low side (SCL1/SDA1), 5V pull-ups on high side (SCL2/SDA2)
+# 3V3 pull-ups on low side (SCL1/SDA1), 5V pull-ups on high side (SCL2/SDA2).
+# EN+VREF2 are shorted and biased from _HDMI_5V through R12 (200k) with a C2
+# (100pF) filter, per TI SCPS113O — the internal reference then regulates the
+# gate node to ~VREF1+Vth. Never hard-tie VREF2 to the 5V rail (pass-FET damage
+# risk) or EN to 3V3 (below the VREF1+0.6V enable minimum). Side effect: the
+# shifter is enabled only while cable +5V is present.
 Resistor(
     name="R8",
     value="2.2kohm",
@@ -251,17 +294,38 @@ Component(
         "SDA1": DDC_SDA,
         "SDA2": DDC_SDA_5V,
         "SCL2": DDC_SCL_5V,
-        "VREF2": _HDMI_5V,
-        "EN": VDD_3V3,
+        "VREF2": _VREF2_EN,
+        "EN": _VREF2_EN,
     },
     part=Part(mpn="PCA9306DCTR", manufacturer="Texas Instruments"),
+)
+# _HDMI_5V —R12(200k)— EN+VREF2 bias node
+Resistor(
+    name="R12",
+    value="200kohm",
+    package="0402",
+    mpn="0402WGF2003TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=_HDMI_5V,
+    P2=_VREF2_EN,
+)
+# EN+VREF2 —C2(100pF)— GND (datasheet-recommended filter, close to VREF2)
+Capacitor(
+    name="C2",
+    value="100pF",
+    package="0402",
+    voltage="50V",
+    mpn="0402CG101J500NT",
+    manufacturer="FH (Guangdong Fenghua Advanced Tech)",
+    P1=_VREF2_EN,
+    P2=GND,
 )
 
 # ── ESD protection array: PESD5V0L4UF (SOT-886, 5V, 4-ch common-anode) ───────
 # Pin map (verified via PESD3V3L4UF parent, Power_Protection.kicad_sym):
 #   1=K1  2=A  3=K2  4=K3  5=A  6=K4
 # K1-K4 = cathodes → signal lines; A = common anode → GND
-# Channels: K1=_CEC_NODE, K2=_HPD, K3=DDC_SCL_5V, K4=DDC_SDA_5V
+# Channels: K1=_CEC_NODE, K2=_HPD, K3=DDC_SDA_5V, K4=DDC_SCL_5V
 Component(
     name="D_ESD",
     symbol=Symbol(
@@ -292,8 +356,8 @@ Component(
     ),
     footprint=File("gitlab.com/kicad/libraries/kicad-footprints/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod"),
     pins={
-        "K1": _ARC14,
-        "K2": _HDMI_5V,
+        "K1": _HDMI_5V,
+        "K2": _ARC14,
         "A": GND,
     },
     part=Part(mpn="PESD5V0S2BT,215", manufacturer="Nexperia"),
