@@ -5,8 +5,8 @@
 # from LCSC 2026-06-24 — VERIFY before ordering).
 # ESD consolidation (2026-06-24): the former D2 PESD5V0L4UF (4-ch, SOT-886, JLC shortfall +
 # not LCSC-stocked) and D3 PESD5V0S2BT (2-ch) were replaced by a single 5-ch array
-# (D2 D5V0M5B6LP16-7, C445551) on the signal lines + a single TVS (D3 H5VL10B, C7420372)
-# on the cable +5V. H5VL10B is JLC "promotional Extended" — treat as Basic for this run.
+# (D2 D5V0M5B6LP16-7, C445551) on the signal lines + a single TVS (D3 H7VN10B, C20615788)
+# on the cable +5V. Same DFN1006-2L footprint as the prior H5VL10B (drop-in).
 # `make fab` WARNs and lists any still-unmapped part.
 
 # --- ICs / connectors ---
@@ -20,7 +20,7 @@ mpn,AP2112K-3.3TRG1,C51118
 
 # --- ESD protection ---
 mpn,D5V0M5B6LP16-7,C445551
-mpn,H5VL10B,C7420372
+mpn,H7VN10B,C20615788
 
 # --- resistors (UNI-ROYAL 0402, JLC Basic) ---
 mpn,0402WGF1000TCE,C25076

@@ -141,7 +141,6 @@ TestPoint = Module("@stdlib/generics/TestPoint.zen")
 # Power rails
 TestPoint(name="TP_5V", variant="Pad_D1.0mm", P1=VDD_5V)
 TestPoint(name="TP_3V3", variant="Pad_D1.0mm", P1=VDD_3V3)
-TestPoint(name="TP_1V1", variant="Pad_D1.0mm", P1=VDD_1V1)
 TestPoint(name="TP_GND1", variant="Pad_D1.0mm", P1=GND)
 TestPoint(name="TP_GND2", variant="Pad_D1.0mm", P1=GND)
 # ARC + CEC

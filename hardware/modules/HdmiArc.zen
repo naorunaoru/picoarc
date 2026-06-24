@@ -347,17 +347,20 @@ Component(
     part=Part(mpn="D5V0M5B6LP16-7", manufacturer="Diodes Incorporated"),
 )
 
-# ── ESD: cable +5V (H5VL10B, DFN1006/SOD-882, single bidirectional, 5V) ───────
-# The one connector line the 5-ch array does not cover. Single bidirectional 5V TVS
-# (VRWM 5V) on the cable +5V rail — spec-equivalent to the +5V channel of the
-# PESD5V0S2BT it replaces. Bidirectional → the C/A symbol pins are polarity-agnostic.
+# ── ESD: cable +5V (H7VN10B, DFN1006-2L, single bidirectional) ────────────────
+# The one connector line the 5-ch array does not cover. Single bidirectional TVS
+# on the cable +5V rail — replaces the H5VL10B (same DFN1006-2L footprint, drop-in).
+# VRWM ~7V clears the up-to-5.3V HDMI +5V with margin; 200nA leakage keeps the rail
+# (and the R6/R7 sense divider) clean. Clamp ~14V is fine here: everything on
+# _HDMI_5V is resistor-isolated (R5 1k, R6/R12 100k/200k). Bidirectional → the C/A
+# symbol pins are polarity-agnostic.
 Component(
     name="D_ESD_5V",
-    symbol=Symbol("../footprints/picoarc.pretty/H5VL10B.kicad_sym"),
+    symbol=Symbol("../footprints/picoarc.pretty/H7VN10B.kicad_sym"),
     footprint=File("../footprints/picoarc.pretty/SOD-882_L1.0-W0.6-BI.kicad_mod"),
     pins={
         "C": _HDMI_5V,
         "A": GND,
     },
-    part=Part(mpn="H5VL10B", manufacturer="hongjiacheng"),
+    part=Part(mpn="H7VN10B", manufacturer="hongjiacheng"),
 )
