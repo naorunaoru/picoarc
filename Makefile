@@ -1,4 +1,4 @@
-.PHONY: build build-release build-debug flash flash-debug monitor run
+.PHONY: build build-release build-debug flash flash-debug monitor run fab
 
 build:
 	./picoarc build
@@ -20,3 +20,6 @@ monitor:
 
 run:
 	./picoarc run
+
+fab:
+	python3 hardware/fab.py $(FAB_ARGS)
