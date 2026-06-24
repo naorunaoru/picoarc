@@ -49,5 +49,32 @@ class OverlayTest(unittest.TestCase):
         self.assertEqual(fab.resolve_lcsc("R1", "NOPE", {}, {}), "")
 
 
+class BomTest(unittest.TestCase):
+    ROWS = [
+        {"designator": "R10", "mpn": "RES1", "package": "0402", "value": "100"},
+        {"designator": "R2", "mpn": "RES1", "package": "0402", "value": "100"},
+        {"designator": "U5", "mpn": "RP2040", "package": "QFN-56", "value": "RP2040"},
+        {"designator": "C1", "mpn": "NOPART", "package": "0402", "value": "10nF"},
+    ]
+    MAP = {"RES1": "C100", "RP2040": "C2040"}
+
+    def test_groups_identical_parts_and_natsorts_designators(self):
+        rows, unmapped = fab.build_bom(self.ROWS, self.MAP, {})
+        res = next(r for r in rows if r["LCSC Part #"] == "C100")
+        self.assertEqual(res["Designator"], "R2,R10")   # natural order, not R10,R2
+        self.assertEqual(res["Comment"], "100")
+        self.assertEqual(res["Footprint"], "0402")
+
+    def test_unmapped_part_listed_not_dropped(self):
+        rows, unmapped = fab.build_bom(self.ROWS, self.MAP, {})
+        self.assertIn("C1", unmapped)
+        c1 = next(r for r in rows if "C1" in r["Designator"])
+        self.assertEqual(c1["LCSC Part #"], "")        # present, blank LCSC
+
+    def test_columns_exact(self):
+        rows, _ = fab.build_bom(self.ROWS, self.MAP, {})
+        self.assertEqual(list(rows[0].keys()), ["Comment", "Designator", "Footprint", "LCSC Part #"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -65,3 +65,29 @@ def resolve_lcsc(designator, mpn, mpn_map, ref_map):
     if mpn and mpn in mpn_map:
         return mpn_map[mpn]
     return ""
+
+
+def natkey(ref):
+    m = re.match(r"([A-Za-z]+)(\d+)$", ref)
+    return (m.group(1), int(m.group(2))) if m else (ref, 0)
+
+
+def build_bom(bom_rows, mpn_map, ref_map):
+    groups = {}
+    unmapped = []
+    for r in bom_rows:
+        ref = r["designator"]
+        lcsc = resolve_lcsc(ref, r.get("mpn", ""), mpn_map, ref_map)
+        if not lcsc:
+            unmapped.append(ref)
+        groups.setdefault((r.get("value", ""), r.get("package", ""), lcsc), []).append(ref)
+    jlc_rows = []
+    for (value, package, lcsc), refs in groups.items():
+        jlc_rows.append({
+            "Comment": value,
+            "Designator": ",".join(sorted(refs, key=natkey)),
+            "Footprint": package,
+            "LCSC Part #": lcsc,
+        })
+    jlc_rows.sort(key=lambda x: natkey(x["Designator"].split(",")[0]))
+    return jlc_rows, sorted(unmapped, key=natkey)
