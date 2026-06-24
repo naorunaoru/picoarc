@@ -189,7 +189,7 @@ def export_pos(kicad, board, csv_path):
 
 def run_pcb_bom(zen):
     proc = run(["pcb", "bom", "--format", "json", str(zen)],
-               capture_output=True, text=True, check=True)
+               capture_output=True, text=True, check=True, cwd=str(HARDWARE))
     return json.loads(proc.stdout)
 
 

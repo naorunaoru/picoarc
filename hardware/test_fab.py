@@ -152,7 +152,7 @@ class IntegrationSmokeTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             proc = _sp.run(
                 [sys.executable, str(_Path(fab.__file__)), "--skip-drc", "--output", d],
-                capture_output=True, text=True,
+                capture_output=True, text=True, cwd=str(fab.ROOT),
             )
             self.assertEqual(proc.returncode, 0, proc.stderr)
             out = _Path(d)
