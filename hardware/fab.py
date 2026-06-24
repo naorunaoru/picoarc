@@ -25,6 +25,40 @@ BUNDLED_KICAD_CLI = "/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli"
 GERBER_LAYERS = "F.Cu,In1.Cu,In2.Cu,B.Cu,F.SilkS,B.SilkS,F.Mask,B.Mask,F.Paste,B.Paste,Edge.Cuts"
 
 
+def resolve_kicad_cli(environ=os.environ, which=shutil.which, exists=os.path.exists):
+    if environ.get("KICAD_CLI"):
+        return environ["KICAD_CLI"]
+    if exists(BUNDLED_KICAD_CLI):
+        return BUNDLED_KICAD_CLI
+    found = which("kicad-cli")
+    if found:
+        return found
+    raise SystemExit(
+        "kicad-cli not found. Set $KICAD_CLI, install KiCad 10, "
+        f"or ensure {BUNDLED_KICAD_CLI} exists."
+    )
+
+
+def read_pcb_version(pro_path):
+    data = json.loads(Path(pro_path).read_text())
+    return data.get("text_variables", {}).get("PCB_VERSION", "v0.0.0")
+
+
+def git_short_hash(repo):
+    return subprocess.run(
+        ["git", "-C", str(repo), "rev-parse", "--short", "HEAD"],
+        capture_output=True, text=True, check=True,
+    ).stdout.strip()
+
+
+def tree_dirty(repo, paths):
+    out = subprocess.run(
+        ["git", "-C", str(repo), "status", "--porcelain", "--", *map(str, paths)],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    return bool(out.strip())
+
+
 def compute_stamp(version, short_hash, dirty):
     stamp = f"{version}-{short_hash}"
     if dirty:

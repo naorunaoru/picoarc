@@ -1,4 +1,6 @@
 import unittest
+import tempfile
+import json as _json
 from pathlib import Path
 
 import fab
@@ -100,6 +102,41 @@ class CplTest(unittest.TestCase):
     def test_bottom_maps_to_capitalized(self):
         rows = fab.remap_cpl(self.POS, {"R2"})
         self.assertEqual(rows[0]["Layer"], "Bottom")
+
+
+class ResolveCliTest(unittest.TestCase):
+    def test_env_override_wins(self):
+        got = fab.resolve_kicad_cli(environ={"KICAD_CLI": "/custom/kc"},
+                                    which=lambda _: None, exists=lambda _: False)
+        self.assertEqual(got, "/custom/kc")
+
+    def test_bundled_path_when_present(self):
+        got = fab.resolve_kicad_cli(environ={}, which=lambda _: None,
+                                    exists=lambda p: p == fab.BUNDLED_KICAD_CLI)
+        self.assertEqual(got, fab.BUNDLED_KICAD_CLI)
+
+    def test_path_fallback(self):
+        got = fab.resolve_kicad_cli(environ={}, which=lambda _: "/usr/bin/kicad-cli",
+                                    exists=lambda _: False)
+        self.assertEqual(got, "/usr/bin/kicad-cli")
+
+    def test_missing_raises(self):
+        with self.assertRaises(SystemExit):
+            fab.resolve_kicad_cli(environ={}, which=lambda _: None, exists=lambda _: False)
+
+
+class PcbVersionTest(unittest.TestCase):
+    def test_reads_text_variable(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "x.kicad_pro"
+            p.write_text(_json.dumps({"text_variables": {"PCB_VERSION": "v1.2.3"}}))
+            self.assertEqual(fab.read_pcb_version(p), "v1.2.3")
+
+    def test_defaults_when_absent(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "x.kicad_pro"
+            p.write_text("{}")
+            self.assertEqual(fab.read_pcb_version(p), "v0.0.0")
 
 
 if __name__ == "__main__":
