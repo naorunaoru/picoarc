@@ -2,9 +2,11 @@
 #   kind=mpn  -> match a manufacturer part number from `pcb bom`
 #   kind=ref  -> override by designator (wins over an mpn match)
 # Seeded with the 8 ICs/connectors, then the passives/LED/MOSFET/crystal/switch (web-sourced
-# from LCSC 2026-06-24 — VERIFY before ordering). One part is intentionally NOT mapped:
-#   D2 PESD5V0L4UF (4-ch ESD, SOT-886) is not stocked by LCSC/JLCPCB. Substitute (e.g.
-#   PESD5V0L5UF C552561 / PESD5V0L4UG C5182057) or supply externally, then add its row here.
+# from LCSC 2026-06-24 — VERIFY before ordering).
+# ESD consolidation (2026-06-24): the former D2 PESD5V0L4UF (4-ch, SOT-886, JLC shortfall +
+# not LCSC-stocked) and D3 PESD5V0S2BT (2-ch) were replaced by a single 5-ch array
+# (D2 D5V0M5B6LP16-7, C445551) on the signal lines + a single TVS (D3 H5VL10B, C7420372)
+# on the cable +5V. H5VL10B is JLC "promotional Extended" — treat as Basic for this run.
 # `make fab` WARNs and lists any still-unmapped part.
 
 # --- ICs / connectors ---
@@ -15,7 +17,10 @@ mpn,USBLC6-2SC6,C7519
 mpn,208658-1001,C916313
 mpn,USB4105-GF-A-060,C3025063
 mpn,AP2112K-3.3TRG1,C51118
-mpn,"PESD5V0S2BT,215",C49338
+
+# --- ESD protection ---
+mpn,D5V0M5B6LP16-7,C445551
+mpn,H5VL10B,C7420372
 
 # --- resistors (UNI-ROYAL 0402, JLC Basic) ---
 mpn,0402WGF1000TCE,C25076

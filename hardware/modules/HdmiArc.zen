@@ -32,7 +32,8 @@ DDC via PCA9306 (3V3 ↔ 5V level shift):
   pull-ups: DDC_SCL—2.2k—VDD_3V3, DDC_SDA—2.2k—VDD_3V3
             DDC_SCL_5V—2.2k—_HDMI_5V, DDC_SDA_5V—2.2k—_HDMI_5V
 
-ESD: PESD5V0L4UF (5V, 4-channel) on _CEC_NODE, _HPD, DDC_SCL_5V, DDC_SDA_5V → GND
+ESD: D5V0M5B6LP16-7 (5V, 5-ch bidirectional) on _CEC_NODE, _HPD, DDC_SCL_5V,
+  DDC_SDA_5V, _ARC14 → GND; H5VL10B (5V, single) on _HDMI_5V → GND
 
 GND: HDMI pin17 + shield → GND
 TMDS pins (1-12 + shields): no-connect
@@ -321,44 +322,42 @@ Capacitor(
     P2=GND,
 )
 
-# ── ESD protection array: PESD5V0L4UF (SOT-886, 5V, 4-ch common-anode) ───────
-# Pin map (verified via PESD3V3L4UF parent, Power_Protection.kicad_sym):
-#   1=K1  2=A  3=K2  4=K3  5=A  6=K4
-# K1-K4 = cathodes → signal lines; A = common anode → GND
-# Channels: K1=_CEC_NODE, K2=_HPD, K3=DDC_SDA_5V, K4=DDC_SCL_5V
+# ── ESD protection: D5V0M5B6LP16-7 (U-DFN1616-6, 5-ch bidirectional, 5V) ──────
+# Replaces the former 4-ch PESD5V0L4UF (SOT-886, JLC shortfall + not LCSC-stocked)
+# AND the 2-ch PESD5V0S2BT: a single 5-channel array now covers all five connector
+# signal lines; the cable +5V power pin moves to its own single TVS (D_ESD_5V).
+# Datasheet schematic (Diodes DS37468): pins 1,3,4,5,6 = bidirectional I/O cells to
+# a common node; pin 2 = GND; EP (pad 7) = mechanical → tied to GND. VRWM 5V clears
+# the 5V-idle DDC lines, and the bidirectional cells are correct for AC-coupled ARC.
+# Local symbol: the LCSC-generated symbol names all five I/O pins "I/O" (unaddressable
+# by the pin-name binding), so it's copied locally with pins renamed IO1/IO3/IO4/IO5/IO6.
 Component(
     name="D_ESD",
-    symbol=Symbol(
-        library="gitlab.com/kicad/libraries/kicad-symbols/Power_Protection.kicad_sym",
-        name="PESD5V0L4UF",
-    ),
-    footprint=File("gitlab.com/kicad/libraries/kicad-footprints/Package_TO_SOT_SMD.pretty/SOT-886.kicad_mod"),
+    symbol=Symbol("../footprints/picoarc.pretty/D5V0M5B6LP16.kicad_sym"),
+    footprint=File("../footprints/picoarc.pretty/DFN1616-6_L1.6-W1.6-P0.50-BL-EP.kicad_mod"),
     pins={
-        "K1": CEC_NODE,
-        "A": GND,
-        "K2": _HPD,
-        "K3": DDC_SDA_5V,
-        "K4": DDC_SCL_5V,
+        "IO1": CEC_NODE,
+        "IO3": _HPD,
+        "IO4": DDC_SDA_5V,
+        "IO5": DDC_SCL_5V,
+        "IO6": _ARC14,
+        "GND": GND,
+        "EP": GND,
     },
-    part=Part(mpn="PESD5V0L4UF", manufacturer="Nexperia"),
+    part=Part(mpn="D5V0M5B6LP16-7", manufacturer="Diodes Incorporated"),
 )
 
-# ── ESD: ARC + HDMI-5V (PESD5V0S2BT, SOT-23, 5V bidirectional, 2-line) ────────
-# Covers the two connector-facing lines the 4-ch D_ESD does not: ARC (pin14) and
-# the cable +5V (pin18). Bidirectional → correct for the AC-coupled ARC swing.
-# PESD5V0S2BT pinout: K1, K2 = protected I/O; A (pad 3) = common → GND.
-# Symbol RCLAMP0502B is the matching 2-line SOT-23 array with distinct K1/K2/A pins.
+# ── ESD: cable +5V (H5VL10B, DFN1006/SOD-882, single bidirectional, 5V) ───────
+# The one connector line the 5-ch array does not cover. Single bidirectional 5V TVS
+# (VRWM 5V) on the cable +5V rail — spec-equivalent to the +5V channel of the
+# PESD5V0S2BT it replaces. Bidirectional → the C/A symbol pins are polarity-agnostic.
 Component(
-    name="D_ESD_ARC",
-    symbol=Symbol(
-        library="gitlab.com/kicad/libraries/kicad-symbols/Power_Protection.kicad_sym",
-        name="RCLAMP0502B",
-    ),
-    footprint=File("gitlab.com/kicad/libraries/kicad-footprints/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod"),
+    name="D_ESD_5V",
+    symbol=Symbol("../footprints/picoarc.pretty/H5VL10B.kicad_sym"),
+    footprint=File("../footprints/picoarc.pretty/SOD-882_L1.0-W0.6-BI.kicad_mod"),
     pins={
-        "K1": _HDMI_5V,
-        "K2": _ARC14,
+        "C": _HDMI_5V,
         "A": GND,
     },
-    part=Part(mpn="PESD5V0S2BT,215", manufacturer="Nexperia"),
+    part=Part(mpn="H5VL10B", manufacturer="hongjiacheng"),
 )
