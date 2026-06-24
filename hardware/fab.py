@@ -146,3 +146,129 @@ def build_bom(bom_rows, mpn_map, ref_map):
         })
     jlc_rows.sort(key=lambda x: natkey(x["Designator"].split(",")[0]))
     return jlc_rows, sorted(unmapped, key=natkey)
+
+
+def run(cmd, **kw):
+    print("+ " + " ".join(str(p) for p in cmd), flush=True)
+    return subprocess.run(cmd, **kw)
+
+
+def run_drc(kicad, board, report_path):
+    """Return the kicad-cli return code (nonzero => violations)."""
+    return run([kicad, "pcb", "drc", "--format", "json", "-o", str(report_path),
+                "--severity-all", "--exit-code-violations", "--units", "mm",
+                str(board)]).returncode
+
+
+def summarize_drc(report_path):
+    data = json.loads(Path(report_path).read_text())
+    items = list(data.get("violations", [])) + list(data.get("unconnected_items", []))
+    counts = {}
+    for v in items:
+        counts[v.get("type", "?")] = counts.get(v.get("type", "?"), 0) + 1
+    lines = [f"  {n:4d}  {t}" for t, n in sorted(counts.items(), key=lambda x: -x[1])]
+    return len(items), "\n".join(lines)
+
+
+def export_gerbers(kicad, board, out_dir, git_hash):
+    run([kicad, "pcb", "export", "gerbers", "-o", str(out_dir),
+         "--layers", GERBER_LAYERS, "--check-zones",
+         "-D", f"PCB_GIT_HASH={git_hash}", str(board)], check=True)
+
+
+def export_drill(kicad, board, out_dir):
+    run([kicad, "pcb", "export", "drill", "-o", str(out_dir) + os.sep,
+         "--format", "excellon", "--excellon-units", "mm",
+         "--drill-origin", "absolute", str(board)], check=True)
+
+
+def export_pos(kicad, board, csv_path):
+    run([kicad, "pcb", "export", "pos", "--format", "csv", "--units", "mm",
+         "-o", str(csv_path), str(board)], check=True)
+
+
+def run_pcb_bom(zen):
+    proc = run(["pcb", "bom", "--format", "json", str(zen)],
+               capture_output=True, text=True, check=True)
+    return json.loads(proc.stdout)
+
+
+def write_csv(path, fieldnames, rows):
+    with open(path, "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=fieldnames)
+        w.writeheader()
+        w.writerows(rows)
+
+
+def zip_dir(src_dir, zip_path):
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for f in sorted(Path(src_dir).iterdir()):
+            if f.is_file():
+                zf.write(f, f.name)
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(prog="fab", description="Export a JLCPCB assembly package.")
+    ap.add_argument("--output", default=str(DEFAULT_OUTPUT), help="output directory")
+    ap.add_argument("--skip-drc", action="store_true", help="skip the strict DRC gate (logged)")
+    ap.add_argument("--gerbers-only", action="store_true", help="skip BOM + CPL")
+    ap.add_argument("--no-zip", action="store_true", help="leave loose gerber/drill files")
+    args = ap.parse_args(argv)
+
+    kicad = resolve_kicad_cli()
+    out_dir = Path(args.output)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    git_hash = git_short_hash(ROOT)
+    dirty = tree_dirty(ROOT, [HARDWARE])
+    version = read_pcb_version(PROJECT)
+    stamp = compute_stamp(version, git_hash, dirty)
+    names = output_names(stamp, out_dir)
+    if dirty:
+        print(f"WARN: working tree dirty — silk hash {git_hash} may not reflect the plotted "
+              f"layout; outputs tagged -dirty", flush=True)
+
+    # 0. DRC gate
+    if args.skip_drc:
+        print("WARN: DRC skipped (--skip-drc)", flush=True)
+    else:
+        if run_drc(kicad, BOARD, names["drc"]) != 0:
+            total, summary = summarize_drc(names["drc"])
+            print(f"\nDRC FAILED: {total} violation(s):\n{summary}\n"
+                  f"See {names['drc']}. Fix the board or re-run with --skip-drc.", flush=True)
+            return 1
+
+    # 1. Gerbers + drill -> zip
+    with tempfile.TemporaryDirectory() as tmp:
+        export_gerbers(kicad, BOARD, tmp, git_hash)
+        export_drill(kicad, BOARD, tmp)
+        if args.no_zip:
+            for f in Path(tmp).iterdir():
+                shutil.copy(f, out_dir / f.name)
+        else:
+            zip_dir(tmp, names["gerber_zip"])
+
+    if not args.gerbers_only:
+        # 2. BOM
+        mpn_map, ref_map = load_lcsc_overlay(OVERLAY.read_text())
+        bom_rows = run_pcb_bom(ZEN)
+        jlc_bom, unmapped = build_bom(bom_rows, mpn_map, ref_map)
+        write_csv(names["bom"], ["Comment", "Designator", "Footprint", "LCSC Part #"], jlc_bom)
+        placed = {r["designator"] for r in bom_rows}
+        if unmapped:
+            print(f"WARN: {len(unmapped)} part(s) need an LCSC mapping: "
+                  f"{', '.join(unmapped)}", flush=True)
+
+        # 3. CPL (filtered to placed parts)
+        with tempfile.TemporaryDirectory() as tmp:
+            pos_csv = Path(tmp) / "pos.csv"
+            export_pos(kicad, BOARD, pos_csv)
+            cpl_rows = remap_cpl(pos_csv.read_text(), placed)
+        write_csv(names["cpl"], CPL_FIELDS, cpl_rows)
+
+    print(f"\nFab package written to {out_dir} (stamp {stamp})", flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

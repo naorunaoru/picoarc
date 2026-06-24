@@ -1,7 +1,9 @@
+import csv
+import sys
 import unittest
 import tempfile
 import json as _json
-from pathlib import Path
+from pathlib import Path as _Path
 
 import fab
 
@@ -14,11 +16,11 @@ class StampTest(unittest.TestCase):
         self.assertEqual(fab.compute_stamp("v0.0.0", "cc0bb70", True), "v0.0.0-cc0bb70-dirty")
 
     def test_output_names(self):
-        names = fab.output_names("v0.0.0-cc0bb70", Path("/out"))
-        self.assertEqual(names["gerber_zip"], Path("/out/picoarc-v0.0.0-cc0bb70-gerbers.zip"))
-        self.assertEqual(names["bom"], Path("/out/picoarc-v0.0.0-cc0bb70-bom.csv"))
-        self.assertEqual(names["cpl"], Path("/out/picoarc-v0.0.0-cc0bb70-cpl.csv"))
-        self.assertEqual(names["drc"], Path("/out/drc-report.json"))
+        names = fab.output_names("v0.0.0-cc0bb70", _Path("/out"))
+        self.assertEqual(names["gerber_zip"], _Path("/out/picoarc-v0.0.0-cc0bb70-gerbers.zip"))
+        self.assertEqual(names["bom"], _Path("/out/picoarc-v0.0.0-cc0bb70-bom.csv"))
+        self.assertEqual(names["cpl"], _Path("/out/picoarc-v0.0.0-cc0bb70-cpl.csv"))
+        self.assertEqual(names["drc"], _Path("/out/drc-report.json"))
 
 
 class OverlayTest(unittest.TestCase):
@@ -128,15 +130,47 @@ class ResolveCliTest(unittest.TestCase):
 class PcbVersionTest(unittest.TestCase):
     def test_reads_text_variable(self):
         with tempfile.TemporaryDirectory() as d:
-            p = Path(d) / "x.kicad_pro"
+            p = _Path(d) / "x.kicad_pro"
             p.write_text(_json.dumps({"text_variables": {"PCB_VERSION": "v1.2.3"}}))
             self.assertEqual(fab.read_pcb_version(p), "v1.2.3")
 
     def test_defaults_when_absent(self):
         with tempfile.TemporaryDirectory() as d:
-            p = Path(d) / "x.kicad_pro"
+            p = _Path(d) / "x.kicad_pro"
             p.write_text("{}")
             self.assertEqual(fab.read_pcb_version(p), "v0.0.0")
+
+
+import subprocess as _sp
+import zipfile as _zip
+
+
+class IntegrationSmokeTest(unittest.TestCase):
+    """Runs the real pipeline with --skip-drc so an in-progress board still exercises export."""
+
+    def test_make_fab_skip_drc_produces_artifacts(self):
+        with tempfile.TemporaryDirectory() as d:
+            proc = _sp.run(
+                [sys.executable, str(_Path(fab.__file__)), "--skip-drc", "--output", d],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            out = _Path(d)
+            zips = list(out.glob("picoarc-*-gerbers.zip"))
+            boms = list(out.glob("picoarc-*-bom.csv"))
+            cpls = list(out.glob("picoarc-*-cpl.csv"))
+            self.assertEqual(len(zips), 1, "exactly one gerber zip")
+            self.assertEqual(len(boms), 1)
+            self.assertEqual(len(cpls), 1)
+            # zip carries copper + paste + edge + drill
+            names = _zip.ZipFile(zips[0]).namelist()
+            self.assertTrue(any(n.endswith((".gtl", "-F_Cu.gtl")) or "F_Cu" in n for n in names), names)
+            self.assertTrue(any(n.lower().endswith(".drl") for n in names), names)
+            # CPL is filtered to placed parts (51), not the 65 pos rows
+            cpl_rows = list(csv.DictReader(cpls[0].open()))
+            self.assertEqual(len(cpl_rows), 51)
+            self.assertNotIn("TP1", {r["Designator"] for r in cpl_rows})
+            self.assertEqual(list(cpl_rows[0].keys()), fab.CPL_FIELDS)
 
 
 if __name__ == "__main__":
