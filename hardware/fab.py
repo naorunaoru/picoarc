@@ -127,27 +127,54 @@ def remap_cpl(pos_text, placed):
     return out
 
 
-def build_bom(bom_rows, mpn_map, ref_map):
+def build_bom(bom_rows, mpn_map, ref_map, footprints=None):
+    # `pcb bom` leaves `value` and `package` blank for ICs/connectors/semiconductors and uses
+    # cosmetically different value strings for the same part (e.g. "1k" vs "1k 5%"). So we group
+    # by the orderable identity — the MPN — not by value/package: two designators share a BOM
+    # line iff they are the same physical part. lcsc is in the key so a per-designator ref
+    # override that points at a different part splits it onto its own line.
+    footprints = footprints or {}
     groups = {}
+    order = []
     unmapped = []
     for r in bom_rows:
         ref = r["designator"]
-        lcsc = resolve_lcsc(ref, r.get("mpn", ""), mpn_map, ref_map)
+        mpn = r.get("mpn", "")
+        lcsc = resolve_lcsc(ref, mpn, mpn_map, ref_map)
         if not lcsc:
             unmapped.append(ref)
-        # Unmapped parts (blank lcsc) sharing the same value+package intentionally collapse
-        # into one row — acceptable for an all-Basic BOM where same value+footprint = same part.
-        groups.setdefault((r.get("value", ""), r.get("package", ""), lcsc), []).append(ref)
+        key = ("mpn", mpn, lcsc) if mpn else ("vp", r.get("value", ""), r.get("package", ""), lcsc)
+        if key not in groups:
+            groups[key] = []
+            order.append(key)
+        groups[key].append(r)
     jlc_rows = []
-    for (value, package, lcsc), refs in groups.items():
+    for key in order:
+        rows = groups[key]
+        refs = sorted((r["designator"] for r in rows), key=natkey)
+        mpn = rows[0].get("mpn", "")
+        lcsc = resolve_lcsc(refs[0], mpn, mpn_map, ref_map)
+        # Comment: first meaningful value in the group, else the MPN (ICs carry no value).
+        comment = next((r.get("value", "") for r in rows if r.get("value")), mpn)
+        # Footprint: first non-empty package, else the real footprint name from the pos file
+        # (pcb bom's package is blank for non-passives; the pos `Package` column has it).
+        footprint = next((r.get("package", "") for r in rows if r.get("package")), "")
+        if not footprint:
+            footprint = footprints.get(refs[0], "")
         jlc_rows.append({
-            "Comment": value,
-            "Designator": ",".join(sorted(refs, key=natkey)),
-            "Footprint": package,
+            "Comment": comment,
+            "Designator": ",".join(refs),
+            "Footprint": footprint,
             "LCSC Part #": lcsc,
         })
     jlc_rows.sort(key=lambda x: natkey(x["Designator"].split(",")[0]))
     return jlc_rows, sorted(unmapped, key=natkey)
+
+
+def pos_footprints(pos_text):
+    """Map designator -> footprint name from a kicad-cli pos CSV. This is the authoritative
+    footprint name; `pcb bom`'s `package` field is blank for ICs/connectors."""
+    return {row["Ref"]: row["Package"] for row in csv.DictReader(io.StringIO(pos_text))}
 
 
 def run(cmd, **kw):
@@ -254,10 +281,18 @@ def main(argv=None):
                 zip_dir(tmp, names["gerber_zip"])
 
         if not args.gerbers_only:
+            # Export the placement file once; it feeds both the BOM (authoritative footprint
+            # names, which pcb bom omits for ICs/connectors) and the CPL.
+            with tempfile.TemporaryDirectory() as tmp:
+                pos_csv = Path(tmp) / "pos.csv"
+                export_pos(kicad, BOARD, pos_csv)
+                pos_text = pos_csv.read_text()
+            footprints = pos_footprints(pos_text)
+
             # 2. BOM
             mpn_map, ref_map = load_lcsc_overlay(OVERLAY.read_text())
             bom_rows = run_pcb_bom(ZEN)
-            jlc_bom, unmapped = build_bom(bom_rows, mpn_map, ref_map)
+            jlc_bom, unmapped = build_bom(bom_rows, mpn_map, ref_map, footprints)
             write_csv(names["bom"], ["Comment", "Designator", "Footprint", "LCSC Part #"], jlc_bom)
             placed = {r["designator"] for r in bom_rows}
             if unmapped:
@@ -265,10 +300,7 @@ def main(argv=None):
                       f"{', '.join(unmapped)}", flush=True)
 
             # 3. CPL (filtered to placed parts)
-            with tempfile.TemporaryDirectory() as tmp:
-                pos_csv = Path(tmp) / "pos.csv"
-                export_pos(kicad, BOARD, pos_csv)
-                cpl_rows = remap_cpl(pos_csv.read_text(), placed)
+            cpl_rows = remap_cpl(pos_text, placed)
             write_csv(names["cpl"], CPL_FIELDS, cpl_rows)
 
         print(f"\nFab package written to {out_dir} (stamp {stamp})", flush=True)

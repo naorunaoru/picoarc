@@ -80,6 +80,53 @@ class BomTest(unittest.TestCase):
         self.assertEqual(list(rows[0].keys()), ["Comment", "Designator", "Footprint", "LCSC Part #"])
 
 
+class BomIdentityTest(unittest.TestCase):
+    """Parts group by orderable identity (MPN), not by cosmetic value/package."""
+
+    def test_distinct_unmapped_parts_with_empty_value_package_do_not_merge(self):
+        # The real bug: D2 (ESD), Q1 (MOSFET), SW1 (switch) all have empty value+package
+        # and no LCSC, but DIFFERENT mpns — they must NOT collapse into one row.
+        rows = [
+            {"designator": "D2", "mpn": "PESD5V0L4UF", "value": "", "package": ""},
+            {"designator": "Q1", "mpn": "2N7002", "value": "", "package": ""},
+            {"designator": "SW1", "mpn": "TS-1088", "value": "", "package": ""},
+        ]
+        fps = {"D2": "SOT-886", "Q1": "SOT-23", "SW1": "SW-SMD"}
+        jlc, unmapped = fab.build_bom(rows, {}, {}, fps)
+        self.assertEqual(len(jlc), 3)
+        self.assertEqual(sorted(r["Designator"] for r in jlc), ["D2", "Q1", "SW1"])
+        self.assertEqual(sorted(unmapped), ["D2", "Q1", "SW1"])
+
+    def test_empty_value_falls_back_to_mpn_and_empty_package_to_pos_footprint(self):
+        rows = [{"designator": "U5", "mpn": "RP2040", "value": "", "package": ""}]
+        jlc, _ = fab.build_bom(rows, {"RP2040": "C2040"}, {}, {"U5": "QFN-56-1EP"})
+        self.assertEqual(jlc[0]["Comment"], "RP2040")        # value empty -> mpn
+        self.assertEqual(jlc[0]["Footprint"], "QFN-56-1EP")  # package empty -> pos footprint
+        self.assertEqual(jlc[0]["LCSC Part #"], "C2040")
+
+    def test_same_mpn_different_value_strings_merge_into_one_line(self):
+        # R4 "1k" and R23 "1k 5%" share one MPN -> the same orderable part -> one line.
+        rows = [
+            {"designator": "R4", "mpn": "RMPN", "value": "1k", "package": "0402"},
+            {"designator": "R23", "mpn": "RMPN", "value": "1k 5%", "package": "0402"},
+        ]
+        jlc, _ = fab.build_bom(rows, {}, {}, {})
+        self.assertEqual(len(jlc), 1)
+        self.assertEqual(jlc[0]["Designator"], "R4,R23")
+        self.assertIn(jlc[0]["Comment"], ("1k", "1k 5%"))    # a representative value
+        self.assertEqual(jlc[0]["Footprint"], "0402")
+
+
+class PosFootprintsTest(unittest.TestCase):
+    def test_maps_designator_to_package_column(self):
+        pos = (
+            "Ref,Val,Package,PosX,PosY,Rot,Side\n"
+            '"U5","RP2040","QFN-56-1EP",1,2,0,top\n'
+            '"D2","?","SOT-886",3,4,0,bottom\n'
+        )
+        self.assertEqual(fab.pos_footprints(pos), {"U5": "QFN-56-1EP", "D2": "SOT-886"})
+
+
 class CplTest(unittest.TestCase):
     POS = (
         "Ref,Val,Package,PosX,PosY,Rot,Side\n"
