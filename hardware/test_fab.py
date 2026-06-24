@@ -141,8 +141,76 @@ class PcbVersionTest(unittest.TestCase):
             self.assertEqual(fab.read_pcb_version(p), "v0.0.0")
 
 
+class SummarizeDrcTest(unittest.TestCase):
+    """Exercises summarize_drc against a synthetic KiCad-10 DRC JSON fixture."""
+
+    def _write_report(self, tmpdir, violations, unconnected_items):
+        p = _Path(tmpdir) / "drc-report.json"
+        p.write_text(_json.dumps({
+            "violations": violations,
+            "unconnected_items": unconnected_items,
+        }))
+        return p
+
+    def test_mixed_violations_and_unconnected(self):
+        """Correct total and per-type counts for a report with multiple violation types."""
+        with tempfile.TemporaryDirectory() as d:
+            report = self._write_report(d, [
+                {"type": "clearance", "description": "Clearance violation"},
+                {"type": "clearance", "description": "Another clearance"},
+                {"type": "silk_over_copper", "description": "Silk over copper"},
+            ], [
+                {"type": "unconnected_items", "description": "Net not connected"},
+                {"type": "unconnected_items", "description": "Another unconnected"},
+            ])
+            total, summary = fab.summarize_drc(report)
+            self.assertEqual(total, 5)
+            # Each type's count must appear in the summary
+            self.assertIn("clearance", summary)
+            self.assertIn("silk_over_copper", summary)
+            self.assertIn("unconnected_items", summary)
+            # clearance appears 2 times — its count must be in the summary
+            self.assertIn("2", summary)
+            # silk_over_copper and unconnected_items appear once / twice
+            self.assertIn("1", summary)
+
+    def test_clean_report_returns_zero(self):
+        """Empty violations and unconnected_items produce total 0 and empty summary."""
+        with tempfile.TemporaryDirectory() as d:
+            report = self._write_report(d, [], [])
+            total, summary = fab.summarize_drc(report)
+            self.assertEqual(total, 0)
+            self.assertEqual(summary, "")
+
+
 import subprocess as _sp
 import zipfile as _zip
+
+
+class ToolFailureTest(unittest.TestCase):
+    """main() must return 1 and print a clean message (no traceback) on tool failure."""
+
+    def test_tool_failure_returns_1_and_prints_stderr(self):
+        """Simulate a failing kicad-cli call; main must catch it and return 1."""
+        import io as _io
+        import unittest.mock as _mock
+
+        err_output = _io.StringIO()
+        fake_error = _sp.CalledProcessError(
+            returncode=1,
+            cmd=["kicad-cli", "pcb", "export", "gerbers"],
+            stderr="kicad-cli: error: no board file found\n",
+        )
+
+        with tempfile.TemporaryDirectory() as d:
+            with _mock.patch.object(fab, "export_gerbers", side_effect=fake_error), \
+                 _mock.patch("sys.stderr", err_output):
+                rc = fab.main(["--skip-drc", "--output", d])
+
+        self.assertEqual(rc, 1)
+        msg = err_output.getvalue()
+        self.assertIn("kicad-cli", msg)
+        self.assertIn("kicad-cli: error:", msg)
 
 
 class IntegrationSmokeTest(unittest.TestCase):

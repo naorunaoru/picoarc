@@ -135,6 +135,8 @@ def build_bom(bom_rows, mpn_map, ref_map):
         lcsc = resolve_lcsc(ref, r.get("mpn", ""), mpn_map, ref_map)
         if not lcsc:
             unmapped.append(ref)
+        # Unmapped parts (blank lcsc) sharing the same value+package intentionally collapse
+        # into one row — acceptable for an all-Basic BOM where same value+footprint = same part.
         groups.setdefault((r.get("value", ""), r.get("package", ""), lcsc), []).append(ref)
     jlc_rows = []
     for (value, package, lcsc), refs in groups.items():
@@ -215,59 +217,69 @@ def main(argv=None):
     ap.add_argument("--no-zip", action="store_true", help="leave loose gerber/drill files")
     args = ap.parse_args(argv)
 
+    # resolve_kicad_cli raises SystemExit on its own with a clean message; let it propagate.
     kicad = resolve_kicad_cli()
-    out_dir = Path(args.output)
-    out_dir.mkdir(parents=True, exist_ok=True)
 
-    git_hash = git_short_hash(ROOT)
-    dirty = tree_dirty(ROOT, [HARDWARE])
-    version = read_pcb_version(PROJECT)
-    stamp = compute_stamp(version, git_hash, dirty)
-    names = output_names(stamp, out_dir)
-    if dirty:
-        print(f"WARN: working tree dirty — silk hash {git_hash} may not reflect the plotted "
-              f"layout; outputs tagged -dirty", flush=True)
+    try:
+        out_dir = Path(args.output)
+        out_dir.mkdir(parents=True, exist_ok=True)
 
-    # 0. DRC gate
-    if args.skip_drc:
-        print("WARN: DRC skipped (--skip-drc)", flush=True)
-    else:
-        if run_drc(kicad, BOARD, names["drc"]) != 0:
-            total, summary = summarize_drc(names["drc"])
-            print(f"\nDRC FAILED: {total} violation(s):\n{summary}\n"
-                  f"See {names['drc']}. Fix the board or re-run with --skip-drc.", flush=True)
-            return 1
+        git_hash = git_short_hash(ROOT)
+        dirty = tree_dirty(ROOT, [HARDWARE])
+        version = read_pcb_version(PROJECT)
+        stamp = compute_stamp(version, git_hash, dirty)
+        names = output_names(stamp, out_dir)
+        if dirty:
+            print(f"WARN: working tree dirty — silk hash {git_hash} may not reflect the plotted "
+                  f"layout; outputs tagged -dirty", flush=True)
 
-    # 1. Gerbers + drill -> zip
-    with tempfile.TemporaryDirectory() as tmp:
-        export_gerbers(kicad, BOARD, tmp, git_hash)
-        export_drill(kicad, BOARD, tmp)
-        if args.no_zip:
-            for f in Path(tmp).iterdir():
-                shutil.copy(f, out_dir / f.name)
+        # 0. DRC gate
+        if args.skip_drc:
+            print("WARN: DRC skipped (--skip-drc)", flush=True)
         else:
-            zip_dir(tmp, names["gerber_zip"])
+            if run_drc(kicad, BOARD, names["drc"]) != 0:
+                total, summary = summarize_drc(names["drc"])
+                print(f"\nDRC FAILED: {total} violation(s):\n{summary}\n"
+                      f"See {names['drc']}. Fix the board or re-run with --skip-drc.", flush=True)
+                return 1
 
-    if not args.gerbers_only:
-        # 2. BOM
-        mpn_map, ref_map = load_lcsc_overlay(OVERLAY.read_text())
-        bom_rows = run_pcb_bom(ZEN)
-        jlc_bom, unmapped = build_bom(bom_rows, mpn_map, ref_map)
-        write_csv(names["bom"], ["Comment", "Designator", "Footprint", "LCSC Part #"], jlc_bom)
-        placed = {r["designator"] for r in bom_rows}
-        if unmapped:
-            print(f"WARN: {len(unmapped)} part(s) need an LCSC mapping: "
-                  f"{', '.join(unmapped)}", flush=True)
-
-        # 3. CPL (filtered to placed parts)
+        # 1. Gerbers + drill -> zip
         with tempfile.TemporaryDirectory() as tmp:
-            pos_csv = Path(tmp) / "pos.csv"
-            export_pos(kicad, BOARD, pos_csv)
-            cpl_rows = remap_cpl(pos_csv.read_text(), placed)
-        write_csv(names["cpl"], CPL_FIELDS, cpl_rows)
+            export_gerbers(kicad, BOARD, tmp, git_hash)
+            export_drill(kicad, BOARD, tmp)
+            if args.no_zip:
+                for f in Path(tmp).iterdir():
+                    shutil.copy(f, out_dir / f.name)
+            else:
+                zip_dir(tmp, names["gerber_zip"])
 
-    print(f"\nFab package written to {out_dir} (stamp {stamp})", flush=True)
-    return 0
+        if not args.gerbers_only:
+            # 2. BOM
+            mpn_map, ref_map = load_lcsc_overlay(OVERLAY.read_text())
+            bom_rows = run_pcb_bom(ZEN)
+            jlc_bom, unmapped = build_bom(bom_rows, mpn_map, ref_map)
+            write_csv(names["bom"], ["Comment", "Designator", "Footprint", "LCSC Part #"], jlc_bom)
+            placed = {r["designator"] for r in bom_rows}
+            if unmapped:
+                print(f"WARN: {len(unmapped)} part(s) need an LCSC mapping: "
+                      f"{', '.join(unmapped)}", flush=True)
+
+            # 3. CPL (filtered to placed parts)
+            with tempfile.TemporaryDirectory() as tmp:
+                pos_csv = Path(tmp) / "pos.csv"
+                export_pos(kicad, BOARD, pos_csv)
+                cpl_rows = remap_cpl(pos_csv.read_text(), placed)
+            write_csv(names["cpl"], CPL_FIELDS, cpl_rows)
+
+        print(f"\nFab package written to {out_dir} (stamp {stamp})", flush=True)
+        return 0
+
+    except subprocess.CalledProcessError as e:
+        cmd_str = " ".join(str(p) for p in e.cmd) if isinstance(e.cmd, (list, tuple)) else str(e.cmd)
+        print(f"\nERROR: tool failed: {cmd_str}", file=sys.stderr, flush=True)
+        if e.stderr:
+            print(e.stderr, file=sys.stderr, flush=True)
+        return 1
 
 
 if __name__ == "__main__":
