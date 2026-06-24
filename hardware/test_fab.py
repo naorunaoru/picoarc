@@ -127,6 +127,41 @@ class PosFootprintsTest(unittest.TestCase):
         self.assertEqual(fab.pos_footprints(pos), {"U5": "QFN-56-1EP", "D2": "SOT-886"})
 
 
+class RotationCorrectionTest(unittest.TestCase):
+    def test_load_splits_fp_and_ref_rules(self):
+        text = "# comment\nfp,^SOT-23,-90\nfp,^VSSOP-8_,180\nref,U5,270\n\n"
+        fp, ref = fab.load_rotations(text)
+        self.assertEqual(fp, [("^SOT-23", -90.0), ("^VSSOP-8_", 180.0)])
+        self.assertEqual(ref, {"U5": 270.0})
+
+    def test_load_rejects_unknown_kind(self):
+        with self.assertRaises(ValueError):
+            fab.load_rotations("xx,foo,90\n")
+
+    def test_no_rule_leaves_rotation_string_untouched(self):
+        self.assertEqual(fab.correct_rotation("90.000000", "J9", "Some_FP", [], {}), "90.000000")
+
+    def test_fp_regex_applied_and_normalized_to_0_360(self):
+        fp = [("^SOT-23", -90.0)]
+        self.assertEqual(fab.correct_rotation("0.0", "U3", "SOT-23-6", fp, {}), "270")    # 0-90 -> 270
+        self.assertEqual(fab.correct_rotation("180.0", "U2", "SOT-23-5", fp, {}), "90")   # 180-90 -> 90
+
+    def test_ref_override_beats_fp_rule(self):
+        fp = [("^QFN", 90.0)]
+        self.assertEqual(fab.correct_rotation("-90", "U5", "QFN-56", fp, {"U5": 270.0}), "180")
+
+    def test_first_matching_fp_rule_wins(self):
+        fp = [("^VSSOP-8_3.0x3.0mm", 270.0), ("^VSSOP-8_", 180.0)]
+        self.assertEqual(fab.correct_rotation("0", "U1", "VSSOP-8_3.0x3.0mm_P0.65mm", fp, {}), "270")
+        self.assertEqual(fab.correct_rotation("0", "U1", "VSSOP-8_2.3x2mm_P0.5mm", fp, {}), "180")
+
+    def test_remap_cpl_applies_correction_using_package_column(self):
+        pos = ("Ref,Val,Package,PosX,PosY,Rot,Side\n"
+               '"U2","?","SOT-23-5",1,2,180,top\n')
+        rows = fab.remap_cpl(pos, {"U2"}, [("^SOT-23", -90.0)], {})
+        self.assertEqual(rows[0]["Rotation"], "90")
+
+
 class CplTest(unittest.TestCase):
     POS = (
         "Ref,Val,Package,PosX,PosY,Rot,Side\n"

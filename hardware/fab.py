@@ -19,6 +19,7 @@ BOARD = HARDWARE / "layout" / "layout.kicad_pcb"
 PROJECT = HARDWARE / "layout" / "layout.kicad_pro"
 ZEN = HARDWARE / "picoarc.zen"
 OVERLAY = HARDWARE / "jlcpcb-lcsc.csv"
+ROTATIONS = HARDWARE / "jlcpcb-rotations.csv"
 DEFAULT_OUTPUT = HARDWARE / "fab"
 
 BUNDLED_KICAD_CLI = "/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli"
@@ -109,7 +110,41 @@ def natkey(ref):
 CPL_FIELDS = ["Designator", "Mid X", "Mid Y", "Layer", "Rotation"]
 
 
-def remap_cpl(pos_text, placed):
+def load_rotations(text):
+    """Parse the CPL rotation-correction file into (fp_rules, ref_rules). fp_rules is an
+    ordered list of (footprint_regex, degrees); ref_rules maps designator -> degrees."""
+    fp_rules = []
+    ref_rules = {}
+    for row in csv.reader(io.StringIO(text)):
+        if not row or row[0].lstrip().startswith("#"):
+            continue
+        if len(row) < 3:
+            raise ValueError(f"bad rotation row (need kind,key,degrees): {row!r}")
+        kind, key, deg = row[0].strip(), row[1].strip(), float(row[2].strip())
+        if kind == "fp":
+            fp_rules.append((key, deg))
+        elif kind == "ref":
+            ref_rules[key] = deg
+        else:
+            raise ValueError(f"unknown kind {kind!r} (expected 'fp' or 'ref'): {row!r}")
+    return fp_rules, ref_rules
+
+
+def correct_rotation(rot_str, designator, footprint, fp_rules, ref_rules):
+    """Add the matching correction (designator override > first matching footprint regex) to
+    KiCad's exported rotation and normalize to [0, 360). With no matching rule the original
+    string is returned untouched."""
+    offset = ref_rules.get(designator)
+    if offset is None:
+        offset = next((deg for pat, deg in fp_rules if re.search(pat, footprint)), None)
+    if offset is None:
+        return rot_str
+    return f"{(float(rot_str) + offset) % 360.0:g}"
+
+
+def remap_cpl(pos_text, placed, fp_rules=None, ref_rules=None):
+    fp_rules = fp_rules or []
+    ref_rules = ref_rules or {}
     out = []
     for row in csv.DictReader(io.StringIO(pos_text)):
         ref = row["Ref"]
@@ -121,7 +156,8 @@ def remap_cpl(pos_text, placed):
             "Mid X": row["PosX"],
             "Mid Y": row["PosY"],
             "Layer": layer,
-            "Rotation": row["Rot"],
+            "Rotation": correct_rotation(row["Rot"], ref, row.get("Package", ""),
+                                         fp_rules, ref_rules),
         })
     out.sort(key=lambda x: natkey(x["Designator"]))
     return out
@@ -299,8 +335,10 @@ def main(argv=None):
                 print(f"WARN: {len(unmapped)} part(s) need an LCSC mapping: "
                       f"{', '.join(unmapped)}", flush=True)
 
-            # 3. CPL (filtered to placed parts)
-            cpl_rows = remap_cpl(pos_text, placed)
+            # 3. CPL (filtered to placed parts, with JLCPCB rotation correction)
+            fp_rules, ref_rules = (load_rotations(ROTATIONS.read_text())
+                                   if ROTATIONS.exists() else ([], {}))
+            cpl_rows = remap_cpl(pos_text, placed, fp_rules, ref_rules)
             write_csv(names["cpl"], CPL_FIELDS, cpl_rows)
 
         print(f"\nFab package written to {out_dir} (stamp {stamp})", flush=True)

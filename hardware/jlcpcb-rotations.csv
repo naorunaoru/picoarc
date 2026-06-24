@@ -1,0 +1,22 @@
+# JLCPCB CPL rotation corrections for picoarc.  Columns: kind,key,degrees
+#   kind=fp   -> key is a regex matched against the footprint name (first match wins, top->bottom)
+#   kind=ref  -> key is an exact designator; overrides any fp rule (use for connectors/one-offs)
+# The `degrees` value is ADDED to KiCad's exported rotation, then normalized to [0,360).
+# KiCad's footprint 0deg orientation differs from JLCPCB's part-library orientation for many
+# packages; these are the community-standard corrections (JLCKicadTools cpl_rotations_db).
+#
+# VERIFY EVERY PART against JLCPCB's placement preview after upload. Seeds below cover the
+# standard IC packages on this board. NOT corrected (verify, add a ref override if wrong):
+#   - J1/J2 connectors  -> no reliable DB value; read the needed offset from the JLC preview
+#   - SW1, D2/D3 ESD     -> easyeda2kicad/LCSC-derived footprints are usually already in JLC's
+#                           pin-1 convention; correcting them would make them wrong
+#   - R*/C* passives, D1 LED, Y1 crystal -> non-critical / no known correction
+
+# --- standard IC packages ---
+fp,^SOT-23,-90
+fp,^VSSOP-8_3.0x3.0mm,270
+fp,^VSSOP-8_,180
+fp,^SOIC-,270
+
+# --- RP2040 QFN-56 (U5): generic KiCad footprint name, so target by designator ---
+ref,U5,270
