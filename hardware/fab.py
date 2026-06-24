@@ -40,3 +40,28 @@ def output_names(stamp, out_dir):
         "cpl": out_dir / f"{base}-cpl.csv",
         "drc": out_dir / "drc-report.json",
     }
+
+
+def load_lcsc_overlay(text):
+    mpn_map, ref_map = {}, {}
+    for row in csv.reader(io.StringIO(text)):
+        if not row or row[0].lstrip().startswith("#"):
+            continue
+        if len(row) < 3:
+            raise ValueError(f"bad overlay row (need kind,key,lcsc): {row!r}")
+        kind, key, lcsc = row[0].strip(), row[1].strip(), row[2].strip()
+        if kind == "mpn":
+            mpn_map[key] = lcsc
+        elif kind == "ref":
+            ref_map[key] = lcsc
+        else:
+            raise ValueError(f"unknown kind {kind!r} (expected 'mpn' or 'ref'): {row!r}")
+    return mpn_map, ref_map
+
+
+def resolve_lcsc(designator, mpn, mpn_map, ref_map):
+    if designator in ref_map:
+        return ref_map[designator]
+    if mpn and mpn in mpn_map:
+        return mpn_map[mpn]
+    return ""

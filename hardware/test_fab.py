@@ -19,5 +19,35 @@ class StampTest(unittest.TestCase):
         self.assertEqual(names["drc"], Path("/out/drc-report.json"))
 
 
+class OverlayTest(unittest.TestCase):
+    SAMPLE = (
+        "# comment line\n"
+        "mpn,RP2040,C2040\n"
+        'mpn,"PESD5V0S2BT,215",C49338\n'
+        "ref,R5,C9999\n"
+        "\n"
+    )
+
+    def test_load_splits_mpn_and_ref(self):
+        mpn_map, ref_map = fab.load_lcsc_overlay(self.SAMPLE)
+        self.assertEqual(mpn_map, {"RP2040": "C2040", "PESD5V0S2BT,215": "C49338"})
+        self.assertEqual(ref_map, {"R5": "C9999"})
+
+    def test_load_rejects_unknown_kind(self):
+        with self.assertRaises(ValueError):
+            fab.load_lcsc_overlay("widget,foo,C1\n")
+
+    def test_resolve_ref_override_beats_mpn(self):
+        mpn_map, ref_map = fab.load_lcsc_overlay(self.SAMPLE)
+        self.assertEqual(fab.resolve_lcsc("R5", "RP2040", mpn_map, ref_map), "C9999")
+
+    def test_resolve_by_mpn(self):
+        mpn_map, ref_map = fab.load_lcsc_overlay(self.SAMPLE)
+        self.assertEqual(fab.resolve_lcsc("U5", "RP2040", mpn_map, ref_map), "C2040")
+
+    def test_resolve_unmapped_returns_empty(self):
+        self.assertEqual(fab.resolve_lcsc("R1", "NOPE", {}, {}), "")
+
+
 if __name__ == "__main__":
     unittest.main()

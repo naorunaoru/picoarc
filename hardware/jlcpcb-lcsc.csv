@@ -1,0 +1,14 @@
+# JLCPCB LCSC overlay map for picoarc.  Columns: kind,key,lcsc
+#   kind=mpn  -> match a manufacturer part number from `pcb bom`
+#   kind=ref  -> override by designator (wins over an mpn match)
+# Seeded with the 8 mapped ICs/connectors (all JLC parts per the all-Basic BOM notes).
+# Passives (R*/C*), the LED (D1), 4-ch ESD (D2), MOSFET (Q1), crystal (Y1) are NOT mapped yet:
+# `make fab` will WARN and list them — add an `mpn,<part>,<lcsc>` row for each as you order.
+mpn,RP2040,C2040
+mpn,PCA9306DCTR,C123752
+mpn,W25Q16JVSSIQ,C82317
+mpn,USBLC6-2SC6,C7519
+mpn,208658-1001,C916313
+mpn,USB4105-GF-A-060,C3025063
+mpn,AP2112K-3.3TRG1,C51118
+mpn,"PESD5V0S2BT,215",C49338
