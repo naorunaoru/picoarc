@@ -19438,6 +19438,42 @@
 			(justify left bottom)
 		)
 	)
+	(gr_text "${PCB_GIT_HASH}"
+		(at 120.72 104.31 0)
+		(layer "B.SilkS")
+		(uuid "398990f6-8352-4b20-b50d-0c3c97486dc9")
+		(effects
+			(font
+				(size 0.6 0.5)
+				(thickness 0.1)
+			)
+			(justify left bottom mirror)
+		)
+	)
+	(gr_text "@naorunaoru"
+		(at 132.58 108.19 0)
+		(layer "B.SilkS")
+		(uuid "14bc3d96-206c-48c8-9903-3d7f5eb7cc9e")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
+			(justify left bottom mirror)
+		)
+	)
+	(gr_text "picoARC"
+		(at 132.9 106.28 0)
+		(layer "B.SilkS")
+		(uuid "8171ca97-bc71-4c16-abe6-9e394d7b3c6b")
+		(effects
+			(font
+				(size 2 2)
+				(thickness 0.1)
+			)
+			(justify left bottom mirror)
+		)
+	)
 	(segment
 		(start 112.203162 107)
 		(end 110.58 107)
