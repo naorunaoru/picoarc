@@ -72,6 +72,27 @@ def natkey(ref):
     return (m.group(1), int(m.group(2))) if m else (ref, 0)
 
 
+CPL_FIELDS = ["Designator", "Mid X", "Mid Y", "Layer", "Rotation"]
+
+
+def remap_cpl(pos_text, placed):
+    out = []
+    for row in csv.DictReader(io.StringIO(pos_text)):
+        ref = row["Ref"]
+        if ref not in placed:
+            continue
+        layer = "Top" if row["Side"].strip().lower() == "top" else "Bottom"
+        out.append({
+            "Designator": ref,
+            "Mid X": row["PosX"],
+            "Mid Y": row["PosY"],
+            "Layer": layer,
+            "Rotation": row["Rot"],
+        })
+    out.sort(key=lambda x: natkey(x["Designator"]))
+    return out
+
+
 def build_bom(bom_rows, mpn_map, ref_map):
     groups = {}
     unmapped = []

@@ -76,5 +76,31 @@ class BomTest(unittest.TestCase):
         self.assertEqual(list(rows[0].keys()), ["Comment", "Designator", "Footprint", "LCSC Part #"])
 
 
+class CplTest(unittest.TestCase):
+    POS = (
+        "Ref,Val,Package,PosX,PosY,Rot,Side\n"
+        '"TP1","?","TestPad",134.0,-114.2,180.0,bottom\n'
+        '"U5","RP2040","QFN",120.0,-110.0,90.0,top\n'
+        '"R2","100","0402",100.5,-90.0,0.0,bottom\n'
+    )
+
+    def test_filters_to_placed_set(self):
+        rows = fab.remap_cpl(self.POS, {"U5", "R2"})
+        refs = [r["Designator"] for r in rows]
+        self.assertEqual(refs, ["R2", "U5"])           # TP1 dropped, natural-sorted
+        self.assertNotIn("TP1", refs)
+
+    def test_column_mapping_and_side_normalization(self):
+        rows = fab.remap_cpl(self.POS, {"U5"})
+        self.assertEqual(rows[0], {
+            "Designator": "U5", "Mid X": "120.0", "Mid Y": "-110.0",
+            "Layer": "Top", "Rotation": "90.0",
+        })
+
+    def test_bottom_maps_to_capitalized(self):
+        rows = fab.remap_cpl(self.POS, {"R2"})
+        self.assertEqual(rows[0]["Layer"], "Bottom")
+
+
 if __name__ == "__main__":
     unittest.main()
