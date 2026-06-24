@@ -163,11 +163,13 @@ class IntegrationSmokeTest(unittest.TestCase):
             self.assertEqual(len(boms), 1)
             self.assertEqual(len(cpls), 1)
             # zip carries copper + paste + edge + drill
-            names = _zip.ZipFile(zips[0]).namelist()
+            with _zip.ZipFile(zips[0]) as zf:
+                names = zf.namelist()
             self.assertTrue(any(n.endswith((".gtl", "-F_Cu.gtl")) or "F_Cu" in n for n in names), names)
             self.assertTrue(any(n.lower().endswith(".drl") for n in names), names)
             # CPL is filtered to placed parts (51), not the 65 pos rows
-            cpl_rows = list(csv.DictReader(cpls[0].open()))
+            with cpls[0].open() as fh:
+                cpl_rows = list(csv.DictReader(fh))
             self.assertEqual(len(cpl_rows), 51)
             self.assertNotIn("TP1", {r["Designator"] for r in cpl_rows})
             self.assertEqual(list(cpl_rows[0].keys()), fab.CPL_FIELDS)
