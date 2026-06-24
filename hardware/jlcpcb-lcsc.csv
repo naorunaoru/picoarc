@@ -1,9 +1,13 @@
 # JLCPCB LCSC overlay map for picoarc.  Columns: kind,key,lcsc
 #   kind=mpn  -> match a manufacturer part number from `pcb bom`
 #   kind=ref  -> override by designator (wins over an mpn match)
-# Seeded with the 8 mapped ICs/connectors (all JLC parts per the all-Basic BOM notes).
-# Passives (R*/C*), the LED (D1), 4-ch ESD (D2), MOSFET (Q1), crystal (Y1) are NOT mapped yet:
-# `make fab` will WARN and list them — add an `mpn,<part>,<lcsc>` row for each as you order.
+# Seeded with the 8 ICs/connectors, then the passives/LED/MOSFET/crystal/switch (web-sourced
+# from LCSC 2026-06-24 — VERIFY before ordering). One part is intentionally NOT mapped:
+#   D2 PESD5V0L4UF (4-ch ESD, SOT-886) is not stocked by LCSC/JLCPCB. Substitute (e.g.
+#   PESD5V0L5UF C552561 / PESD5V0L4UG C5182057) or supply externally, then add its row here.
+# `make fab` WARNs and lists any still-unmapped part.
+
+# --- ICs / connectors ---
 mpn,RP2040,C2040
 mpn,PCA9306DCTR,C123752
 mpn,W25Q16JVSSIQ,C82317
@@ -12,3 +16,32 @@ mpn,208658-1001,C916313
 mpn,USB4105-GF-A-060,C3025063
 mpn,AP2112K-3.3TRG1,C51118
 mpn,"PESD5V0S2BT,215",C49338
+
+# --- resistors (UNI-ROYAL 0402, JLC Basic) ---
+mpn,0402WGF1000TCE,C25076
+mpn,0402WGF1001TCE,C11702
+mpn,0402WGF1002TCE,C25744
+mpn,0402WGF1003TCE,C25741
+mpn,0402WGF1200TCE,C25079
+mpn,0402WGF2003TCE,C25764
+mpn,0402WGF2200TCE,C25091
+mpn,0402WGF2201TCE,C25879
+mpn,0402WGF2202TCE,C25768
+mpn,0402WGF3300TCE,C25104
+mpn,0402WGF330JTCE,C25105
+mpn,0402WGF5101TCE,C25905
+
+# --- capacitors ---
+mpn,0402CG101J500NT,C1546
+mpn,0402CG330J500NT,C1562
+mpn,CL05A105KA5NQNC,C52923
+mpn,CL05B103KB5NNNC,C15195
+# next two are JLC Extended parts (per-part fee):
+mpn,CL05B104KB54PNC,C307331
+mpn,CL10A106MA8NRNC,C96446
+
+# --- LED / MOSFET / crystal / switch ---
+mpn,KT-0603R,C2286
+mpn,2N7002,C8545
+mpn,X322512MSB4SI,C9002
+mpn,TS-1088-AR02016,C720477
