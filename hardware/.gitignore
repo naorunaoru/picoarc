@@ -8,8 +8,6 @@ layout/*.log
 layout/.history/
 .history/
 
-# pre-promotion layout backup (redundant with git history)
-layout/_pre-promote-backup/
-
 # JLCPCB fab export output
 fab/
+layout/jclcpcb/
