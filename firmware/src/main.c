@@ -3,6 +3,7 @@
 #include "arc.h"
 #include "cec.h"
 #include "ddc_edid.h"
+#include "hardware/gpio.h"
 #include "hardware/pwm.h"
 #include "picoarc_config.h"
 #include "picoarc_log.h"
@@ -48,6 +49,20 @@ static spdif_mode_t idle_spdif_mode(void) {
     return SPDIF_MODE_OFF;
 #endif
 }
+
+#if PICOARC_HPD_GATE_ENABLE
+static void hpd_gate_hold(unsigned int gate_pin) {
+    gpio_init(gate_pin);
+    gpio_put(gate_pin, true);
+    gpio_set_dir(gate_pin, GPIO_OUT);
+    printf("hpd: holding low through GP%u gate\n", gate_pin);
+}
+
+static void hpd_gate_release(unsigned int gate_pin) {
+    gpio_put(gate_pin, false);
+    printf("hpd: released GP%u gate\n", gate_pin);
+}
+#endif
 
 static const char *adapter_state_name(adapter_state_t state) {
     switch (state) {
@@ -307,6 +322,12 @@ int main(void) {
     stdio_init_all();
 #endif
 
+    // GP5 is an active-high FET gate: high holds HDMI HPD low, low releases it.
+    // Keep HPD deasserted until the EDID responder is installed below.
+#if PICOARC_HPD_GATE_ENABLE
+    hpd_gate_hold(PICOARC_HPD_GATE_PIN);
+#endif
+
     // Bring up the audio/CEC hardware before pumping tud_task. The host can
     // issue class-specific audio control transfers as soon as enumeration
     // completes, so the S/PDIF path must be ready before USB traffic is served.
@@ -314,6 +335,9 @@ int main(void) {
     spdif_set_mode(idle_spdif_mode());
 #if PICOARC_DDC_EDID_ENABLE
     ddc_edid_init(PICOARC_DDC_EDID_SDA_PIN, PICOARC_DDC_EDID_SCL_PIN);
+#endif
+#if PICOARC_HPD_GATE_ENABLE
+    hpd_gate_release(PICOARC_HPD_GATE_PIN);
 #endif
     arc_init(PICOARC_CEC_PIN, PICOARC_HDMI_5V_PIN);
     cec_set_yield(cec_yield_pump);
