@@ -98,3 +98,10 @@ Net GND
 Note about DDC_EDID: while omitting a level shifter works as a bench-only direct
 GPIO bodge, keep in mind that HDMI DDC is a 5 V bus and RP2040 IO is not exactly
 5 V tolerant.
+
+## License
+
+The PicoARC hardware design materials in this directory are licensed under the
+CERN Open Hardware Licence Version 2 - Weakly Reciprocal (`CERN-OHL-W-2.0`).
+See [../LICENSE](../LICENSE) for the repository license notice and full license
+text locations.

@@ -32,6 +32,13 @@ and JLCPCB production files are checked in alongside it.
 See [hardware/README.md](hardware/README.md) for the hardware file map,
 Zener/KiCad workflow, and the old hand-wired Pico prototype wiring.
 
+## License
+
+PicoARC uses a split license. Hardware design materials are licensed under
+`CERN-OHL-W-2.0`, and firmware plus general project documentation are licensed
+under `MIT`. See [LICENSE](LICENSE) for the exact scope and full license text
+locations.
+
 ## Build requirements
 
 - Raspberry Pi Pico SDK
