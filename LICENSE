@@ -1,0 +1,27 @@
+PicoARC license notice
+
+This repository uses a split license:
+
+- Hardware design materials are licensed under the CERN Open Hardware Licence
+  Version 2 - Weakly Reciprocal (CERN-OHL-W-2.0).
+- Firmware and general project documentation are licensed under the MIT License.
+
+The repository-level license expression is:
+
+    CERN-OHL-W-2.0 AND MIT
+
+Hardware design materials include the schematic/netlist source, local hardware
+components and modules, PCB layout, fabrication and assembly outputs, hardware
+3D models, and hardware documentation under `hardware/`, unless a file states a
+different license. The Source Location for the hardware design is this
+repository.
+
+Firmware materials include the project firmware source, build scripts, and
+firmware documentation under `firmware/`, unless a file states a different
+license. Third-party files, generated files, vendored dependencies, SDK files,
+and imported snippets retain their own notices and license terms.
+
+The full license texts are included in:
+
+- `LICENSES/CERN-OHL-W-2.0.txt`
+- `LICENSES/MIT.txt`
