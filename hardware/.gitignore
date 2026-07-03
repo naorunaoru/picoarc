@@ -1,0 +1,9 @@
+# Zener/pcb tool generated artifacts
+.pcb/
+
+# KiCad layout generation log (disposable)
+layout/*.log
+
+# VSCode Local History extension artifacts
+layout/.history/
+.history/

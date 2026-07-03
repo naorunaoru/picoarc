@@ -1,0 +1,54 @@
+# JLCPCB LCSC overlay map for picoarc.  Columns: kind,key,lcsc
+#   kind=mpn  -> match a manufacturer part number from `pcb bom`
+#   kind=ref  -> override by designator (wins over an mpn match)
+# Seeded with the 8 ICs/connectors, then the passives/LED/MOSFET/crystal/switch (web-sourced
+# from LCSC 2026-06-24 — VERIFY before ordering).
+# ESD consolidation (2026-06-24): the former D2 PESD5V0L4UF (4-ch, SOT-886, JLC shortfall +
+# not LCSC-stocked) and D3 PESD5V0S2BT (2-ch) were replaced by a single 5-ch array
+# (D2 D5V0M5B6LP16-7, C445551) on the signal lines + a single TVS on the cable +5V.
+# D3 cable-+5V TVS: H7VN10B (bidirectional) -> H7VH10U (UNIdirectional, C51898355,
+# cheaper) on 2026-06-25 — a DC rail wants a unidirectional TVS. Same R+O DFN1006-2L
+# footprint (drop-in), but polarity now matters: cathode->_HDMI_5V (verify in JLC preview).
+# `make fab` WARNs and lists any still-unmapped part.
+
+# --- ICs / connectors ---
+mpn,RP2040,C2040
+mpn,PCA9306DCUR,C33196
+mpn,W25Q16JVSSIQ,C82317
+mpn,USBLC6-2SC6,C7519
+mpn,208658-1001,C916313
+mpn,USB4105-GF-A-060,C3025063
+mpn,AP2112K-3.3TRG1,C51118
+
+# --- ESD protection ---
+mpn,D5V0M5B6LP16-7,C445551
+mpn,H7VH10U,C51898355
+
+# --- resistors (UNI-ROYAL 0402, JLC Basic) ---
+mpn,0402WGF1000TCE,C25076
+mpn,0402WGF1001TCE,C11702
+mpn,0402WGF1002TCE,C25744
+mpn,0402WGF1003TCE,C25741
+mpn,0402WGF1200TCE,C25079
+mpn,0402WGF2003TCE,C25764
+mpn,0402WGF2200TCE,C25091
+mpn,0402WGF2201TCE,C25879
+mpn,0402WGF2202TCE,C25768
+mpn,0402WGF3300TCE,C25104
+mpn,0402WGF330JTCE,C25105
+mpn,0402WGF5101TCE,C25905
+
+# --- capacitors ---
+mpn,0402CG101J500NT,C1546
+mpn,0402CG330J500NT,C1562
+mpn,CL05A105KA5NQNC,C52923
+mpn,CL05B103KB5NNNC,C15195
+# next two are JLC Extended parts (per-part fee):
+mpn,CL05B104KB54PNC,C307331
+mpn,CL10A106MA8NRNC,C96446
+
+# --- LED / MOSFET / crystal / switch ---
+mpn,KT-0603R,C2286
+mpn,2N7002,C8545
+mpn,X322512MSB4SI,C9002
+mpn,TS-1088-AR02016,C720477

@@ -1,0 +1,371 @@
+"""HDMI ARC/CEC/DDC front-end module.
+
+Netlist (derived from the project README's prototype wiring, with value
+substitutions for the all-JLC-Basic BOM — see commit e54cc1e:
+27k→22k, 56Ω→100Ω∥120Ω, 68k→100k):
+
+CEC (HDMI pin 13):
+  VDD_3V3 —R1(22k)— _CEC_NODE
+  CEC_BUS(GP3) —R2(220Ω)— _CEC_NODE
+  _CEC_NODE — HDMI pin 13
+
+ARC (HDMI pin 14):
+  ARC_TX(GP2) —R3(330Ω)— ATT_A
+  ATT_A —R4a(100Ω)∥R4b(120Ω)— GND  (~54.5Ω HEAC L-pad shunt)
+  ATT_A —C1(10nF)— HDMI pin 14  (AC coupling)
+
+HDMI +5V / HPD / sense:
+  _HDMI_5V(pin18) —R5(1k)— _HPD(pin19)
+  _HPD —Q1(2N7002 D-S)— GND, gate _HPD_GATE: HPD_GATE(GP5) ∥ R13(100k)—VDD_3V3
+    (gate pulled up → HPD held low while board is powered until firmware drives
+    GP5 low; releases HPD only once the EDID I2C slave is ready. Board
+    unpowered → Q1 off → HPD asserts passively via R5, as before.)
+  _HDMI_5V(pin18) —R6(100k)— HDMI_5V_SENSE(GP4)  (100k/100k divider → 2.5V)
+  HDMI_5V_SENSE(GP4) —R7(100k)— GND
+
+DDC via PCA9306 (3V3 ↔ 5V level shift):
+  low side:  SCL1=DDC_SCL(GP7), SDA1=DDC_SDA(GP6), VREF1=VDD_3V3
+  high side: SCL2=DDC_SCL_5V(→pin15), SDA2=DDC_SDA_5V(→pin16)
+  EN+VREF2 shorted = _VREF2_EN —R12(200k)— _HDMI_5V, —C2(100pF)— GND
+    (per TI SCPS113O §9.2.2.1/§10: EN must be tied to VREF2 and the pair pulled
+    to the high-side rail through ~200k; a hard tie risks pass-FET damage)
+  pull-ups: DDC_SCL—2.2k—VDD_3V3, DDC_SDA—2.2k—VDD_3V3
+            DDC_SCL_5V—2.2k—_HDMI_5V, DDC_SDA_5V—2.2k—_HDMI_5V
+
+ESD: D5V0M5B6LP16-7 (5V, 5-ch bidirectional) on _CEC_NODE, _HPD, DDC_SCL_5V,
+  DDC_SDA_5V, _ARC14 → GND; H7VH10U (7V, single unidirectional) on _HDMI_5V → GND
+  (cathode→_HDMI_5V, anode→GND)
+
+GND: HDMI pin17 + shield → GND
+TMDS pins (1-12 + shields): no-connect
+"""
+
+load("@stdlib/interfaces.zen", "Gpio")
+
+Resistor = Module("@stdlib/generics/Resistor.zen")
+Capacitor = Module("@stdlib/generics/Capacitor.zen")
+
+# ── Module IOs ────────────────────────────────────────────────────────────────
+VDD_3V3 = io("VDD_3V3", Power)
+GND = io("GND", Ground)
+ARC_TX = io("ARC_TX", Gpio)
+CEC_BUS = io("CEC_BUS", Gpio)
+HDMI_5V_SENSE = io("HDMI_5V_SENSE", Gpio)
+HPD_GATE = io("HPD_GATE", Gpio)
+DDC_SDA = io("DDC_SDA", Gpio)
+DDC_SCL = io("DDC_SCL", Gpio)
+
+# Exposed test-point nodes (outputs)
+ATT_A = io("ATT_A", Net)
+CEC_NODE = io("CEC_NODE", Net)
+DDC_SDA_5V = io("DDC_SDA_5V", Net)
+DDC_SCL_5V = io("DDC_SCL_5V", Net)
+
+# ── Internal nets ─────────────────────────────────────────────────────────────
+_HDMI_5V = Net("_HDMI_5V")
+_HPD = Net("_HPD")
+_ARC14 = Net("_ARC14")
+_VREF2_EN = Net("_VREF2_EN")
+
+# ── HDMI Type-A receptacle ────────────────────────────────────────────────────
+# Connector.kicad_sym HDMI_A_1.4 pin map (verified by extraction):
+#   1=D2+  2=D2S  3=D2-  4=D1+  5=D1S  6=D1-
+#   7=D0+  8=D0S  9=D0-  10=CK+ 11=CKS 12=CK-
+#   13=CEC  14=UTILITY/HEAC+  15=SCL  16=SDA
+#   17=GND  18=+5V  19=HPD/HEAC-  SH=SH
+Component(
+    name="J_HDMI",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Connector.kicad_sym",
+        name="HDMI_A_1.4",
+    ),
+    footprint=File(
+        "gitlab.com/kicad/libraries/kicad-footprints/Connector_Video.pretty/HDMI_A_Molex_208658-1001_Horizontal.kicad_mod"
+    ),
+    pins={
+        # CEC / ARC / DDC / power / sense
+        "CEC": CEC_NODE,
+        "UTILITY/HEAC+": _ARC14,
+        "SCL": DDC_SCL_5V,
+        "SDA": DDC_SDA_5V,
+        "GND": GND,
+        "+5V": _HDMI_5V,
+        "HPD/HEAC-": _HPD,
+        "SH": GND,
+        # TMDS data / clock — all no-connect (fresh nets)
+        "D2+": Net("NC_D2P"),
+        "D2-": Net("NC_D2N"),
+        "D2S": Net("NC_D2S"),
+        "D1+": Net("NC_D1P"),
+        "D1-": Net("NC_D1N"),
+        "D1S": Net("NC_D1S"),
+        "D0+": Net("NC_D0P"),
+        "D0-": Net("NC_D0N"),
+        "D0S": Net("NC_D0S"),
+        "CK+": Net("NC_CKP"),
+        "CK-": Net("NC_CKN"),
+        "CKS": Net("NC_CKS"),
+    },
+    part=Part(mpn="208658-1001", manufacturer="Molex"),
+)
+
+# ── CEC network ───────────────────────────────────────────────────────────────
+# VDD_3V3 —R1(22k)— CEC_NODE
+Resistor(
+    name="R1",
+    value="22kohm",
+    package="0402",
+    mpn="0402WGF2202TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=VDD_3V3,
+    P2=CEC_NODE,
+)
+# CEC_BUS(GP3) —R2(220Ω)— CEC_NODE
+Resistor(
+    name="R2",
+    value="220ohm",
+    package="0402",
+    mpn="0402WGF2200TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=CEC_BUS,
+    P2=CEC_NODE,
+)
+
+# ── ARC network ───────────────────────────────────────────────────────────────
+# ARC_TX(GP2) —R3(330Ω)— ATT_A
+Resistor(
+    name="R3",
+    value="330ohm",
+    package="0402",
+    mpn="0402WGF3300TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=ARC_TX,
+    P2=ATT_A,
+)
+# ATT_A — (R4a 100Ω ∥ R4b 120Ω = ~54.5Ω) — GND  (HEAC ARC L-pad shunt, synthesized
+# from two Basic resistors; Zout = R3∥54.5 = 46.8Ω, amplitude 0.468V)
+Resistor(
+    name="R4a",
+    value="100ohm",
+    package="0402",
+    mpn="0402WGF1000TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=ATT_A,
+    P2=GND,
+)
+Resistor(
+    name="R4b",
+    value="120ohm",
+    package="0402",
+    mpn="0402WGF1200TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=ATT_A,
+    P2=GND,
+)
+# ATT_A —C1(10nF)— _ARC14 (AC coupling to HDMI pin14)
+Capacitor(
+    name="C1",
+    value="10nF",
+    package="0402",
+    voltage="50V",
+    mpn="CL05B103KB5NNNC",
+    manufacturer="Samsung Electro-Mechanics",
+    P1=ATT_A,
+    P2=_ARC14,
+)
+
+# ── +5V / HPD / sense network ─────────────────────────────────────────────────
+# _HDMI_5V —R5(1k)— _HPD
+Resistor(
+    name="R5",
+    value="1kohm",
+    package="0402",
+    mpn="0402WGF1001TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=_HDMI_5V,
+    P2=_HPD,
+)
+# _HDMI_5V —R6(100k)— HDMI_5V_SENSE(GP4)  (100k/100k divider → 2.5V at +5V)
+Resistor(
+    name="R6",
+    value="100kohm",
+    package="0402",
+    mpn="0402WGF1003TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=_HDMI_5V,
+    P2=HDMI_5V_SENSE,
+)
+# HDMI_5V_SENSE(GP4) —R7(100k)— GND
+Resistor(
+    name="R7",
+    value="100kohm",
+    package="0402",
+    mpn="0402WGF1003TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=HDMI_5V_SENSE,
+    P2=GND,
+)
+
+# ── HPD gate: hold HPD low until the EDID slave is ready ─────────────────────
+# Q1 (2N7002, JLC Basic C8545) shorts _HPD to GND while its gate is high. R13
+# pulls the gate to VDD_3V3, so a powered board deasserts HPD by default;
+# firmware drives HPD_GATE(GP5) low to release HPD once EDID is servable. The
+# source sees a fresh HPD rising edge and (re-)reads EDID. Unpowered board:
+# gate floats low → Q1 off → HPD asserts passively through R5 (legacy behavior).
+Component(
+    name="Q1",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Transistor_FET.kicad_sym",
+        name="2N7002",
+    ),
+    footprint=File("gitlab.com/kicad/libraries/kicad-footprints/Package_TO_SOT_SMD.pretty/SOT-23.kicad_mod"),
+    pins={
+        "D": _HPD,
+        "S": GND,
+        "G": HPD_GATE,
+    },
+    part=Part(mpn="2N7002", manufacturer="Jiangsu Changjing Electronics Technology (CJ)"),
+)
+Resistor(
+    name="R13",
+    value="100kohm",
+    package="0402",
+    mpn="0402WGF1003TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=HPD_GATE,
+    P2=VDD_3V3,
+)
+
+# ── DDC level translator: PCA9306 ────────────────────────────────────────────
+# PCA9306 pin map (verified, Interface.kicad_sym):
+#   1=GND  2=VREF1  3=SCL1  4=SDA1  5=SDA2  6=SCL2  7=VREF2  8=EN
+# 3V3 pull-ups on low side (SCL1/SDA1), 5V pull-ups on high side (SCL2/SDA2).
+# EN+VREF2 are shorted and biased from _HDMI_5V through R12 (200k) with a C2
+# (100pF) filter, per TI SCPS113O — the internal reference then regulates the
+# gate node to ~VREF1+Vth. Never hard-tie VREF2 to the 5V rail (pass-FET damage
+# risk) or EN to 3V3 (below the VREF1+0.6V enable minimum). Side effect: the
+# shifter is enabled only while cable +5V is present.
+Resistor(
+    name="R8",
+    value="2.2kohm",
+    package="0402",
+    mpn="0402WGF2201TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=DDC_SCL,
+    P2=VDD_3V3,
+)
+Resistor(
+    name="R9",
+    value="2.2kohm",
+    package="0402",
+    mpn="0402WGF2201TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=DDC_SDA,
+    P2=VDD_3V3,
+)
+Resistor(
+    name="R10",
+    value="2.2kohm",
+    package="0402",
+    mpn="0402WGF2201TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=DDC_SCL_5V,
+    P2=_HDMI_5V,
+)
+Resistor(
+    name="R11",
+    value="2.2kohm",
+    package="0402",
+    mpn="0402WGF2201TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=DDC_SDA_5V,
+    P2=_HDMI_5V,
+)
+
+Component(
+    name="U_DDC",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Interface.kicad_sym",
+        name="PCA9306",
+    ),
+    footprint=File("gitlab.com/kicad/libraries/kicad-footprints/Package_SO.pretty/VSSOP-8_2.3x2mm_P0.5mm.kicad_mod"),
+    pins={
+        "GND": GND,
+        "VREF1": VDD_3V3,
+        "SCL1": DDC_SCL,
+        "SDA1": DDC_SDA,
+        "SDA2": DDC_SDA_5V,
+        "SCL2": DDC_SCL_5V,
+        "VREF2": _VREF2_EN,
+        "EN": _VREF2_EN,
+    },
+    part=Part(mpn="PCA9306DCUR", manufacturer="Texas Instruments"),
+)
+# _HDMI_5V —R12(200k)— EN+VREF2 bias node
+Resistor(
+    name="R12",
+    value="200kohm",
+    package="0402",
+    mpn="0402WGF2003TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=_HDMI_5V,
+    P2=_VREF2_EN,
+)
+# EN+VREF2 —C2(100pF)— GND (datasheet-recommended filter, close to VREF2)
+Capacitor(
+    name="C2",
+    value="100pF",
+    package="0402",
+    voltage="50V",
+    mpn="0402CG101J500NT",
+    manufacturer="FH (Guangdong Fenghua Advanced Tech)",
+    P1=_VREF2_EN,
+    P2=GND,
+)
+
+# ── ESD protection: D5V0M5B6LP16-7 (U-DFN1616-6, 5-ch bidirectional, 5V) ──────
+# Replaces the former 4-ch PESD5V0L4UF (SOT-886, JLC shortfall + not LCSC-stocked)
+# AND the 2-ch PESD5V0S2BT: a single 5-channel array now covers all five connector
+# signal lines; the cable +5V power pin moves to its own single TVS (D_ESD_5V).
+# Datasheet schematic (Diodes DS37468): pins 1,3,4,5,6 = bidirectional I/O cells to
+# a common node; pin 2 = GND; EP (pad 7) = mechanical → tied to GND. VRWM 5V clears
+# the 5V-idle DDC lines, and the bidirectional cells are correct for AC-coupled ARC.
+# Local symbol: the LCSC-generated symbol names all five I/O pins "I/O" (unaddressable
+# by the pin-name binding), so it's copied locally with pins renamed IO1/IO3/IO4/IO5/IO6.
+Component(
+    name="D_ESD",
+    symbol=Symbol("../footprints/picoarc.pretty/D5V0M5B6LP16.kicad_sym"),
+    footprint=File("../footprints/picoarc.pretty/DFN1616-6_L1.6-W1.6-P0.50-BL-EP.kicad_mod"),
+    pins={
+        "IO1": CEC_NODE,
+        "IO3": _HPD,
+        "IO4": DDC_SDA_5V,
+        "IO5": DDC_SCL_5V,
+        "IO6": _ARC14,
+        "GND": GND,
+        "EP": GND,
+    },
+    part=Part(mpn="D5V0M5B6LP16-7", manufacturer="Diodes Incorporated"),
+)
+
+# ── ESD: cable +5V (H7VH10U, DFN1006-2L, single UNIdirectional) ───────────────
+# The one connector line the 5-ch array does not cover. Single UNIdirectional TVS
+# on the cable +5V DC rail (the correct topology — a DC rail only swings one way;
+# the prior H7VN10B was bidirectional, which is for signals). Same R+O DFN1006-2L
+# package as H7VN10B (drop-in footprint), and cheaper.
+# VRWM 7V clears the up-to-5.3V HDMI +5V with margin; 500nA leakage keeps the rail
+# (and the R6/R7 sense divider) clean. Clamp 15V is fine here: everything on
+# _HDMI_5V is resistor-isolated (R5 1k, R6/R12 100k/200k).
+# POLARITY MATTERS NOW: cathode (C, pad 1) -> _HDMI_5V, anode (A, pad 2) -> GND.
+# A reversed part forward-conducts and shorts +5V to GND — VERIFY D3's cathode
+# orientation in the JLCPCB placement preview before ordering.
+Component(
+    name="D_ESD_5V",
+    symbol=Symbol("../footprints/picoarc.pretty/H7VH10U.kicad_sym"),
+    footprint=File("../footprints/picoarc.pretty/SOD-882_L1.0-W0.6-BI.kicad_mod"),
+    pins={
+        "C": _HDMI_5V,
+        "A": GND,
+    },
+    part=Part(mpn="H7VH10U", manufacturer="hongjiacheng"),
+)

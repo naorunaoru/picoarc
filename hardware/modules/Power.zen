@@ -1,0 +1,33 @@
+"""USB 5V -> AP2112K-3.3 LDO -> +3V3 (bus-powered).
+
+Inlined (cloned-and-trimmed) from @kicad/Regulator_Linear/AP2112K-3.3.zen so that
+the LDO IC carries a part (BOM) and the input/output caps are pinned to JLCPCB
+Basic MPNs. Component names, footprints and topology are kept IDENTICAL to the
+vendored module (U1 SOT-23-5, C_IN/C_OUT 0603 10uF, EN tied to VIN = AlwaysOn) so
+a later `pcb layout` re-sync matches existing placement. The power-good LED and
+its series resistor are intentionally dropped — this board has no power-good LED.
+"""
+
+Capacitor = Module("@stdlib/generics/Capacitor.zen")
+
+VIN = io("VIN", Power)    # +5V from USB VBUS
+VOUT = io("VOUT", Power)  # +3V3
+GND = io("GND", Ground)
+
+# Main regulator — fixed 3.3V LDO, EN tied to VIN (always on).
+Component(
+    name="U1",
+    symbol=Symbol(library="@kicad-symbols/Regulator_Linear.kicad_sym", name="AP2112K-3.3"),
+    footprint=File("@kicad-footprints/Package_TO_SOT_SMD.pretty/SOT-23-5.kicad_mod"),
+    pins={
+        "VIN": VIN,
+        "EN": VIN,
+        "GND": GND,
+        "VOUT": VOUT,
+    },
+    part=Part(mpn="AP2112K-3.3TRG1", manufacturer="Diodes Incorporated"),
+)
+
+# Input and output ceramics (10uF 0603, X5R 25V) — JLCPCB Basic.
+Capacitor(name="C_IN",  value="10uF", package="0603", mpn="CL10A106MA8NRNC", manufacturer="Samsung Electro-Mechanics", P1=VIN,  P2=GND)
+Capacitor(name="C_OUT", value="10uF", package="0603", mpn="CL10A106MA8NRNC", manufacturer="Samsung Electro-Mechanics", P1=VOUT, P2=GND)
