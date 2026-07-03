@@ -24,39 +24,13 @@ On the HDMI side, it pretends to be a TV: responds to DDC queries with a plausib
 
 ## Hardware
 
-For now the hardware part exists as a hand-wired abomination. If you want to replicate it at this stage, you'll need:
+The PCB design lives under `hardware/`. The schematic source is written in
+[Zener](https://docs.pcb.new/pages/spec), so `hardware/picoarc.zen` is the
+schematic/netlist source of truth rather than a `.kicad_sch`; the KiCad layout
+and JLCPCB production files are checked in alongside it.
 
-- Pi Pico dev board
-- HDMI breakout
-- Few passives you probably have laying around
-- 3.3 V <-> 5 V I2C level shifter for HDMI DDC/EDID (or not, if you're brave)
-
-```
-Net CEC_BUS
-  Pico 3V3 (pin 36)  — R1 (27 kΩ) — node CEC_BUS
-  Pico GP3 (pin 5)   — R2 (220 Ω) — node CEC_BUS
-  node CEC_BUS                    — HDMI pin 13
-
-Net ARC_TX
-  Pico GP2 (pin 4)   — R3 (330 Ω) — node ATT_A
-  node ATT_A         — R4 (56 Ω)  — Pico GND
-  node ATT_A         — C1 (10 nF) — HDMI pin 14
-
-Net HDMI_5V_FROM_SOUNDBAR
-  HDMI pin 18        — R5 (1 kΩ)   — HDMI pin 19
-  HDMI pin 18        — R6 (68 kΩ)  — node HDMI_5V_SENSE
-  node HDMI_5V_SENSE              — Pico GP4 (pin 6)
-  node HDMI_5V_SENSE — R7 (100 kΩ) — Pico GND
-
-Net DDC_EDID
-  HDMI pin 15 (SCL)  — level shifter — Pico GP7 (pin 10)
-  HDMI pin 16 (SDA)  — level shifter — Pico GP6 (pin 9)
-
-Net GND
-  Pico GND (pin 38)               — HDMI pin 17
-```
-
-Note about DDC_EDID: while omitting a level shifter works as a bench-only direct GPIO bodge, keep in mind that HDMI DDC is a 5V bus and RP2040 IO is not exactly 5V tolerant.
+See [hardware/README.md](hardware/README.md) for the hardware file map,
+Zener/KiCad workflow, and the old hand-wired Pico prototype wiring.
 
 ## Build requirements
 
