@@ -7,6 +7,3 @@ layout/*.log
 # VSCode Local History extension artifacts
 layout/.history/
 .history/
-
-# JLCPCB fab export output
-layout/jclcpcb/
