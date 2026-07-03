@@ -9,5 +9,4 @@ layout/.history/
 .history/
 
 # JLCPCB fab export output
-fab/
 layout/jclcpcb/
