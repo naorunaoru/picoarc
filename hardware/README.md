@@ -25,6 +25,22 @@ separate `.kicad_sch` to edit:
 Edit the Zen module tree when changing the circuit, then regenerate/sync the
 KiCad layout from that source.
 
+## Debug Probe Access
+
+`TP_SWD` is a compact row of three 1.0 x 2.0 mm edge test pads on 1.5 mm pitch.
+Connect it to Raspberry Pi Debug Probe using pogo pins or soldered leads. Its
+target-side pinout is:
+
+- pin 1: SWCLK / SC
+- pin 2: GND
+- pin 3: SWDIO / SD
+
+The SWCLK and SWDIO pads currently connect directly to the RP2040. Target-side
+100 ohm series termination is intentionally omitted while the board layout is
+in flux and should be reconsidered before fabrication. The center ground pad
+and the board's other solderable ground test pads use thermal-relief zone
+connections to make hand soldering practical.
+
 ## Layout and Production Files
 
 - `pcb.toml` is the Zener workspace/board manifest. It pins the board entry

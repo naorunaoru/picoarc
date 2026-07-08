@@ -1,0 +1,17 @@
+"""Solderable ground test point with a thermal-relief zone connection."""
+
+P1 = io("P1", Net)
+
+Component(
+    name="TP",
+    prefix="TP",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Connector.kicad_sym",
+        name="TestPoint",
+    ),
+    footprint=File("../footprints/picoarc.pretty/TestPad_D1.0mm_Round_Thermal.kicad_mod"),
+    pins={"1": P1},
+    properties={"variant": "Pad_D1.0mm_Thermal"},
+    skip_bom=True,
+    skip_pos=True,
+)

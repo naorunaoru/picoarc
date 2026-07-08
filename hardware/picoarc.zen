@@ -120,8 +120,11 @@ HdmiArc(
     DDC_SCL_5V=DDC_SCL_5V,
 )
 
-Debug = Module("./modules/Debug.zen")
-Debug(name="DBG", STATUS_LED=STATUS_LED, GND=GND)
+DebugLed = Module("./modules/DebugLed.zen")
+DebugLed(name="DBG", STATUS_LED=STATUS_LED, GND=GND)
+
+DebugPort = Module("./modules/DebugPort.zen")
+DebugPort(name="SWD", swd=swd, GND=GND)
 
 
 # Design-rule check: the 100k/100k divider must keep HDMI +5V sense below RP2040 IO max.
@@ -142,8 +145,9 @@ TestPoint = Module("@stdlib/generics/TestPoint.zen")
 # Power rails
 TestPoint(name="TP_5V", variant="Pad_D1.0mm", P1=VDD_5V)
 TestPoint(name="TP_3V3", variant="Pad_D1.0mm", P1=VDD_3V3)
-TestPoint(name="TP_GND1", variant="Pad_D1.0mm", P1=GND)
-TestPoint(name="TP_GND2", variant="Pad_D1.0mm", P1=GND)
+GroundTestPoint = Module("./modules/GroundTestPoint.zen")
+GroundTestPoint(name="TP_GND1", P1=GND)
+GroundTestPoint(name="TP_GND2", P1=GND)
 # ARC + CEC
 TestPoint(name="TP_ATT_A", variant="Pad_D1.0mm", P1=ATT_A)
 TestPoint(name="TP_CEC", variant="Pad_D1.0mm", P1=CEC_NODE)
@@ -152,6 +156,7 @@ TestPoint(name="TP_CEC", variant="Pad_D1.0mm", P1=CEC_NODE)
 # U_MCU, clear of the EP via field where ARC_TX/CEC run on B.Cu). GP26-29 are the
 # ADC inputs; GP17-22 give UART0 RX / I2C1 / SPI0 / PWM coverage.
 _PAD_FP = File("footprints/picoarc.pretty/TestPad_1.0x1.0mm_RoundRect.kicad_mod")
+_GND_PAD_FP = File("footprints/picoarc.pretty/TestPad_1.0x1.0mm_RoundRect_Thermal.kicad_mod")
 _PAD_SYM = Symbol(
     library="gitlab.com/kicad/libraries/kicad-symbols/Connector.kicad_sym",
     name="TestPoint",
@@ -169,14 +174,21 @@ for _pad_name, _pad_net in {
     "PAD_GP29": GP29,
     "PAD_3V3": VDD_3V3,
     "PAD_5V": VDD_5V,
-    "PAD_GND1": GND,
-    "PAD_GND2": GND,
 }.items():
     Component(
         name=_pad_name,
         symbol=_PAD_SYM,
         footprint=_PAD_FP,
         pins={"1": _pad_net},
+        skip_bom=True,
+    )
+
+for _pad_name in ["PAD_GND1", "PAD_GND2"]:
+    Component(
+        name=_pad_name,
+        symbol=_PAD_SYM,
+        footprint=_GND_PAD_FP,
+        pins={"1": GND},
         skip_bom=True,
     )
 
