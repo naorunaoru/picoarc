@@ -13,16 +13,14 @@ _dn  = usb.D.N
 _cc1 = Net("CC1")
 _cc2 = Net("CC2")
 
-# USB-C receptacle — GCT USB4105-xx-A, 16P top-mount horizontal
+# USB-C receptacle — G-Switch GT-USB-7014G / LCSC C3019717, 16P horizontal sinker
 Component(
     name="J_USB",
     symbol=Symbol(
         library="gitlab.com/kicad/libraries/kicad-symbols/Connector.kicad_sym",
         name="USB_C_Receptacle_USB2.0_16P",
     ),
-    footprint=File(
-        "gitlab.com/kicad/libraries/kicad-footprints/Connector_USB.pretty/USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal.kicad_mod"
-    ),
+    footprint=File("../footprints/picoarc.pretty/USB-C-SMD_GT-USB-7014D.kicad_mod"),
     pins={
         "VBUS":   VBUS,
         "GND":    GND,
@@ -34,7 +32,7 @@ Component(
         "SBU1":   Net("NC_SBU1"),
         "SBU2":   Net("NC_SBU2"),
     },
-    part=Part(mpn="USB4105-GF-A-060", manufacturer="GCT"),
+    part=Part(mpn="GT-USB-7014G", manufacturer="G-Switch"),
 )
 
 # CC Rd pulldowns — 5.1 kΩ to GND marks this as a USB device (UFP / sink)

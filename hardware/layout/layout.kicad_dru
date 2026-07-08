@@ -53,3 +53,16 @@
 (rule "JLCPCB_small_via_annular_no_kelvin"
 	(constraint annular_width (min 0.125mm))
 	(condition "A.Type == 'Via' && A.Hole <= 0.2mm"))
+
+# J1 (HDMI) and J2 (USB-C) are mid-mount / sunk-board (沉板) connectors: the
+# vendor footprints carry their own Edge.Cuts cutout, and their solder pads +
+# shell tabs sit ~0.16mm from that cutout (and from the corner fillets they
+# share) by the part's own geometry — well inside the 0.3mm board edge_clearance.
+# This is intrinsic to the connector, not a routing error, and JLCPCB fabricates
+# these parts routinely. Relax edge_clearance to 0.1mm ONLY for copper that
+# belongs to J1/J2; every other net keeps the full 0.3mm edge clearance. The
+# 0.1mm floor still catches gross regressions. Keyed on refdes — re-check after
+# a `pcb layout` re-sync that could renumber the connectors.
+(rule "midmount_connector_edge_clearance"
+	(constraint edge_clearance (min 0.1mm))
+	(condition "A.memberOfFootprint('J1') || A.memberOfFootprint('J2') || B.memberOfFootprint('J1') || B.memberOfFootprint('J2')"))

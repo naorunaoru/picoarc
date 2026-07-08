@@ -1,8 +1,6 @@
 (fp_lib_table
   (version 7)
   (lib (name "kicad_libraries_kicad-footprints_Capacitor_SMD@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Capacitor_SMD.pretty") (options "") (descr ""))
-  (lib (name "kicad_libraries_kicad-footprints_Connector_USB@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Connector_USB.pretty") (options "") (descr ""))
-  (lib (name "kicad_libraries_kicad-footprints_Connector_Video@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Connector_Video.pretty") (options "") (descr ""))
   (lib (name "kicad_libraries_kicad-footprints_Crystal@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Crystal.pretty") (options "") (descr ""))
   (lib (name "kicad_libraries_kicad-footprints_LED_SMD@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/LED_SMD.pretty") (options "") (descr ""))
   (lib (name "kicad_libraries_kicad-footprints_Package_DFN_QFN@9.0.3") (type "KiCad") (uri "${KIPRJMOD}/../.pcb/cache/gitlab.com/kicad/libraries/kicad-footprints/9.0.3/Package_DFN_QFN.pretty") (options "") (descr ""))

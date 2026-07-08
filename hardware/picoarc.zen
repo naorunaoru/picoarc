@@ -1,6 +1,7 @@
 """PicoARC — RP2040 USB-Audio-to-HDMI-ARC bridge board."""
 
 load("@stdlib/interfaces.zen", "Usb2", "Swd", "Gpio", "Analog", "Qspi")
+load("@stdlib/board_config.zen", "BoardConfig", "Stackup", "CopperLayer", "DielectricLayer")
 
 VDD_5V = Power("VDD_5V")
 VDD_3V3 = Power("VDD_3V3")
@@ -179,8 +180,24 @@ for _pad_name, _pad_net in {
         skip_bom=True,
     )
 
+_STACKUP_1V2 = BoardConfig(
+    stackup=Stackup(
+        thickness=1.2,
+        layers=[
+            CopperLayer(thickness=0.035, role="mixed"),
+            DielectricLayer(thickness=0.1500, material="Prepreg", form="prepreg"),
+            CopperLayer(thickness=0.0152, role="ground"),
+            DielectricLayer(thickness=0.7796, material="FR4-Core", form="core"),
+            CopperLayer(thickness=0.0152, role="power"),
+            DielectricLayer(thickness=0.1500, material="Prepreg", form="prepreg"),
+            CopperLayer(thickness=0.035, role="mixed"),
+        ],
+    ),
+)
+
 Board(
     name="picoarc",
     layout_path="layout",
     layers=4,
+    config=_STACKUP_1V2,
 )

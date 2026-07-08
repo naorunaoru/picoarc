@@ -73,15 +73,15 @@ _VREF2_EN = Net("_VREF2_EN")
 #   7=D0+  8=D0S  9=D0-  10=CK+ 11=CKS 12=CK-
 #   13=CEC  14=UTILITY/HEAC+  15=SCL  16=SDA
 #   17=GND  18=+5V  19=HPD/HEAC-  SH=SH
+# HC-HDMI0019T-3 / C7501810 is an edge-mount receptacle whose vendor PCB layout
+# calls for a 1.2mm board thickness.
 Component(
     name="J_HDMI",
     symbol=Symbol(
         library="gitlab.com/kicad/libraries/kicad-symbols/Connector.kicad_sym",
         name="HDMI_A_1.4",
     ),
-    footprint=File(
-        "gitlab.com/kicad/libraries/kicad-footprints/Connector_Video.pretty/HDMI_A_Molex_208658-1001_Horizontal.kicad_mod"
-    ),
+    footprint=File("../footprints/picoarc.pretty/HDMI-SMD_HC-HDMI0019T-3_PicoARC_R6.kicad_mod"),
     pins={
         # CEC / ARC / DDC / power / sense
         "CEC": CEC_NODE,
@@ -106,7 +106,7 @@ Component(
         "CK-": Net("NC_CKN"),
         "CKS": Net("NC_CKS"),
     },
-    part=Part(mpn="208658-1001", manufacturer="Molex"),
+    part=Part(mpn="HC-HDMI0019T-3", manufacturer="Shenzhen Hongcheng Electronics"),
 )
 
 # ── CEC network ───────────────────────────────────────────────────────────────
