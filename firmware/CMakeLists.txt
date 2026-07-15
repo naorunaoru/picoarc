@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.13)
 
 set(PICO_BOARD pico)
 
+set(PICOARC_TINYUSB_PATH "${CMAKE_CURRENT_LIST_DIR}/third_party/tinyusb")
+if(NOT EXISTS "${PICOARC_TINYUSB_PATH}/hw/bsp/rp2040")
+    message(FATAL_ERROR "Bundled TinyUSB is missing from ${PICOARC_TINYUSB_PATH}")
+endif()
+set(PICO_TINYUSB_PATH "${PICOARC_TINYUSB_PATH}" CACHE PATH "TinyUSB source used by PicoARC" FORCE)
+
 if(NOT PICO_SDK_PATH AND EXISTS "$ENV{HOME}/Developer/pico/pico-sdk")
     set(PICO_SDK_PATH "$ENV{HOME}/Developer/pico/pico-sdk")
 endif()
@@ -77,6 +83,7 @@ target_link_libraries(picoarc
     hardware_i2c
     hardware_pio
     hardware_pwm
+    hardware_watchdog
     tinyusb_device
 )
 

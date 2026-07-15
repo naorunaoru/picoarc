@@ -9,7 +9,7 @@
 
 #define USB_VID 0xcafe
 #define USB_PID 0x4011
-#define USB_BCD 0x0100
+#define USB_BCD 0x0101
 #define USB_STRING_MAX_CHARS 32
 
 #define EPNUM_CDC_NOTIF 0x81
@@ -80,6 +80,9 @@ uint8_t const desc_configuration[] = {
     TUD_RPI_RESET_DESCRIPTOR(ITF_NUM_RESET, STRID_RESET),
 #endif
 };
+
+_Static_assert(sizeof(desc_configuration) == CONFIG_TOTAL_LEN,
+               "USB configuration descriptor length mismatch");
 
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
     (void)index;

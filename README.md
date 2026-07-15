@@ -48,6 +48,8 @@ locations.
 
 The build files look for the Pico SDK at `~/Developer/pico/pico-sdk` by default.
 If your SDK is elsewhere, set `PICO_SDK_PATH` before building.
+TinyUSB 0.21.0 is bundled under `firmware/third_party/tinyusb`; builds do not
+use the TinyUSB revision from the installed Pico SDK.
 
 ## Build
 
