@@ -48,14 +48,17 @@ locations.
 
 The build files look for the Pico SDK at `~/Developer/pico/pico-sdk` by default.
 If your SDK is elsewhere, set `PICO_SDK_PATH` before building.
-TinyUSB 0.21.0 is bundled under `firmware/third_party/tinyusb`; builds do not
-use the TinyUSB revision from the installed Pico SDK.
+TinyUSB is pinned as a git submodule under `firmware/third_party/tinyusb`;
+builds do not use the TinyUSB revision from the installed Pico SDK. The
+submodule points to a [TinyUSB fork](https://github.com/naorunaoru/tinyusb)
+based on 0.21.0 with PicoARC's full-speed UAC2 feedback fix.
 
 ## Build
 
 From this directory:
 
 ```sh
+git submodule update --init
 make build
 ```
 

@@ -4,7 +4,9 @@ set(PICO_BOARD pico)
 
 set(PICOARC_TINYUSB_PATH "${CMAKE_CURRENT_LIST_DIR}/third_party/tinyusb")
 if(NOT EXISTS "${PICOARC_TINYUSB_PATH}/hw/bsp/rp2040")
-    message(FATAL_ERROR "Bundled TinyUSB is missing from ${PICOARC_TINYUSB_PATH}")
+    message(FATAL_ERROR
+        "TinyUSB submodule is missing; run 'git submodule update --init' from the repository root"
+    )
 endif()
 set(PICO_TINYUSB_PATH "${PICOARC_TINYUSB_PATH}" CACHE PATH "TinyUSB source used by PicoARC" FORCE)
 
