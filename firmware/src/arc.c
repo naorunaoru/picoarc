@@ -19,6 +19,12 @@ static bool arc_initiated;
 static bool system_audio_mode;
 static bool last_streaming;
 static bool last_source_5v;
+static bool source_5v_candidate;
+static absolute_time_t source_5v_debounce_until;
+#if PICOARC_HPD_GATE_ENABLE
+static bool hpd_release_pending;
+static absolute_time_t hpd_release_at;
+#endif
 static unsigned int probe_step;
 static unsigned int streaming_probe_step;
 static unsigned int logical_scan_address;
@@ -1574,6 +1580,17 @@ void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
     gpio_init(hdmi_5v_pin);
     gpio_set_dir(hdmi_5v_pin, GPIO_IN);
     gpio_disable_pulls(hdmi_5v_pin);
+    source_5v_candidate = gpio_get(hdmi_5v_pin);
+    source_5v_debounce_until =
+        make_timeout_time_ms(PICOARC_HDMI_5V_DEBOUNCE_MS);
+#if PICOARC_HPD_GATE_ENABLE
+    // Keep HPD low while HDMI is absent. On a confirmed connection we release
+    // it only after a deliberate low pulse, making every cable insertion look
+    // like a clean sink hotplug even if the +5 V sense input chatters.
+    gpio_put(PICOARC_HPD_GATE_PIN, true);
+    hpd_release_pending = false;
+    hpd_release_at = make_timeout_time_ms(0);
+#endif
 
     cec_init(cec_pin);
     cec_set_logical_address(CEC_LOGICAL_TV);
@@ -1588,22 +1605,35 @@ void arc_task(void) {
     const bool streaming = audio_is_streaming();
     unsigned int cec_frames = 0;
 
-    while (cec_frames < max_cec_frames_per_task && cec_receive_frame_passive(&frame)) {
-        handle_frame(&frame, streaming, !streaming);
-        cec_frames++;
+    const bool raw_source_5v = gpio_get(hdmi_5v_pin);
+    if (raw_source_5v != source_5v_candidate) {
+        source_5v_candidate = raw_source_5v;
+        source_5v_debounce_until =
+            make_timeout_time_ms(PICOARC_HDMI_5V_DEBOUNCE_MS);
     }
 
-    const bool source_5v = gpio_get(hdmi_5v_pin);
+    bool source_5v_changed = false;
+    if (source_5v_candidate != last_source_5v &&
+        time_reached(source_5v_debounce_until)) {
+        last_source_5v = source_5v_candidate;
+        source_5v_changed = true;
+    }
+
+    const bool source_5v = last_source_5v;
     const bool bus_high = cec_bus_is_high();
 
-    if (source_5v != last_source_5v) {
-        last_source_5v = source_5v;
+    if (source_5v_changed) {
+        cec_reset_receiver();
         probe_step = 0;
         streaming_probe_step = 0;
         reset_logical_address_scan();
         ddc_cec_wait_logged = false;
         next_probe = make_timeout_time_ms(source_5v ? 250 : 2000);
         if (!source_5v) {
+#if PICOARC_HPD_GATE_ENABLE
+            gpio_put(PICOARC_HPD_GATE_PIN, true);
+            hpd_release_pending = false;
+#endif
             arc_initiated = false;
             system_audio_mode = false;
             relative_volume_sync_active = false;
@@ -1613,11 +1643,38 @@ void arc_task(void) {
             reset_sad_extra_queries();
             reset_device_info_probe();
         } else {
-#if PICOARC_DDC_EDID_ENABLE
+#if PICOARC_HPD_GATE_ENABLE
+            gpio_put(PICOARC_HPD_GATE_PIN, true);
+            hpd_release_pending = true;
+            hpd_release_at = make_timeout_time_ms(PICOARC_HPD_REPLUG_LOW_MS);
+#elif PICOARC_DDC_EDID_ENABLE
             ddc_edid_note_hotplug();
 #endif
         }
         printf("arc: HDMI +5V %s\n", source_5v ? "present" : "lost");
+    }
+
+#if PICOARC_HPD_GATE_ENABLE
+    if (source_5v && hpd_release_pending) {
+        if (!time_reached(hpd_release_at)) {
+            return;
+        }
+
+        gpio_put(PICOARC_HPD_GATE_PIN, false);
+        hpd_release_pending = false;
+        cec_reset_receiver();
+#if PICOARC_DDC_EDID_ENABLE
+        ddc_edid_note_hotplug();
+#endif
+        printf("arc: HPD reasserted after %ums low pulse\n",
+               PICOARC_HPD_REPLUG_LOW_MS);
+    }
+#endif
+
+    while (cec_frames < max_cec_frames_per_task && cec_receive_frame_passive(&frame)) {
+        const bool arc_gate_open = arc_initiated && system_audio_mode;
+        handle_frame(&frame, streaming, !streaming || !arc_gate_open);
+        cec_frames++;
     }
 
     if (streaming != last_streaming) {

@@ -30,5 +30,6 @@ bool cec_poll(uint8_t initiator, uint8_t follower);
 bool cec_receive_frame(cec_frame_t *frame, uint32_t timeout_us);
 bool cec_receive_frame_passive(cec_frame_t *frame);
 void cec_passive_reset(void);
+void cec_reset_receiver(void);
 
 #endif

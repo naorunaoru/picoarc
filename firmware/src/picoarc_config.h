@@ -5,10 +5,12 @@
 #define PICOARC_SPDIF_PIN 2
 #define PICOARC_CEC_PIN 3
 #define PICOARC_HDMI_5V_PIN 4
+#define PICOARC_HDMI_5V_DEBOUNCE_MS 100
 
 // Active-high FET gate: high holds HDMI HPD low, low releases HPD.
 #define PICOARC_HPD_GATE_ENABLE 1
 #define PICOARC_HPD_GATE_PIN 5
+#define PICOARC_HPD_REPLUG_LOW_MS 200
 
 // Set to 1 to keep sending silence while USB audio is idle.
 // Set to 0 to stop the ARC/S/PDIF carrier while idle so the soundbar can standby.

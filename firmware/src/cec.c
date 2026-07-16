@@ -56,6 +56,7 @@ static unsigned int cec_ack_dma_chan;
 static dma_channel_config cec_ack_dma_config;
 static PIO cec_rx_pio;
 static unsigned int cec_rx_sm;
+static unsigned int cec_rx_offset;
 static unsigned int cec_rx_dma_chan;
 static dma_channel_config cec_tx_dma_config;
 static dma_channel_config cec_rx_dma_config;
@@ -251,15 +252,15 @@ void cec_init(unsigned int pin) {
     // while PIO1 owns the output mux for TX.
     cec_rx_pio = pio0;
     cec_rx_sm = pio_claim_unused_sm(cec_rx_pio, true);
-    const unsigned int rx_offset = pio_add_program(cec_rx_pio, &cec_rx_program);
+    cec_rx_offset = pio_add_program(cec_rx_pio, &cec_rx_program);
 
-    pio_sm_config rx_config = cec_rx_program_get_default_config(rx_offset);
+    pio_sm_config rx_config = cec_rx_program_get_default_config(cec_rx_offset);
     sm_config_set_in_pins(&rx_config, cec_pin);
     sm_config_set_jmp_pin(&rx_config, cec_pin);
     sm_config_set_in_shift(&rx_config, false, false, 32);
     sm_config_set_fifo_join(&rx_config, PIO_FIFO_JOIN_RX);
     sm_config_set_clkdiv(&rx_config, (float)clock_get_hz(clk_sys) / cec_rx_CEC_RX_RATE_HZ);
-    pio_sm_init(cec_rx_pio, cec_rx_sm, rx_offset, &rx_config);
+    pio_sm_init(cec_rx_pio, cec_rx_sm, cec_rx_offset, &rx_config);
     pio_sm_set_enabled(cec_rx_pio, cec_rx_sm, true);
 
     cec_rx_dma_chan = dma_claim_unused_channel(true);
@@ -426,6 +427,21 @@ bool cec_receive_frame(cec_frame_t *frame, uint32_t timeout_us) {
 void cec_passive_reset(void) {
     rx_reset_read();
     passive_frame = (cec_frame_t){0};
+}
+
+void cec_reset_receiver(void) {
+    // A cable removal can interrupt a CEC byte at any edge. The RX program has
+    // blocking waits inside a byte and cannot distinguish the next start bit
+    // from the edge it was waiting for, so resetting only the software parser
+    // can leave reception permanently out of phase after hotplug.
+    pio_sm_set_enabled(cec_rx_pio, cec_rx_sm, false);
+    pio_sm_clear_fifos(cec_rx_pio, cec_rx_sm);
+    pio_sm_restart(cec_rx_pio, cec_rx_sm);
+    pio_sm_exec(cec_rx_pio,
+                cec_rx_sm,
+                pio_encode_jmp(cec_rx_offset + cec_rx_wrap_target));
+    cec_passive_reset();
+    pio_sm_set_enabled(cec_rx_pio, cec_rx_sm, true);
 }
 
 static void passive_ack_slot(void) {
