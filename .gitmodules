@@ -1,3 +1,6 @@
 [submodule "firmware/third_party/tinyusb"]
 	path = firmware/third_party/tinyusb
 	url = https://github.com/naorunaoru/tinyusb.git
+[submodule "firmware/third_party/pico-sdk"]
+	path = firmware/third_party/pico-sdk
+	url = https://github.com/raspberrypi/pico-sdk.git
