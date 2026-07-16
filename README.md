@@ -41,19 +41,23 @@ locations.
 
 ## Build requirements
 
-- Raspberry Pi Pico SDK
+- Git
 - CMake and Ninja
 - Arm GNU toolchain
 - `picotool`
 
-The build files look for the Pico SDK at `~/Developer/pico/pico-sdk` by default.
-If your SDK is elsewhere, set `PICO_SDK_PATH` before building.
+The Pico SDK and TinyUSB sources are pinned as git submodules under
+`firmware/third_party`; builds do not use SDK copies installed on the host.
+PicoARC uses Pico SDK 2.2.0 and a
+[TinyUSB fork](https://github.com/naorunaoru/tinyusb) based on 0.21.0 with the
+full-speed UAC2 feedback fix.
 
 ## Build
 
 From this directory:
 
 ```sh
+git submodule update --init --recursive
 make build
 ```
 

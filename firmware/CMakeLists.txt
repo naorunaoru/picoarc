@@ -2,9 +2,21 @@ cmake_minimum_required(VERSION 3.13)
 
 set(PICO_BOARD pico)
 
-if(NOT PICO_SDK_PATH AND EXISTS "$ENV{HOME}/Developer/pico/pico-sdk")
-    set(PICO_SDK_PATH "$ENV{HOME}/Developer/pico/pico-sdk")
+set(PICOARC_PICO_SDK_PATH "${CMAKE_CURRENT_LIST_DIR}/third_party/pico-sdk")
+if(NOT EXISTS "${PICOARC_PICO_SDK_PATH}/pico_sdk_init.cmake")
+    message(FATAL_ERROR
+        "Pico SDK submodule is missing; run 'git submodule update --init --recursive' from the repository root"
+    )
 endif()
+set(PICO_SDK_PATH "${PICOARC_PICO_SDK_PATH}" CACHE PATH "Pico SDK source used by PicoARC" FORCE)
+
+set(PICOARC_TINYUSB_PATH "${CMAKE_CURRENT_LIST_DIR}/third_party/tinyusb")
+if(NOT EXISTS "${PICOARC_TINYUSB_PATH}/hw/bsp/rp2040")
+    message(FATAL_ERROR
+        "TinyUSB submodule is missing; run 'git submodule update --init --recursive' from the repository root"
+    )
+endif()
+set(PICO_TINYUSB_PATH "${PICOARC_TINYUSB_PATH}" CACHE PATH "TinyUSB source used by PicoARC" FORCE)
 
 if(NOT PICO_TOOLCHAIN_PATH AND EXISTS "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin")
     set(PICO_TOOLCHAIN_PATH "/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin")
@@ -77,6 +89,7 @@ target_link_libraries(picoarc
     hardware_i2c
     hardware_pio
     hardware_pwm
+    hardware_watchdog
     tinyusb_device
 )
 

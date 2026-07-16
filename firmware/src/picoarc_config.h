@@ -18,6 +18,13 @@
 #define PICOARC_STATUS_LED_WAIT_HDMI_BLINK_MS 1000
 #define PICOARC_STATUS_LED_WAIT_USB_BREATHE_MS 2400
 
+// Recover when a host selects a streaming alternate setting but does not keep
+// delivering isochronous audio. Keep the hardware watchdog long enough for
+// synchronous CEC transactions while still recovering a wedged main loop.
+#define PICOARC_USB_STREAM_PACKET_TIMEOUT_MS 1500
+#define PICOARC_USB_RECOVERY_DISCONNECT_MS 500
+#define PICOARC_WATCHDOG_TIMEOUT_MS 8000
+
 // Answer HDMI DDC EDID reads from the RP2040 through the board-level I2C
 // translator. HDMI DDC is a 5V bus; do not connect pins 15/16 directly to
 // RP2040 GPIO outside a bench-only bodge.

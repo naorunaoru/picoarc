@@ -44,21 +44,11 @@ jobs:
     needs: check-tag
     if: needs.check-tag.outputs.on_master == 'true'
 
-    env:
-      PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
-
     steps:
       - name: Checkout PicoARC
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Checkout Pico SDK
-        uses: actions/checkout@v4
-        with:
-          repository: raspberrypi/pico-sdk
-          ref: 2.2.0
-          path: pico-sdk
           submodules: recursive
 
       - name: Install build dependencies

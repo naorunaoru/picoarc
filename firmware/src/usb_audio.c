@@ -5,7 +5,6 @@
 #include <stdio.h>
 
 #include "arc.h"
-#include "hardware/structs/usb.h"
 #include "picoarc_config.h"
 #include "picoarc_log.h"
 #include "pico/time.h"
@@ -25,7 +24,6 @@ enum {
     READ_FRAMES_BUDGET = 2 * MAX_FRAMES_PER_MS,
     START_BUFFER_FRAMES = 256,
     RECOVER_BUFFER_FRAMES = 256,
-    AUDIO_OUT_EP_NUM = 3,
     FEEDBACK_TARGET_FRAMES = 256,
     FEEDBACK_UPDATE_US = 4000,
     FEEDBACK_P_GAIN_Q16_PER_FRAME = 16,
@@ -58,6 +56,10 @@ static uint64_t max_audio_task_gap_us;
 static uint64_t last_audio_read_us;
 static uint64_t max_audio_read_gap_us;
 static uint16_t max_usb_available_bytes;
+static uint64_t stream_packet_deadline_us;
+static volatile uint32_t stream_packet_count;
+static uint32_t observed_stream_packet_count;
+static bool recovery_requested;
 
 static bool active_alt_is_iec61937(void) {
     return active_alt == PICOARC_AUDIO_ALT_IEC61937;
@@ -181,12 +183,14 @@ static void set_all_volume(int16_t value) {
 
 static void notify_host_control_change(uint8_t control_selector) {
     const audio_interrupt_data_t data = {
-        .bInfo = 0,
-        .bAttribute = AUDIO_CS_REQ_CUR,
-        .wValue_cn_or_mcn = 0,
-        .wValue_cs = control_selector,
-        .wIndex_ep_or_int = 0,
-        .wIndex_entity_id = UAC2_ENTITY_FEATURE_UNIT,
+        .v2 = {
+            .bInfo = 0,
+            .bAttribute = AUDIO20_CS_REQ_CUR,
+            .wValue_cn_or_mcn = 0,
+            .wValue_cs = control_selector,
+            .wIndex_ep_or_int = 0,
+            .wIndex_entity_id = UAC2_ENTITY_FEATURE_UNIT,
+        },
     };
 
     tud_audio_int_write(&data);
@@ -201,10 +205,10 @@ void usb_audio_set_cec_audio_status(uint8_t cec_volume, bool muted, bool notify_
     set_all_mute(usb_mute);
     set_all_volume(usb_volume);
     if (notify_host && mute_changed) {
-        notify_host_control_change(AUDIO_FU_CTRL_MUTE);
+        notify_host_control_change(AUDIO20_FU_CTRL_MUTE);
     }
     if (notify_host && volume_changed) {
-        notify_host_control_change(AUDIO_FU_CTRL_VOLUME);
+        notify_host_control_change(AUDIO20_FU_CTRL_VOLUME);
     }
 }
 
@@ -214,12 +218,18 @@ void usb_audio_set_cec_mute_status(bool muted, bool notify_host) {
 
     set_all_mute(usb_mute);
     if (notify_host && mute_changed) {
-        notify_host_control_change(AUDIO_FU_CTRL_MUTE);
+        notify_host_control_change(AUDIO20_FU_CTRL_MUTE);
     }
 }
 
 bool usb_audio_is_streaming(void) {
     return streaming;
+}
+
+bool usb_audio_take_recovery_request(void) {
+    const bool requested = recovery_requested;
+    recovery_requested = false;
+    return requested;
 }
 
 static void update_feedback(bool force) {
@@ -246,17 +256,19 @@ static void update_feedback(bool force) {
     next_feedback_us = now_us + FEEDBACK_UPDATE_US;
 }
 
-static bool clock_get_request(uint8_t rhport, audio_control_request_t const *request) {
-    if (request->bControlSelector == AUDIO_CS_CTRL_SAM_FREQ && request->bRequest == AUDIO_CS_REQ_CUR) {
-        audio_control_cur_4_t cur = {.bCur = (int32_t)tu_htole32(active_sample_rate)};
-        return tud_audio_buffer_and_schedule_control_xfer(rhport, (tusb_control_request_t const *)request, &cur, sizeof(cur));
+static bool clock_get_request(uint8_t rhport, tusb_control_request_t const *request) {
+    const uint8_t control_selector = TU_U16_HIGH(request->wValue);
+
+    if (control_selector == AUDIO20_CS_CTRL_SAM_FREQ && request->bRequest == AUDIO20_CS_REQ_CUR) {
+        audio20_control_cur_4_t cur = {.bCur = (int32_t)tu_htole32(active_sample_rate)};
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request, &cur, sizeof(cur));
     }
 
-    if (request->bControlSelector == AUDIO_CS_CTRL_SAM_FREQ && request->bRequest == AUDIO_CS_REQ_RANGE) {
+    if (control_selector == AUDIO20_CS_CTRL_SAM_FREQ && request->bRequest == AUDIO20_CS_REQ_RANGE) {
         // Discrete ARC/SPDIF rates that fit every advertised PCM alt over
         // full-speed USB. Most hosts treat each
         // sub-range whose bMin == bMax as a single supported value.
-        audio_control_range_4_n_t(5) range = {
+        audio20_control_range_4_n_t(5) range = {
             .wNumSubRanges = tu_htole16(5),
             .subrange[0] = {
                 .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_32K),
@@ -284,34 +296,37 @@ static bool clock_get_request(uint8_t rhport, audio_control_request_t const *req
                 .bRes = 0,
             },
         };
-        return tud_audio_buffer_and_schedule_control_xfer(rhport, (tusb_control_request_t const *)request, &range, sizeof(range));
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request, &range, sizeof(range));
     }
 
-    if (request->bControlSelector == AUDIO_CS_CTRL_CLK_VALID && request->bRequest == AUDIO_CS_REQ_CUR) {
-        audio_control_cur_1_t valid = {.bCur = 1};
-        return tud_audio_buffer_and_schedule_control_xfer(rhport, (tusb_control_request_t const *)request, &valid, sizeof(valid));
+    if (control_selector == AUDIO20_CS_CTRL_CLK_VALID && request->bRequest == AUDIO20_CS_REQ_CUR) {
+        audio20_control_cur_1_t valid = {.bCur = 1};
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request, &valid, sizeof(valid));
     }
 
     return false;
 }
 
-static bool feature_get_request(uint8_t rhport, audio_control_request_t const *request) {
-    if (request->bChannelNumber > CHANNELS) {
+static bool feature_get_request(uint8_t rhport, tusb_control_request_t const *request) {
+    const uint8_t control_selector = TU_U16_HIGH(request->wValue);
+    const uint8_t channel_number = TU_U16_LOW(request->wValue);
+
+    if (channel_number > CHANNELS) {
         return false;
     }
 
-    if (request->bControlSelector == AUDIO_FU_CTRL_MUTE && request->bRequest == AUDIO_CS_REQ_CUR) {
-        audio_control_cur_1_t cur = {.bCur = mute[request->bChannelNumber]};
-        return tud_audio_buffer_and_schedule_control_xfer(rhport, (tusb_control_request_t const *)request, &cur, sizeof(cur));
+    if (control_selector == AUDIO20_FU_CTRL_MUTE && request->bRequest == AUDIO20_CS_REQ_CUR) {
+        audio20_control_cur_1_t cur = {.bCur = mute[channel_number]};
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request, &cur, sizeof(cur));
     }
 
-    if (request->bControlSelector == AUDIO_FU_CTRL_VOLUME && request->bRequest == AUDIO_CS_REQ_CUR) {
-        audio_control_cur_2_t cur = {.bCur = tu_htole16(volume[request->bChannelNumber])};
-        return tud_audio_buffer_and_schedule_control_xfer(rhport, (tusb_control_request_t const *)request, &cur, sizeof(cur));
+    if (control_selector == AUDIO20_FU_CTRL_VOLUME && request->bRequest == AUDIO20_CS_REQ_CUR) {
+        audio20_control_cur_2_t cur = {.bCur = tu_htole16(volume[channel_number])};
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request, &cur, sizeof(cur));
     }
 
-    if (request->bControlSelector == AUDIO_FU_CTRL_VOLUME && request->bRequest == AUDIO_CS_REQ_RANGE) {
-        audio_control_range_2_n_t(1) range = {
+    if (control_selector == AUDIO20_FU_CTRL_VOLUME && request->bRequest == AUDIO20_CS_REQ_RANGE) {
+        audio20_control_range_2_n_t(1) range = {
             .wNumSubRanges = tu_htole16(1),
             .subrange[0] = {
                 .bMin = tu_htole16(host_volume_min_256()),
@@ -319,21 +334,21 @@ static bool feature_get_request(uint8_t rhport, audio_control_request_t const *r
                 .bRes = tu_htole16(host_volume_step_256()),
             },
         };
-        return tud_audio_buffer_and_schedule_control_xfer(rhport, (tusb_control_request_t const *)request, &range, sizeof(range));
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request, &range, sizeof(range));
     }
 
     return false;
 }
 
 bool tud_audio_get_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p_request) {
-    audio_control_request_t const *request = (audio_control_request_t const *)p_request;
+    const uint8_t entity_id = TU_U16_HIGH(p_request->wIndex);
 
-    if (request->bEntityID == UAC2_ENTITY_CLOCK) {
-        return clock_get_request(rhport, request);
+    if (entity_id == UAC2_ENTITY_CLOCK) {
+        return clock_get_request(rhport, p_request);
     }
 
-    if (request->bEntityID == UAC2_ENTITY_FEATURE_UNIT) {
-        return feature_get_request(rhport, request);
+    if (entity_id == UAC2_ENTITY_FEATURE_UNIT) {
+        return feature_get_request(rhport, p_request);
     }
 
     return false;
@@ -341,15 +356,19 @@ bool tud_audio_get_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
 
 bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p_request, uint8_t *buf) {
     (void)rhport;
-    (void)buf;
-    audio_control_request_t const *request = (audio_control_request_t const *)p_request;
+    const uint8_t entity_id = TU_U16_HIGH(p_request->wIndex);
+    const uint8_t control_selector = TU_U16_HIGH(p_request->wValue);
+    const uint8_t channel_number = TU_U16_LOW(p_request->wValue);
 
-    if (request->bRequest != AUDIO_CS_REQ_CUR) {
+    if (p_request->bRequest != AUDIO20_CS_REQ_CUR) {
         return false;
     }
 
-    if (request->bEntityID == UAC2_ENTITY_CLOCK && request->bControlSelector == AUDIO_CS_CTRL_SAM_FREQ) {
-        const int32_t requested = ((audio_control_cur_4_t const *)buf)->bCur;
+    if (entity_id == UAC2_ENTITY_CLOCK && control_selector == AUDIO20_CS_CTRL_SAM_FREQ) {
+        if (p_request->wLength != sizeof(audio20_control_cur_4_t)) {
+            return false;
+        }
+        const int32_t requested = ((audio20_control_cur_4_t const *)buf)->bCur;
         if (!sample_rate_supported((uint32_t)requested)) {
             return false;
         }
@@ -367,28 +386,34 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
         return true;
     }
 
-    if (request->bEntityID != UAC2_ENTITY_FEATURE_UNIT) {
+    if (entity_id != UAC2_ENTITY_FEATURE_UNIT) {
         return false;
     }
 
-    if (request->bChannelNumber > CHANNELS) {
+    if (channel_number > CHANNELS) {
         return false;
     }
 
-    if (request->bControlSelector == AUDIO_FU_CTRL_MUTE) {
-        const int8_t requested_mute = ((audio_control_cur_1_t const *)buf)->bCur ? 1 : 0;
+    if (control_selector == AUDIO20_FU_CTRL_MUTE) {
+        if (p_request->wLength != sizeof(audio20_control_cur_1_t)) {
+            return false;
+        }
+        const int8_t requested_mute = ((audio20_control_cur_1_t const *)buf)->bCur ? 1 : 0;
         set_all_mute(requested_mute);
         if (!streaming) {
             printf("usb-audio: host mute=%s ch=%u\n",
                    requested_mute ? "on" : "off",
-                   request->bChannelNumber);
+                   channel_number);
         }
         arc_request_mute_sync(requested_mute != 0);
         return true;
     }
 
-    if (request->bControlSelector == AUDIO_FU_CTRL_VOLUME) {
-        const int16_t requested_volume = ((audio_control_cur_2_t const *)buf)->bCur;
+    if (control_selector == AUDIO20_FU_CTRL_VOLUME) {
+        if (p_request->wLength != sizeof(audio20_control_cur_2_t)) {
+            return false;
+        }
+        const int16_t requested_volume = ((audio20_control_cur_2_t const *)buf)->bCur;
         set_all_volume(requested_volume);
         const uint8_t cec_volume = usb_volume_to_cec_volume(requested_volume);
         if (!streaming) {
@@ -396,7 +421,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
                    (long)(requested_volume / 256),
                    (long)(((requested_volume < 0 ? -requested_volume : requested_volume) % 256) * 100 / 256),
                    cec_volume,
-                   request->bChannelNumber);
+                   channel_number);
         }
         arc_request_volume_sync(cec_volume);
         return true;
@@ -411,8 +436,14 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
     uint8_t const alt = tu_u16_low(tu_le16toh(request->wValue));
 
     if (itf == ITF_NUM_AUDIO_STREAMING) {
+        const uint64_t now_us = time_us_64();
         active_alt = alt;
         streaming = alt != PICOARC_AUDIO_ALT_ZERO;
+        stream_packet_count = 0;
+        observed_stream_packet_count = 0;
+        stream_packet_deadline_us = streaming ?
+            now_us + (uint64_t)PICOARC_USB_STREAM_PACKET_TIMEOUT_MS * 1000u : 0;
+        recovery_requested = false;
         const bool initial_gate_open = streaming &&
                                        arc_audio_format_supported_quiet(active_alt, active_sample_rate);
         output_enabled = false;
@@ -425,7 +456,7 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
         spdif_set_mode(initial_gate_open ? SPDIF_MODE_SILENCE : idle_spdif_mode());
         dropped_frames = 0;
         gated_frames = 0;
-        next_diag_log_us = time_us_64() + 2000000;
+        next_diag_log_us = now_us + 2000000;
         next_gate_log_us = 0;
         next_feedback_us = 0;
         last_audio_task_us = 0;
@@ -444,11 +475,25 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
     return true;
 }
 
-bool tud_audio_set_itf_close_EP_cb(uint8_t rhport, tusb_control_request_t const *request) {
+bool tud_audio_set_itf_close_ep_cb(uint8_t rhport, tusb_control_request_t const *request) {
     (void)rhport;
     (void)request;
     usb_audio_stop_streaming();
     printf("usb-audio: streaming off, spdif=%s\n", spdif_mode_name(spdif_get_mode()));
+    return true;
+}
+
+bool tud_audio_rx_done_isr(uint8_t rhport, uint16_t n_bytes_received,
+                           uint8_t func_id, uint8_t ep_out,
+                           uint8_t cur_alt_setting) {
+    (void)rhport;
+    (void)func_id;
+    (void)ep_out;
+    (void)cur_alt_setting;
+
+    if (n_bytes_received > 0) {
+        stream_packet_count++;
+    }
     return true;
 }
 
@@ -469,8 +514,10 @@ void usb_audio_stop_streaming(void) {
     last_audio_read_us = 0;
     max_audio_read_gap_us = 0;
     max_usb_available_bytes = 0;
-    usb_dpram->ep_buf_ctrl[AUDIO_OUT_EP_NUM].out = 0;
-    usb_dpram->ep_buf_ctrl[AUDIO_OUT_EP_NUM].in = 0;
+    stream_packet_deadline_us = 0;
+    stream_packet_count = 0;
+    observed_stream_packet_count = 0;
+    recovery_requested = false;
 }
 
 void tud_audio_feedback_params_cb(uint8_t func_id, uint8_t alt_itf, audio_feedback_params_t *feedback_param) {
@@ -486,6 +533,19 @@ void usb_audio_task(void) {
     }
 
     const uint64_t task_now_us = time_us_64();
+    const uint32_t packet_count = stream_packet_count;
+    if (packet_count != observed_stream_packet_count) {
+        observed_stream_packet_count = packet_count;
+        stream_packet_deadline_us =
+            task_now_us + (uint64_t)PICOARC_USB_STREAM_PACKET_TIMEOUT_MS * 1000u;
+    } else if (stream_packet_deadline_us != 0 && task_now_us >= stream_packet_deadline_us) {
+        recovery_requested = true;
+        stream_packet_deadline_us = 0;
+        printf("usb-audio: packets stalled at alt=%u; requesting USB recovery\n",
+               active_alt);
+        return;
+    }
+
     if (last_audio_task_us != 0) {
         const uint64_t gap_us = task_now_us - last_audio_task_us;
         if (gap_us > max_audio_task_gap_us) {
