@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "description": "Exact native STEP replacements for the PicoARC Blender render assembly.",
+  "models_root": "../footprints/picoarc.3dshapes",
+  "components": [
+    {
+      "ref": "D2",
+      "mpn": "D5V0M5B6LP16-7",
+      "lcsc": "C445551",
+      "model": "DFN1616-6_L1.6-W1.6-H0.6-P0.50-BL-EP-native.step",
+      "source_kind": "WRL",
+      "quarter_turns": 2,
+      "material_roles": ["mark", "epoxy", "tin", "mark_dark"]
+    },
+    {
+      "ref": "D3",
+      "mpn": "H7VH10U",
+      "lcsc": "C51898355",
+      "model": "DFN1006-2L-FD-native.step",
+      "source_kind": "WRL",
+      "quarter_turns": 0,
+      "material_roles": ["epoxy", "mark", "tin"]
+    },
+    {
+      "ref": "U5",
+      "mpn": "RP2040",
+      "lcsc": "C2040",
+      "model": "LQFN-56_L7.0-W7.0-P0.4-EP-native.step",
+      "source_kind": "STEP",
+      "quarter_turns": 2,
+      "material_roles": ["tin", "mark_dark", "epoxy", "tin"]
+    },
+    {
+      "ref": "U1",
+      "mpn": "PCA9306DCUR",
+      "lcsc": "C33196",
+      "model": "SSOP-8_L2.0-W2.3-P0.50-LS3.1-BR-native.step",
+      "source_kind": "STEP",
+      "quarter_turns": 0,
+      "material_roles": ["tin", "epoxy", "mark"]
+    },
+    {
+      "ref": "U4",
+      "mpn": "W25Q16JVSSIQ",
+      "lcsc": "C82317",
+      "model": "SOIC-8_L5.3-W5.3-H1.9-LS7.9-P1.27-native.step",
+      "source_kind": "STEP",
+      "quarter_turns": 3,
+      "material_roles": ["epoxy", "mark", "mark_dark", "tin"]
+    },
+    {
+      "ref": "U3",
+      "mpn": "USBLC6-2SC6",
+      "lcsc": "C7519",
+      "model": "SOT-23-6_L2.9-W1.6-H1.5-LS2.8-P0.95-native.step",
+      "source_kind": "STEP",
+      "quarter_turns": 2,
+      "material_roles": ["mark", "epoxy", "mark_dark", "tin"]
+    },
+    {
+      "ref": "U2",
+      "mpn": "AP2112K-3.3TRG1",
+      "lcsc": "C51118",
+      "model": "SOT-25-5_L2.9-W1.6-P0.95-LS2.8-BL-native.step",
+      "source_kind": "STEP",
+      "quarter_turns": 3,
+      "material_roles": ["epoxy", "mark", "tin"]
+    },
+    {
+      "ref": "Q1",
+      "mpn": "2N7002",
+      "lcsc": "C8545",
+      "model": "SOT-23-3P_L2.9-W1.3-H1.0-LS2.4-P0.95-native.step",
+      "source_kind": "STEP",
+      "quarter_turns": 0,
+      "material_roles": ["mark", "epoxy", "mark_dark", "tin"]
+    },
+    {
+      "ref": "Y1",
+      "mpn": "X322512MSB4SI",
+      "lcsc": "C9002",
+      "model": "CRYSTAL-SMD_4P-L3.2-W2.5-BL-native.step",
+      "source_kind": "STEP",
+      "quarter_turns": 0,
+      "material_roles": ["can", "mark_dark", "gold", "substrate"]
+    },
+    {
+      "ref": "D1",
+      "mpn": "KT-0603R",
+      "lcsc": "C2286",
+      "model": "LED0603_L1.6-W0.8-H0.6-native.step",
+      "source_kind": "STEP",
+      "quarter_turns": 0,
+      "material_roles": ["gold", "tin", "mark_dark", "ceramic", "red", "substrate"]
+    }
+  ]
+}

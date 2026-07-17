@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "description": "Pinned PicoARC product-render preset. The routed KiCad PCB is the geometry source; the Blender file is the art-directed template.",
+  "pcb": "hardware/layout/layout.kicad_pcb",
+  "template": "hardware/render/picoarc-hero.blend",
+  "output_dir": "assets/camera-studies/neutral-shadow-transparent",
+  "render": {
+    "engine": "CYCLES",
+    "background": "transparent",
+    "resolution": [1400, 788],
+    "samples": 64,
+    "denoise": true,
+    "exposure": -1.4,
+    "look": "AgX - Medium High Contrast",
+    "dither": 0.15,
+    "file_format": "PNG",
+    "color_mode": "RGBA"
+  },
+  "presentation": {
+    "rig": "PicoARC Presentation Rig",
+    "focus": "PicoARC Focus",
+    "assembly_collection": "PicoARC Assembly",
+    "exact_collection": "Exact Component STEP",
+    "root_z_offset_m": -0.0005,
+    "baseline_component_plane_z_m": 0.001195
+  },
+  "materials": {
+    "copper": "PicoARC Copper",
+    "pads": "PicoARC Plated Pads",
+    "front_silkscreen": "PicoARC Front Silkscreen",
+    "back_silkscreen": "PicoARC Back Silkscreen",
+    "front_soldermask": "PicoARC Front Solder Mask - Cycles Studies",
+    "back_soldermask": "PicoARC Back Solder Mask - Cycles Studies",
+    "board_core": "PicoARC FR4 Core"
+  },
+  "cameras": [
+    {
+      "id": "1",
+      "object": "Study 01 - Clean Isometric",
+      "filename": "01-clean-isometric.png",
+      "lighting": "relative"
+    },
+    {
+      "id": "2",
+      "object": "Study 02N - Straight Overhead",
+      "filename": "02-straight-overhead.png",
+      "lighting": "overhead"
+    },
+    {
+      "id": "3",
+      "object": "Study 03 - HDMI Macro",
+      "filename": "03-hdmi-macro.png",
+      "lighting": "relative"
+    },
+    {
+      "id": "4",
+      "object": "Study 04 - USB-C Macro",
+      "filename": "04-usbc-macro.png",
+      "lighting": "relative"
+    },
+    {
+      "id": "5",
+      "object": "Study 05 - Low Product",
+      "filename": "05-low-product.png",
+      "lighting": "relative"
+    },
+    {
+      "id": "6",
+      "object": "Study 06 - Underside Grazing",
+      "filename": "06-underside-grazing.png",
+      "lighting": "underside"
+    }
+  ],
+  "exact_components": {
+    "D1": {"x_mm": 125.68, "y_mm": -119.02, "rotation_deg": 0.0, "side": "top", "import_name_prefix": "LED_0603_1608Metric"},
+    "D2": {"x_mm": 113.66, "y_mm": -108.55, "rotation_deg": 90.0, "side": "top", "import_name_prefix": null},
+    "D3": {"x_mm": 112.24, "y_mm": -106.94, "rotation_deg": 0.0, "side": "top", "import_name_prefix": null},
+    "J1": {"x_mm": 107.215, "y_mm": -111.0, "rotation_deg": 180.0, "side": "top", "import_name_prefix": null},
+    "J2": {"x_mm": 145.19, "y_mm": -111.0, "rotation_deg": 90.0, "side": "top", "import_name_prefix": null},
+    "Q1": {"x_mm": 114.0525, "y_mm": -105.5, "rotation_deg": -90.0, "side": "top", "import_name_prefix": "SOT-23"},
+    "SW1": {"x_mm": 124.31, "y_mm": -104.4, "rotation_deg": 180.0, "side": "top", "import_name_prefix": null},
+    "U1": {"x_mm": 119.0, "y_mm": -110.7, "rotation_deg": 180.0, "side": "top", "import_name_prefix": "VSSOP-8_2.3x2mm_P0.5mm"},
+    "U2": {"x_mm": 136.77, "y_mm": -116.68, "rotation_deg": 180.0, "side": "top", "import_name_prefix": "SOT-23-5"},
+    "U3": {"x_mm": 138.29, "y_mm": -111.51, "rotation_deg": 0.0, "side": "top", "import_name_prefix": "SOT-23-6"},
+    "U4": {"x_mm": 135.18, "y_mm": -105.63, "rotation_deg": 180.0, "side": "top", "import_name_prefix": "SOIC-8_5.3x5.3mm_P1.27mm"},
+    "U5": {"x_mm": 127.2, "y_mm": -112.5625, "rotation_deg": -90.0, "side": "top", "import_name_prefix": "QFN-56-1EP_7x7mm_P0.4mm_EP3.2x3.2mm"},
+    "Y1": {"x_mm": 119.15, "y_mm": -114.25, "rotation_deg": -90.0, "side": "top", "import_name_prefix": "Crystal_SMD_3225-4Pin_3.2x2.5mm"}
+  }
+}
