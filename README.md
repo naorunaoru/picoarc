@@ -1,3 +1,5 @@
+<img width="1400" height="788" alt="01-clean-isometric" src="https://github.com/user-attachments/assets/b9dece9f-7460-4226-a94b-06d028a8eb8d" />
+
 # PicoARC
 
 PicoARC is a device that appears to the host as a USB Audio Class 2 audio interface and passes through incoming audio as an S/PDIF-style stream to an ARC-compatible device. In simpler terms, this allows you to output audio from your computer to a soundbar or an ARC-capable receiver.
