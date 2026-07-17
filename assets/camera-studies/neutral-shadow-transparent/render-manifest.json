@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "generated_at": "2026-07-17T14:13:56.805963+00:00",
+  "source_pcb": "hardware/layout/layout.kicad_pcb",
+  "source_pcb_sha256": "b7022d74f4dd7117ea44a9d44b6148f2fd15efe8b3f72a2e88196bb3853f975a",
+  "template_blend": "hardware/render/picoarc-hero.blend",
+  "config": "hardware/render/render-config.json",
+  "config_sha256": "7974811e545b2e6ced5b87a4c075e7307703e7d9fe01af9a8bec229f061ca097",
+  "background": "transparent",
+  "engine": "CYCLES",
+  "samples": 64,
+  "resolution": [
+    1400,
+    788
+  ],
+  "material_preset": "Neutral Shadow",
+  "refresh": {
+    "root": "PicoARC Layout Assembly",
+    "step_root": "KiCad STEP Assembly",
+    "board_center_m": [
+      0.125,
+      -0.11100001633167267
+    ],
+    "component_plane_m": 0.001195015269331634,
+    "removed_generic": [
+      "LED_0603_1608Metric.002",
+      "SOT-23.002",
+      "VSSOP-8_2.3x2mm_P0.5mm.002",
+      "SOT-23-5.002",
+      "SOT-23-6.002",
+      "SOIC-8_5.3x5.3mm_P1.27mm.002",
+      "QFN-56-1EP_7x7mm_P0.4mm_EP3.2x3.2mm.002",
+      "Crystal_SMD_3225-4Pin_3.2x2.5mm.002"
+    ],
+    "remapped_material_slots": 107,
+    "moved_exact": {
+      "D1": {
+        "x_mm": 125.68,
+        "y_mm": -119.02,
+        "rotation_deg": 0.0
+      },
+      "D2": {
+        "x_mm": 113.66,
+        "y_mm": -108.55,
+        "rotation_deg": 90.0
+      },
+      "D3": {
+        "x_mm": 112.24,
+        "y_mm": -106.94,
+        "rotation_deg": 0.0
+      },
+      "J1": {
+        "x_mm": 107.215,
+        "y_mm": -111.0,
+        "rotation_deg": 180.0
+      },
+      "J2": {
+        "x_mm": 145.19,
+        "y_mm": -111.0,
+        "rotation_deg": 90.0
+      },
+      "Q1": {
+        "x_mm": 114.0525,
+        "y_mm": -105.5,
+        "rotation_deg": -90.0
+      },
+      "SW1": {
+        "x_mm": 124.31,
+        "y_mm": -104.4,
+        "rotation_deg": 180.0
+      },
+      "U1": {
+        "x_mm": 119.0,
+        "y_mm": -110.7,
+        "rotation_deg": 180.0
+      },
+      "U2": {
+        "x_mm": 136.77,
+        "y_mm": -116.68,
+        "rotation_deg": 180.0
+      },
+      "U3": {
+        "x_mm": 138.29,
+        "y_mm": -111.51,
+        "rotation_deg": 0.0
+      },
+      "U4": {
+        "x_mm": 135.18,
+        "y_mm": -105.63,
+        "rotation_deg": 180.0
+      },
+      "U5": {
+        "x_mm": 127.2,
+        "y_mm": -112.5625,
+        "rotation_deg": -90.0
+      },
+      "Y1": {
+        "x_mm": 119.15,
+        "y_mm": -114.25,
+        "rotation_deg": -90.0
+      }
+    },
+    "material_assignments": {
+      "layout_copper.001": "PicoARC Copper",
+      "layout_via.001": "PicoARC Copper",
+      "layout_pad.001": "PicoARC Plated Pads",
+      "layout_PCB.001": "PicoARC FR4 Core",
+      "layout_silkscreen.002": "PicoARC Front Silkscreen",
+      "layout_silkscreen.003": "PicoARC Back Silkscreen",
+      "layout_soldermask.002": "PicoARC Front Solder Mask - Cycles Studies",
+      "layout_soldermask.003": "PicoARC Back Solder Mask - Cycles Studies"
+    }
+  },
+  "outputs": [
+    {
+      "id": "1",
+      "camera": "Study 01 - Clean Isometric",
+      "path": "01-clean-isometric.png",
+      "sha256": "93d95ef22af72befbcfbbe649a9e561ff8217f19f305f715709dd1b3ed9483f6"
+    },
+    {
+      "id": "2",
+      "camera": "Study 02N - Straight Overhead",
+      "path": "02-straight-overhead.png",
+      "sha256": "97d70fde1c7c39ed3e6dccc8d2d760a489a9852c4d95b3b2b818276703b79270"
+    },
+    {
+      "id": "3",
+      "camera": "Study 03 - HDMI Macro",
+      "path": "03-hdmi-macro.png",
+      "sha256": "f41f564e467a281bb8d2d11fecf4714ac7db3fa37fbfc5ec3ac5d413ec160a65"
+    },
+    {
+      "id": "4",
+      "camera": "Study 04 - USB-C Macro",
+      "path": "04-usbc-macro.png",
+      "sha256": "9c41a5f30caa23407337c22de7ada4edd892557c31300c2e63459efc94878352"
+    },
+    {
+      "id": "5",
+      "camera": "Study 05 - Low Product",
+      "path": "05-low-product.png",
+      "sha256": "3692d2962186571b8cb925cf0c5ff441febd3e9686ff939195b109d91f76c2e7"
+    },
+    {
+      "id": "6",
+      "camera": "Study 06 - Underside Grazing",
+      "path": "06-underside-grazing.png",
+      "sha256": "632f748abf856fad6d5fcf8b1407dfeceaca54321d11b3a1b4d28d69dd93119e"
+    }
+  ]
+}
