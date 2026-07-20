@@ -22,7 +22,7 @@ enum {
     SPDIF_WORDS_PER_FRAME = 4,
     SPDIF_WORDS_PER_BLOCK = SPDIF_FRAMES_PER_BLOCK * SPDIF_WORDS_PER_FRAME,
     // One slot stays empty so read == write can unambiguously mean empty.
-    USB_RING_FRAMES = 8192,
+    USB_RING_FRAMES = 2048,
 };
 
 typedef enum {
@@ -37,16 +37,6 @@ typedef struct {
     uint8_t parity;
 } bmc_byte_t;
 
-static const int16_t sine_1khz_48k[48] = {
-    0, 1069, 2120, 3135, 4096, 4987, 5793, 6499,
-    7094, 7568, 7913, 8122, 8192, 8122, 7913, 7568,
-    7094, 6499, 5793, 4987, 4096, 3135, 2120, 1069,
-    0, -1069, -2120, -3135, -4096, -4987, -5793, -6499,
-    -7094, -7568, -7913, -8122, -8192, -8122, -7913, -7568,
-    -7094, -6499, -5793, -4987, -4096, -3135, -2120, -1069,
-};
-
-static uint32_t tone_words[SPDIF_WORDS_PER_BLOCK];
 static uint32_t silence_words[SPDIF_WORDS_PER_BLOCK];
 static uint32_t *build_words;
 static size_t spdif_word_index;
@@ -55,7 +45,7 @@ static PIO spdif_pio;
 static unsigned int spdif_sm;
 static unsigned int spdif_dma_chan;
 static dma_channel_config spdif_dma_config;
-static volatile spdif_mode_t current_mode = SPDIF_MODE_TONE_1KHZ;
+static volatile spdif_mode_t current_mode = SPDIF_MODE_OFF;
 static volatile spdif_stream_format_t current_stream_format = SPDIF_STREAM_FORMAT_PCM;
 // Samples are stored 24-bit-left-aligned in int32_t (audio MSB at bit 31,
 // audio LSB at bit 8). 16-bit USB input is shifted left 16 on ingest, 24-bit
@@ -349,7 +339,7 @@ static void build_dma_block(uint32_t *words, unsigned int *frame_index, unsigned
         return;
     }
 
-    copy_block(words, mode == SPDIF_MODE_TONE_1KHZ ? tone_words : silence_words);
+    copy_block(words, silence_words);
 }
 
 static void start_dma_block(const uint32_t *words) {
@@ -361,7 +351,7 @@ static void start_dma_block(const uint32_t *words) {
                           true);
 }
 
-static void build_block(uint32_t *words, bool tone) {
+static void build_silence_block(uint32_t *words) {
     for (size_t i = 0; i < SPDIF_WORDS_PER_BLOCK; i++) {
         words[i] = 0;
     }
@@ -371,11 +361,8 @@ static void build_block(uint32_t *words, bool tone) {
     current_level = 0;
 
     for (unsigned int frame = 0; frame < SPDIF_FRAMES_PER_BLOCK; frame++) {
-        // sine_1khz_48k is 16-bit; promote to the encoder's 24-bit
-        // left-aligned int32 by shifting up the same way live USB does.
-        const int32_t sample = tone ? ((int32_t)sine_1khz_48k[frame % 48]) << 16 : 0;
-        append_subframe(frame == 0 ? PREAMBLE_B : PREAMBLE_M, sample, false);
-        append_subframe(PREAMBLE_W, sample, false);
+        append_subframe(frame == 0 ? PREAMBLE_B : PREAMBLE_M, 0, false);
+        append_subframe(PREAMBLE_W, 0, false);
     }
 }
 
@@ -401,8 +388,7 @@ static void audio_core_main(void) {
 
 void spdif_start(unsigned int pin) {
     build_bmc_tables();
-    build_block(tone_words, true);
-    build_block(silence_words, false);
+    build_silence_block(silence_words);
 
     spdif_pio = pio0;
     spdif_sm = pio_claim_unused_sm(spdif_pio, true);
@@ -478,8 +464,6 @@ const char *spdif_mode_name(spdif_mode_t mode) {
         return "off";
     case SPDIF_MODE_SILENCE:
         return "silence";
-    case SPDIF_MODE_TONE_1KHZ:
-        return "1khz-tone";
     case SPDIF_MODE_USB_AUDIO:
         return "usb-audio";
     default:
