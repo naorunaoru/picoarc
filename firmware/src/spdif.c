@@ -6,7 +6,6 @@
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
 #include "hardware/pio.h"
-#include "pico/multicore.h"
 #include "pico/stdlib.h"
 #include "picoarc_log.h"
 #include "spdif.pio.h"
@@ -43,8 +42,11 @@ static size_t spdif_word_index;
 static unsigned int current_level;
 static PIO spdif_pio;
 static unsigned int spdif_sm;
-static unsigned int spdif_dma_chan;
-static dma_channel_config spdif_dma_config;
+static unsigned int spdif_dma_chan[2];
+static uint32_t spdif_dma_mask;
+static dma_channel_config spdif_dma_config[2];
+static unsigned int live_frame_index;
+static unsigned int live_level;
 static volatile spdif_mode_t current_mode = SPDIF_MODE_OFF;
 static volatile spdif_stream_format_t current_stream_format = SPDIF_STREAM_FORMAT_PCM;
 // Samples are stored 24-bit-left-aligned in int32_t (audio MSB at bit 31,
@@ -58,9 +60,16 @@ static volatile unsigned int usb_underrun_frames;
 static volatile unsigned int usb_high_water_frames;
 static volatile unsigned int usb_low_water_frames;
 static volatile unsigned int spdif_dma_late_blocks;
+static volatile unsigned int spdif_dma_rearm_races;
+static volatile unsigned int spdif_dma_max_build_us;
+static volatile unsigned int spdif_dma_sequence_errors;
+static volatile unsigned int spdif_pio_stall_events;
+static volatile uint32_t current_sample_rate = SPDIF_DEFAULT_SAMPLE_RATE_HZ;
+static volatile unsigned int current_sample_bits = 16;
 static bmc_byte_t bmc_byte[2][256];
 static uint8_t bmc_tail[2][2][8];
 static uint32_t dma_words[2][SPDIF_WORDS_PER_BLOCK];
+static unsigned int expected_dma_block;
 
 static unsigned int buffered_frames_from(unsigned int read, unsigned int write) {
     if (write >= read) {
@@ -278,10 +287,82 @@ static void encode_subframe_fast(uint32_t words[SPDIF_WORDS_PER_SUBFRAME],
     words[1] = hi;
 }
 
-static bool channel_status_bit(unsigned int frame_index, spdif_stream_format_t format) {
-    // IEC 60958 consumer channel status byte 0 bit 1: 0 = linear PCM,
-    // 1 = non-PCM / encoded audio. Other bits remain zero for now.
-    return format == SPDIF_STREAM_FORMAT_IEC61937 && frame_index == 1;
+static uint8_t channel_status_sample_rate_code(uint32_t rate_hz) {
+    // IEC 60958 consumer channel-status byte 3, bits 0..3. Bit zero of
+    // the returned nibble is transmitted as channel-status bit 24.
+    switch (rate_hz) {
+    case 32000:
+        return 0x3;
+    case 44100:
+        return 0x0;
+    case 48000:
+        return 0x2;
+    case 88200:
+        return 0x8;
+    case 96000:
+        return 0xa;
+    default:
+        return 0x1; // Sample frequency not indicated.
+    }
+}
+
+static uint8_t channel_status_original_rate_code(uint32_t rate_hz) {
+    // IEC 60958 consumer channel-status byte 4, bits 4..7.
+    switch (rate_hz) {
+    case 32000:
+        return 0xc;
+    case 44100:
+        return 0xf;
+    case 48000:
+        return 0xd;
+    case 88200:
+        return 0x7;
+    case 96000:
+        return 0x5;
+    default:
+        return 0x0; // Original sample frequency not indicated.
+    }
+}
+
+static uint8_t channel_status_word_length(void) {
+    if (current_stream_format != SPDIF_STREAM_FORMAT_PCM) {
+        return 0;
+    }
+
+    switch (current_sample_bits) {
+    case 16:
+        return 0x02; // 16 bits with a maximum word length of 20 bits.
+    case 20:
+        return 0x0a; // 20 bits with a maximum word length of 20 bits.
+    case 24:
+        return 0x0b; // 24 bits with a maximum word length of 24 bits.
+    default:
+        return 0; // Word length not indicated.
+    }
+}
+
+static bool channel_status_bit(unsigned int frame_index,
+                               spdif_stream_format_t format) {
+    uint8_t byte = 0;
+
+    switch (frame_index / 8) {
+    case 0:
+        // Consumer channel status. Byte 0 bit 1 distinguishes linear PCM
+        // from IEC 61937 non-audio data.
+        byte = format == SPDIF_STREAM_FORMAT_IEC61937 ? 0x02 : 0x00;
+        break;
+    case 3:
+        byte = channel_status_sample_rate_code(current_sample_rate);
+        break;
+    case 4:
+        byte = channel_status_word_length() |
+               (uint8_t)(channel_status_original_rate_code(current_sample_rate) << 4);
+        break;
+    default:
+        break;
+    }
+
+    return ((byte >> (frame_index % 8)) & 1u) != 0;
 }
 
 static bool read_usb_frame(int32_t *left, int32_t *right) {
@@ -342,15 +423,6 @@ static void build_dma_block(uint32_t *words, unsigned int *frame_index, unsigned
     copy_block(words, silence_words);
 }
 
-static void start_dma_block(const uint32_t *words) {
-    dma_channel_configure(spdif_dma_chan,
-                          &spdif_dma_config,
-                          &spdif_pio->txf[spdif_sm],
-                          words,
-                          SPDIF_WORDS_PER_BLOCK,
-                          true);
-}
-
 static void build_silence_block(uint32_t *words) {
     for (size_t i = 0; i < SPDIF_WORDS_PER_BLOCK; i++) {
         words[i] = 0;
@@ -361,28 +433,9 @@ static void build_silence_block(uint32_t *words) {
     current_level = 0;
 
     for (unsigned int frame = 0; frame < SPDIF_FRAMES_PER_BLOCK; frame++) {
-        append_subframe(frame == 0 ? PREAMBLE_B : PREAMBLE_M, 0, false);
-        append_subframe(PREAMBLE_W, 0, false);
-    }
-}
-
-static void audio_core_main(void) {
-    unsigned int live_frame_index = 0;
-    unsigned int live_level = 0;
-    unsigned int block = 0;
-
-    build_dma_block(dma_words[block], &live_frame_index, &live_level);
-    start_dma_block(dma_words[block]);
-    block ^= 1u;
-
-    while (true) {
-        build_dma_block(dma_words[block], &live_frame_index, &live_level);
-        if (!dma_channel_is_busy(spdif_dma_chan)) {
-            spdif_dma_late_blocks++;
-        }
-        dma_channel_wait_for_finish_blocking(spdif_dma_chan);
-        start_dma_block(dma_words[block]);
-        block ^= 1u;
+        const bool c_bit = channel_status_bit(frame, current_stream_format);
+        append_subframe(frame == 0 ? PREAMBLE_B : PREAMBLE_M, 0, c_bit);
+        append_subframe(PREAMBLE_W, 0, c_bit);
     }
 }
 
@@ -395,6 +448,15 @@ void spdif_start(unsigned int pin) {
     const unsigned int offset = pio_add_program(spdif_pio, &spdif_tx_program);
 
     pio_gpio_init(spdif_pio, pin);
+    // The ARC output network is 330 ohms in series with a 54.5 ohm shunt,
+    // drawing about 8.6 mA while GP2 is high. RP2040 pads reset to 4 mA with
+    // slow slew, which leaves the 12.288 MHz (96 kHz audio) carrier marginal.
+    // Use the pad's 12 mA setting for voltage headroom and fast slew for clean
+    // half-bit edges; the 330 ohm source resistor still limits current.
+    gpio_disable_pulls(pin);
+    gpio_set_input_enabled(pin, false);
+    gpio_set_drive_strength(pin, GPIO_DRIVE_STRENGTH_12MA);
+    gpio_set_slew_rate(pin, GPIO_SLEW_RATE_FAST);
     pio_sm_set_consecutive_pindirs(spdif_pio, spdif_sm, pin, 1, true);
 
     pio_sm_config config = spdif_tx_program_get_default_config(offset);
@@ -408,15 +470,121 @@ void spdif_start(unsigned int pin) {
     pio_sm_init(spdif_pio, spdif_sm, offset, &config);
     pio_sm_set_enabled(spdif_pio, spdif_sm, true);
 
-    spdif_dma_chan = dma_claim_unused_channel(true);
-    spdif_dma_config = dma_channel_get_default_config(spdif_dma_chan);
-    channel_config_set_transfer_data_size(&spdif_dma_config, DMA_SIZE_32);
-    channel_config_set_read_increment(&spdif_dma_config, true);
-    channel_config_set_write_increment(&spdif_dma_config, false);
-    channel_config_set_dreq(&spdif_dma_config, pio_get_dreq(spdif_pio, spdif_sm, true));
-    channel_config_set_high_priority(&spdif_dma_config, true);
+    spdif_dma_chan[0] = dma_claim_unused_channel(true);
+    spdif_dma_chan[1] = dma_claim_unused_channel(true);
+    spdif_dma_mask = (1u << spdif_dma_chan[0]) | (1u << spdif_dma_chan[1]);
+    dma_hw->intr = spdif_dma_mask;
+    for (unsigned int block = 0; block < 2; block++) {
+        spdif_dma_config[block] = dma_channel_get_default_config(spdif_dma_chan[block]);
+        channel_config_set_transfer_data_size(&spdif_dma_config[block], DMA_SIZE_32);
+        channel_config_set_read_increment(&spdif_dma_config[block], true);
+        channel_config_set_write_increment(&spdif_dma_config[block], false);
+        channel_config_set_dreq(&spdif_dma_config[block],
+                                pio_get_dreq(spdif_pio, spdif_sm, true));
+        channel_config_set_high_priority(&spdif_dma_config[block], true);
+        channel_config_set_chain_to(&spdif_dma_config[block],
+                                    spdif_dma_chan[block ^ 1u]);
+    }
 
-    multicore_launch_core1(audio_core_main);
+    live_frame_index = 0;
+    live_level = 0;
+    expected_dma_block = 0;
+    build_dma_block(dma_words[0], &live_frame_index, &live_level);
+    build_dma_block(dma_words[1], &live_frame_index, &live_level);
+
+    // Channel 0 and channel 1 trigger each other at exact block boundaries.
+    // The cooperative task only refills the channel that just completed, so
+    // TinyUSB processing cannot insert a gap between DMA blocks.
+    dma_channel_configure(spdif_dma_chan[1],
+                          &spdif_dma_config[1],
+                          &spdif_pio->txf[spdif_sm],
+                          dma_words[1],
+                          SPDIF_WORDS_PER_BLOCK,
+                          false);
+    dma_channel_configure(spdif_dma_chan[0],
+                          &spdif_dma_config[0],
+                          &spdif_pio->txf[spdif_sm],
+                          dma_words[0],
+                          SPDIF_WORDS_PER_BLOCK,
+                          true);
+
+    // Enabling the PIO before its DMA source is armed produces an expected
+    // startup stall. Clear it so subsequent events represent real carrier
+    // interruptions.
+    spdif_pio->fdebug = 1u << (PIO_FDEBUG_TXSTALL_LSB + spdif_sm);
+}
+
+void spdif_task(void) {
+    const uint32_t pio_stall_mask =
+        1u << (PIO_FDEBUG_TXSTALL_LSB + spdif_sm);
+    if (spdif_pio->fdebug & pio_stall_mask) {
+        spdif_pio->fdebug = pio_stall_mask;
+        spdif_pio_stall_events++;
+    }
+
+    const uint32_t completed = dma_hw->intr & spdif_dma_mask;
+    if (!completed) {
+        return;
+    }
+    dma_hw->intr = completed;
+
+    unsigned int completed_block = 2;
+    if (completed == (1u << spdif_dma_chan[0])) {
+        completed_block = 0;
+    } else if (completed == (1u << spdif_dma_chan[1])) {
+        completed_block = 1;
+    }
+    if (completed_block >= 2 || completed_block != expected_dma_block) {
+        spdif_dma_sequence_errors++;
+    }
+    if (completed_block < 2) {
+        expected_dma_block = completed_block ^ 1u;
+    }
+
+    for (unsigned int block = 0; block < 2; block++) {
+        const uint32_t channel_mask = 1u << spdif_dma_chan[block];
+        if (!(completed & channel_mask)) {
+            continue;
+        }
+
+        // TRANS_COUNT reads as zero while an inactive channel is waiting to
+        // be chained, even after its reload value has been programmed. Use
+        // the raw completion flags to distinguish that armed state from a new
+        // completion, and never overwrite a buffer while its channel is live.
+        if (dma_channel_is_busy(spdif_dma_chan[block])) {
+            spdif_dma_late_blocks++;
+            continue;
+        }
+
+        const uint32_t build_started_us = time_us_32();
+        build_dma_block(dma_words[block], &live_frame_index, &live_level);
+        const uint32_t build_us = time_us_32() - build_started_us;
+        if (build_us > spdif_dma_max_build_us) {
+            spdif_dma_max_build_us = build_us;
+        }
+
+        // At 96 kHz, the other 192-frame block gives us exactly 2 ms to
+        // rebuild and rearm this channel. The pre-build busy check above does
+        // not catch the channel being chained while build_dma_block() runs.
+        // Record that deadline miss before preserving the existing behavior;
+        // writing READ_ADDR while active can cause the audible discontinuity
+        // this diagnostic is intended to confirm.
+        const uint32_t completions_during_build =
+            dma_hw->intr & spdif_dma_mask;
+        if (completions_during_build ||
+            dma_channel_is_busy(spdif_dma_chan[block])) {
+            spdif_dma_rearm_races++;
+        }
+        dma_channel_set_read_addr(spdif_dma_chan[block], dma_words[block], false);
+    }
+
+    if (!dma_channel_is_busy(spdif_dma_chan[0]) &&
+        !dma_channel_is_busy(spdif_dma_chan[1])) {
+        // Core 1 was delayed for longer than two complete blocks. Restart the
+        // chain and expose the incident through the existing diagnostics.
+        spdif_dma_late_blocks++;
+        dma_start_channel_mask(1u << spdif_dma_chan[0]);
+    }
 }
 
 void spdif_set_mode(spdif_mode_t mode) {
@@ -438,6 +606,9 @@ void spdif_set_sample_rate(uint32_t rate_hz) {
         return;
     }
 
+    current_sample_rate = rate_hz;
+    build_silence_block(silence_words);
+
     const float divider = (float)clock_get_hz(clk_sys) /
                           (float)(rate_hz * SPDIF_HALF_BITS_PER_FRAME);
     pio_sm_set_enabled(spdif_pio, spdif_sm, false);
@@ -450,8 +621,11 @@ spdif_mode_t spdif_get_mode(void) {
     return current_mode;
 }
 
-void spdif_set_stream_format(spdif_stream_format_t format) {
+void spdif_set_stream_format(spdif_stream_format_t format,
+                             unsigned int sample_bits) {
     current_stream_format = format;
+    current_sample_bits = sample_bits;
+    build_silence_block(silence_words);
 }
 
 spdif_stream_format_t spdif_get_stream_format(void) {
@@ -507,6 +681,10 @@ void spdif_clear_usb_buffer(void) {
     usb_high_water_frames = 0;
     usb_low_water_frames = USB_RING_FRAMES;
     spdif_dma_late_blocks = 0;
+    spdif_dma_rearm_races = 0;
+    spdif_dma_max_build_us = 0;
+    spdif_dma_sequence_errors = 0;
+    spdif_pio_stall_events = 0;
 }
 
 void spdif_take_usb_stats(spdif_usb_stats_t *stats) {
@@ -521,9 +699,17 @@ void spdif_take_usb_stats(spdif_usb_stats_t *stats) {
                                   usb_low_water_frames;
     stats->underrun_frames = usb_underrun_frames;
     stats->dma_late_blocks = spdif_dma_late_blocks;
+    stats->dma_rearm_races = spdif_dma_rearm_races;
+    stats->dma_max_build_us = spdif_dma_max_build_us;
+    stats->dma_sequence_errors = spdif_dma_sequence_errors;
+    stats->pio_stall_events = spdif_pio_stall_events;
 
     usb_high_water_frames = stats->buffered_frames;
     usb_low_water_frames = stats->buffered_frames;
     usb_underrun_frames = 0;
     spdif_dma_late_blocks = 0;
+    spdif_dma_rearm_races = 0;
+    spdif_dma_max_build_us = 0;
+    spdif_dma_sequence_errors = 0;
+    spdif_pio_stall_events = 0;
 }

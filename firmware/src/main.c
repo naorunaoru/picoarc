@@ -8,11 +8,9 @@
 #include "hardware/watchdog.h"
 #include "picoarc_config.h"
 #include "picoarc_log.h"
+#include "pico/bootrom.h"
 #include "pico/stdlib.h"
-#include "spdif.h"
-#include "tusb.h"
-#include "usb_audio.h"
-#include "usb_descriptors.h"
+#include "realtime.h"
 
 #define STATUS_LED_PWM_WRAP 255
 
@@ -41,17 +39,24 @@ typedef enum {
 
 static absolute_time_t usb_recovery_reconnect_at;
 
-static void cec_yield_pump(void) {
-    tud_task();
-    usb_audio_task();
+static void drain_realtime_requests(void) {
+    uint8_t volume;
+    bool muted;
+
+    if (realtime_take_bootsel_reset_request()) {
+        rom_reset_usb_boot_extra(
+            -1, PICO_STDIO_USB_RESET_BOOTSEL_INTERFACE_DISABLE_MASK, false);
+    }
+    if (realtime_take_volume_request(&volume)) {
+        arc_request_volume_sync(volume);
+    }
+    if (realtime_take_mute_request(&muted)) {
+        arc_request_mute_sync(muted);
+    }
 }
 
-static spdif_mode_t idle_spdif_mode(void) {
-#if PICOARC_IDLE_AUDIO_KEEPALIVE
-    return SPDIF_MODE_SILENCE;
-#else
-    return SPDIF_MODE_OFF;
-#endif
+static void cec_yield_pump(void) {
+    drain_realtime_requests();
 }
 
 #if PICOARC_HPD_GATE_ENABLE
@@ -110,12 +115,11 @@ static void adapter_set_state(adapter_state_t *state, adapter_state_t next) {
     *state = next;
 }
 
-static void adapter_task(adapter_state_t *state, bool *usb_attached) {
-    if (usb_audio_take_recovery_request()) {
-        usb_audio_stop_streaming();
-        if (*usb_attached) {
-            tud_disconnect();
-            *usb_attached = false;
+static void adapter_task(adapter_state_t *state, bool *usb_requested) {
+    if (realtime_take_usb_recovery_request()) {
+        if (*usb_requested) {
+            realtime_set_usb_attached(false);
+            *usb_requested = false;
         }
         usb_recovery_reconnect_at = make_timeout_time_ms(PICOARC_USB_RECOVERY_DISCONNECT_MS);
         printf("adapter: forcing USB re-enumeration after stalled audio stream\n");
@@ -124,9 +128,6 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
 
 #if PICOARC_DEBUG_USB
     if (*state == ADAPTER_STATE_DEBUG_USB) {
-        if (usb_audio_is_streaming()) {
-            usb_audio_task();
-        }
         return;
     }
 #endif
@@ -193,43 +194,47 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
         break;
 
     case ADAPTER_STATE_USB_ATTACH:
-        if (!*usb_attached) {
-            tud_connect();
-            *usb_attached = true;
-            printf("adapter: USB audio attached to host\n");
+        if (!*usb_requested) {
+            realtime_set_usb_attached(true);
+            *usb_requested = true;
         }
-        adapter_set_state(state, ADAPTER_STATE_USB_IDLE);
+        if (realtime_usb_attached()) {
+            printf("adapter: USB audio attached to host\n");
+            adapter_set_state(state, ADAPTER_STATE_USB_IDLE);
+        }
         break;
 
     case ADAPTER_STATE_USB_IDLE:
-        usb_audio_task();
-        if (usb_audio_is_streaming()) {
+        if (realtime_usb_streaming()) {
             adapter_set_state(state, ADAPTER_STATE_USB_STREAMING);
         }
         break;
 
     case ADAPTER_STATE_USB_STREAMING:
-        usb_audio_task();
-        if (!usb_audio_is_streaming()) {
+        if (!realtime_usb_streaming()) {
             adapter_set_state(state, ADAPTER_STATE_USB_IDLE);
         }
         break;
 
     case ADAPTER_STATE_USB_DETACH:
-        usb_audio_stop_streaming();
-        if (*usb_attached) {
-            tud_disconnect();
-            *usb_attached = false;
-            printf("adapter: USB audio detached from host\n");
+        if (*usb_requested) {
+            realtime_set_usb_attached(false);
+            *usb_requested = false;
         }
-        if (!hdmi_connected) {
-            adapter_set_state(state, ADAPTER_STATE_WAIT_HDMI);
-        } else if (!audio_system_found) {
-            adapter_set_state(state, ADAPTER_STATE_CEC_SCAN);
-        } else if (!arc_initiated) {
-            adapter_set_state(state, ADAPTER_STATE_ARC_INIT);
-        } else {
-            adapter_set_state(state, ADAPTER_STATE_QUERY_CAPS);
+        if (realtime_usb_attached()) {
+            break;
+        }
+        {
+            printf("adapter: USB audio detached from host\n");
+            if (!hdmi_connected) {
+                adapter_set_state(state, ADAPTER_STATE_WAIT_HDMI);
+            } else if (!audio_system_found) {
+                adapter_set_state(state, ADAPTER_STATE_CEC_SCAN);
+            } else if (!arc_initiated) {
+                adapter_set_state(state, ADAPTER_STATE_ARC_INIT);
+            } else {
+                adapter_set_state(state, ADAPTER_STATE_QUERY_CAPS);
+            }
         }
         break;
 
@@ -238,12 +243,20 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
             break;
         }
 #if PICOARC_DEBUG_USB
-        tud_connect();
-        *usb_attached = true;
-        printf("adapter: USB audio reattached to host\n");
-        adapter_set_state(state, ADAPTER_STATE_DEBUG_USB);
+        if (!*usb_requested) {
+            if (realtime_usb_attached()) {
+                break;
+            }
+            realtime_set_usb_attached(true);
+            *usb_requested = true;
+        } else if (realtime_usb_attached()) {
+            printf("adapter: USB audio reattached to host\n");
+            adapter_set_state(state, ADAPTER_STATE_DEBUG_USB);
+        }
 #else
-        adapter_set_state(state, ADAPTER_STATE_QUERY_CAPS);
+        if (!realtime_usb_attached()) {
+            adapter_set_state(state, ADAPTER_STATE_QUERY_CAPS);
+        }
 #endif
         break;
 
@@ -347,13 +360,7 @@ static void status_led_task(uint led_pin,
 int main(void) {
     const bool watchdog_reboot = watchdog_caused_reboot();
     watchdog_enable(PICOARC_WATCHDOG_TIMEOUT_MS, true);
-    tusb_init();
-#if !PICOARC_DEBUG_USB
-    tud_disconnect();
-#endif
-#if PICOARC_LOGGING
-    stdio_init_all();
-#endif
+    picoarc_log_init();
 
     // GP5 is an active-high FET gate: high holds HDMI HPD low, low releases it.
     // Keep HPD deasserted until the EDID responder is installed below.
@@ -361,11 +368,9 @@ int main(void) {
     hpd_gate_hold(PICOARC_HPD_GATE_PIN);
 #endif
 
-    // Bring up the audio/CEC hardware before pumping tud_task. The host can
-    // issue class-specific audio control transfers as soon as enumeration
-    // completes, so the S/PDIF path must be ready before USB traffic is served.
-    spdif_start(PICOARC_SPDIF_PIN);
-    spdif_set_mode(idle_spdif_mode());
+    // Core 1 owns TinyUSB, UAC2, and S/PDIF for the rest of the boot. It does
+    // not pump USB until the chained S/PDIF DMA path is ready.
+    realtime_start(PICOARC_SPDIF_PIN);
 #if PICOARC_DDC_EDID_ENABLE
     ddc_edid_init(PICOARC_DDC_EDID_SDA_PIN, PICOARC_DDC_EDID_SCL_PIN);
 #endif
@@ -373,6 +378,9 @@ int main(void) {
     hpd_gate_release(PICOARC_HPD_GATE_PIN);
 #endif
     arc_init(PICOARC_CEC_PIN, PICOARC_HDMI_5V_PIN);
+    picoarc_audio_caps_t audio_caps;
+    arc_get_audio_caps_snapshot(&audio_caps);
+    realtime_set_audio_caps(&audio_caps);
     cec_set_yield(cec_yield_pump);
 
     const uint led_pin = PICO_DEFAULT_LED_PIN;
@@ -386,7 +394,7 @@ int main(void) {
         printf("adapter: recovered from watchdog reset\n");
     }
 
-    printf("spdif: GP%d 48k stereo %s\n", PICOARC_SPDIF_PIN, spdif_mode_name(spdif_get_mode()));
+    printf("spdif: GP%d 48k stereo, core 1 owned\n", PICOARC_SPDIF_PIN);
     printf("adapter: idle audio policy=%s\n", PICOARC_IDLE_AUDIO_POLICY);
 #if PICOARC_DEBUG_USB
     printf("adapter: debug USB stays online; audio streaming remains ARC/SAD gated\n");
@@ -398,7 +406,7 @@ int main(void) {
     uint32_t led_breath_started_ms = 0;
     bool led_on = false;
     status_led_mode_t led_mode = STATUS_LED_OFF;
-    bool usb_attached = PICOARC_DEBUG_USB;
+    bool usb_requested = PICOARC_DEBUG_USB;
     adapter_state_t adapter_state =
 #if PICOARC_DEBUG_USB
         ADAPTER_STATE_DEBUG_USB;
@@ -407,15 +415,17 @@ int main(void) {
 #endif
 
     while (true) {
-        tud_task();
 #if PICOARC_DDC_EDID_ENABLE
         ddc_edid_task();
 #endif
+        drain_realtime_requests();
         arc_task();
-        adapter_task(&adapter_state, &usb_attached);
+        arc_get_audio_caps_snapshot(&audio_caps);
+        realtime_set_audio_caps(&audio_caps);
+        adapter_task(&adapter_state, &usb_requested);
 
         const bool hdmi_connected = arc_hdmi_connected();
-        const bool usb_enumerated = usb_attached && tud_mounted();
+        const bool usb_enumerated = realtime_usb_attached() && realtime_usb_mounted();
         const status_led_mode_t next_led_mode =
             !hdmi_connected ? STATUS_LED_WAIT_HDMI : (!usb_enumerated ? STATUS_LED_WAIT_USB : STATUS_LED_OFF);
         status_led_task(led_pin, next_led_mode, &led_mode, &led_on, &next_led_transition, &led_breath_started_ms);

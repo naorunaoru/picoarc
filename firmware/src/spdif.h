@@ -20,13 +20,23 @@ typedef struct {
     unsigned int low_water_frames;
     unsigned int underrun_frames;
     unsigned int dma_late_blocks;
+    unsigned int dma_rearm_races;
+    unsigned int dma_max_build_us;
+    unsigned int dma_sequence_errors;
+    unsigned int pio_stall_events;
 } spdif_usb_stats_t;
 
 void spdif_start(unsigned int pin);
+// Refill completed DMA blocks. The two DMA channels chain in hardware, so
+// calling this from the core-1 cooperative loop is not boundary-critical.
+void spdif_task(void);
 void spdif_set_mode(spdif_mode_t mode);
 spdif_mode_t spdif_get_mode(void);
 const char *spdif_mode_name(spdif_mode_t mode);
-void spdif_set_stream_format(spdif_stream_format_t format);
+// Set the IEC 60958 channel-status format. sample_bits is used for linear PCM
+// word-length indication and is ignored for IEC 61937 payloads.
+void spdif_set_stream_format(spdif_stream_format_t format,
+                             unsigned int sample_bits);
 spdif_stream_format_t spdif_get_stream_format(void);
 // Switch the PIO output clock to the given sample rate. The encoder block
 // layout (192 stereo frames per DMA block) is sample-rate-agnostic — only the
