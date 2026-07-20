@@ -69,6 +69,9 @@
 #include "usb_descriptors_uac2.h"
 #endif
 
+// Initialize values that would otherwise require a flash command lazily during
+// enumeration. Called once by core 1 before flash-safe runtime begins.
+void usb_descriptors_init(void);
 void usb_descriptors_set_audio_name(const char *name);
 void usb_descriptors_reset_audio_name(void);
 
