@@ -1,0 +1,19 @@
+"""Compact SWD debug port."""
+
+load("@stdlib/interfaces.zen", "Swd")
+
+swd = io("swd", Swd)
+GND = io("GND", Ground)
+
+# Target perspective: pin 1 = SC / SWCLK, pin 2 = GND, pin 3 = SD / SWDIO.
+Component(
+    name="TP_SWD",
+    prefix="TP",
+    symbol=Symbol(
+        library="gitlab.com/kicad/libraries/kicad-symbols/Connector_Generic.kicad_sym",
+        name="Conn_01x03",
+    ),
+    footprint=File("../footprints/picoarc.pretty/SWD_EdgePads_1x03_P1.50mm.kicad_mod"),
+    pins={"Pin_1": swd.SWCLK, "Pin_2": GND, "Pin_3": swd.SWDIO},
+    skip_bom=True,
+)

@@ -120,8 +120,11 @@ HdmiArc(
     DDC_SCL_5V=DDC_SCL_5V,
 )
 
-Debug = Module("./modules/Debug.zen")
-Debug(name="DBG", STATUS_LED=STATUS_LED, GND=GND)
+DebugLed = Module("./modules/DebugLed.zen")
+DebugLed(name="DBG", STATUS_LED=STATUS_LED, GND=GND)
+
+DebugPort = Module("./modules/DebugPort.zen")
+DebugPort(name="SWD", swd=swd, GND=GND)
 
 
 # Design-rule check: the 100k/100k divider must keep HDMI +5V sense below RP2040 IO max.
