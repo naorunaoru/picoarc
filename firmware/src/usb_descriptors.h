@@ -148,6 +148,9 @@
     TUD_AUDIO20_DESC_CS_AS_ISO_EP(AUDIO20_CS_AS_ISO_DATA_EP_ATT_NON_MAX_PACKETS_OK, AUDIO20_CTRL_NONE, AUDIO20_CS_AS_ISO_DATA_EP_LOCK_DELAY_UNIT_MILLISEC, 0x0001),\
     TUD_AUDIO20_DESC_STD_AS_ISO_FB_EP(_epfb, _epfbsize, 0x01)
 
+// Initialize values that would otherwise require a flash command lazily during
+// enumeration. Called once by core 1 before flash-safe runtime begins.
+void usb_descriptors_init(void);
 void usb_descriptors_set_audio_name(const char *name);
 void usb_descriptors_reset_audio_name(void);
 

@@ -93,6 +93,10 @@ static char serial_str[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
 static char product_str[USB_STRING_MAX_CHARS + 1] = "PicoARC USB Audio";
 static char audio_str[USB_STRING_MAX_CHARS + 1] = "PicoARC Speaker";
 
+void usb_descriptors_init(void) {
+    pico_get_unique_board_id_string(serial_str, sizeof(serial_str));
+}
+
 static char const *const string_desc_arr[] = {
     [STRID_LANGID] = (const char[]){0x09, 0x04},
     [STRID_MANUFACTURER] = "PicoARC",

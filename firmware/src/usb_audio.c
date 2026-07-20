@@ -4,10 +4,11 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "arc.h"
+#include "hardware/sync.h"
 #include "picoarc_config.h"
 #include "picoarc_log.h"
 #include "pico/time.h"
+#include "realtime.h"
 #include "spdif.h"
 #include "tusb.h"
 #include "usb_descriptors.h"
@@ -28,6 +29,9 @@ enum {
     FEEDBACK_UPDATE_US = 4000,
     FEEDBACK_P_GAIN_Q16_PER_FRAME = 16,
     FEEDBACK_MAX_ADJUST_Q16 = 1 << 15,
+    // Full-speed audio has one OUT transaction per 1 ms USB frame. Allow
+    // scheduling jitter while still exposing a skipped frame.
+    USB_PACKET_LATE_US = 1500,
 };
 
 #define HOST_VOLUME_MIN_DB (-20)
@@ -58,8 +62,16 @@ static uint64_t max_audio_read_gap_us;
 static uint16_t max_usb_available_bytes;
 static uint64_t stream_packet_deadline_us;
 static volatile uint32_t stream_packet_count;
+static volatile uint32_t last_packet_us;
+static volatile uint32_t max_packet_gap_us;
+static volatile uint32_t late_packet_count;
+static volatile uint16_t min_packet_bytes;
+static volatile uint16_t max_packet_bytes;
 static uint32_t observed_stream_packet_count;
+static unsigned int current_zero_run_frames;
+static unsigned int max_zero_run_frames;
 static bool recovery_requested;
+static picoarc_audio_caps_t arc_caps;
 
 static bool active_alt_is_iec61937(void) {
     return active_alt == PICOARC_AUDIO_ALT_IEC61937;
@@ -76,6 +88,20 @@ static spdif_mode_t idle_spdif_mode(void) {
 static bool active_alt_uses_24_bit_subslot(void) {
     return active_alt == PICOARC_AUDIO_ALT_PCM_20 ||
            active_alt == PICOARC_AUDIO_ALT_PCM_24;
+}
+
+static unsigned int active_alt_sample_bits(void) {
+    switch (active_alt) {
+    case PICOARC_AUDIO_ALT_PCM_16:
+    case PICOARC_AUDIO_ALT_IEC61937:
+        return 16;
+    case PICOARC_AUDIO_ALT_PCM_20:
+        return 20;
+    case PICOARC_AUDIO_ALT_PCM_24:
+        return 24;
+    default:
+        return 0;
+    }
 }
 
 static const char *active_alt_format_name(void) {
@@ -104,6 +130,72 @@ static bool sample_rate_supported(uint32_t sample_rate) {
     default:
         return false;
     }
+}
+
+static uint8_t sample_rate_to_cap_bit(uint32_t sample_rate) {
+    switch (sample_rate) {
+    case PICOARC_AUDIO_SAMPLE_RATE_32K:
+        return PICOARC_AUDIO_RATE_BIT_32K;
+    case PICOARC_AUDIO_SAMPLE_RATE_44K1:
+        return PICOARC_AUDIO_RATE_BIT_44K1;
+    case PICOARC_AUDIO_SAMPLE_RATE_48K:
+        return PICOARC_AUDIO_RATE_BIT_48K;
+    case PICOARC_AUDIO_SAMPLE_RATE_88K2:
+        return PICOARC_AUDIO_RATE_BIT_88K2;
+    case PICOARC_AUDIO_SAMPLE_RATE_96K:
+        return PICOARC_AUDIO_RATE_BIT_96K;
+    default:
+        return 0;
+    }
+}
+
+static bool audio_format_supported(uint8_t alt, uint32_t sample_rate,
+                                   bool log_rejection) {
+    if (alt == PICOARC_AUDIO_ALT_ZERO) {
+        return true;
+    }
+
+    if (!arc_caps.arc_initiated || !arc_caps.caps_ready) {
+        if (log_rejection) {
+            printf("usb-audio: reject alt=%u rate=%lu; ARC ready=%s caps=%s\n",
+                   alt,
+                   (unsigned long)sample_rate,
+                   arc_caps.arc_initiated ? "yes" : "no",
+                   arc_caps.caps_ready ? "ready" : "pending");
+        }
+        return false;
+    }
+
+    const uint8_t rate_bit = sample_rate_to_cap_bit(sample_rate);
+    bool supported = false;
+    switch (alt) {
+    case PICOARC_AUDIO_ALT_PCM_16:
+        supported = (arc_caps.pcm_rates_16 & rate_bit) != 0;
+        break;
+    case PICOARC_AUDIO_ALT_PCM_20:
+        supported = (arc_caps.pcm_rates_20 & rate_bit) != 0;
+        break;
+    case PICOARC_AUDIO_ALT_PCM_24:
+        supported = (arc_caps.pcm_rates_24 & rate_bit) != 0;
+        break;
+    case PICOARC_AUDIO_ALT_IEC61937:
+        supported = ((arc_caps.ac3_rates | arc_caps.dts_rates) & rate_bit) != 0;
+        break;
+    default:
+        break;
+    }
+
+    if (!supported && log_rejection) {
+        printf("usb-audio: reject alt=%u rate=%lu; caps pcm16=0x%02x pcm20=0x%02x pcm24=0x%02x ac3=0x%02x dts=0x%02x\n",
+               alt,
+               (unsigned long)sample_rate,
+               arc_caps.pcm_rates_16,
+               arc_caps.pcm_rates_20,
+               arc_caps.pcm_rates_24,
+               arc_caps.ac3_rates,
+               arc_caps.dts_rates);
+    }
+    return supported;
 }
 
 static int16_t host_volume_min_256(void) {
@@ -209,6 +301,12 @@ void usb_audio_set_cec_audio_status(uint8_t cec_volume, bool muted, bool notify_
     }
     if (notify_host && volume_changed) {
         notify_host_control_change(AUDIO20_FU_CTRL_VOLUME);
+    }
+}
+
+void usb_audio_set_arc_caps(const picoarc_audio_caps_t *caps) {
+    if (caps) {
+        arc_caps = *caps;
     }
 }
 
@@ -405,7 +503,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
                    requested_mute ? "on" : "off",
                    channel_number);
         }
-        arc_request_mute_sync(requested_mute != 0);
+        realtime_post_mute_request(requested_mute != 0);
         return true;
     }
 
@@ -423,7 +521,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
                    cec_volume,
                    channel_number);
         }
-        arc_request_volume_sync(cec_volume);
+        realtime_post_volume_request(cec_volume);
         return true;
     }
 
@@ -440,19 +538,27 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
         active_alt = alt;
         streaming = alt != PICOARC_AUDIO_ALT_ZERO;
         stream_packet_count = 0;
+        last_packet_us = 0;
+        max_packet_gap_us = 0;
+        late_packet_count = 0;
+        min_packet_bytes = UINT16_MAX;
+        max_packet_bytes = 0;
         observed_stream_packet_count = 0;
+        current_zero_run_frames = 0;
+        max_zero_run_frames = 0;
         stream_packet_deadline_us = streaming ?
             now_us + (uint64_t)PICOARC_USB_STREAM_PACKET_TIMEOUT_MS * 1000u : 0;
         recovery_requested = false;
         const bool initial_gate_open = streaming &&
-                                       arc_audio_format_supported_quiet(active_alt, active_sample_rate);
+                                       audio_format_supported(active_alt, active_sample_rate, false);
         output_enabled = false;
         audio_gate_open = false;
         refill_target_frames = START_BUFFER_FRAMES;
         spdif_clear_usb_buffer();
         spdif_set_stream_format(active_alt_is_iec61937() ?
-                                SPDIF_STREAM_FORMAT_IEC61937 :
-                                SPDIF_STREAM_FORMAT_PCM);
+                                    SPDIF_STREAM_FORMAT_IEC61937 :
+                                    SPDIF_STREAM_FORMAT_PCM,
+                                active_alt_sample_bits());
         spdif_set_mode(initial_gate_open ? SPDIF_MODE_SILENCE : idle_spdif_mode());
         dropped_frames = 0;
         gated_frames = 0;
@@ -492,6 +598,23 @@ bool tud_audio_rx_done_isr(uint8_t rhport, uint16_t n_bytes_received,
     (void)cur_alt_setting;
 
     if (n_bytes_received > 0) {
+        const uint32_t now_us = time_us_32();
+        if (last_packet_us != 0) {
+            const uint32_t gap_us = now_us - last_packet_us;
+            if (gap_us > max_packet_gap_us) {
+                max_packet_gap_us = gap_us;
+            }
+            if (gap_us > USB_PACKET_LATE_US) {
+                late_packet_count++;
+            }
+        }
+        last_packet_us = now_us;
+        if (n_bytes_received < min_packet_bytes) {
+            min_packet_bytes = n_bytes_received;
+        }
+        if (n_bytes_received > max_packet_bytes) {
+            max_packet_bytes = n_bytes_received;
+        }
         stream_packet_count++;
     }
     return true;
@@ -503,7 +626,7 @@ void usb_audio_stop_streaming(void) {
     output_enabled = false;
     refill_target_frames = START_BUFFER_FRAMES;
     spdif_clear_usb_buffer();
-    spdif_set_stream_format(SPDIF_STREAM_FORMAT_PCM);
+    spdif_set_stream_format(SPDIF_STREAM_FORMAT_PCM, 16);
     spdif_set_mode(idle_spdif_mode());
     dropped_frames = 0;
     gated_frames = 0;
@@ -516,7 +639,14 @@ void usb_audio_stop_streaming(void) {
     max_usb_available_bytes = 0;
     stream_packet_deadline_us = 0;
     stream_packet_count = 0;
+    last_packet_us = 0;
+    max_packet_gap_us = 0;
+    late_packet_count = 0;
+    min_packet_bytes = UINT16_MAX;
+    max_packet_bytes = 0;
     observed_stream_packet_count = 0;
+    current_zero_run_frames = 0;
+    max_zero_run_frames = 0;
     recovery_requested = false;
 }
 
@@ -558,7 +688,7 @@ void usb_audio_task(void) {
 
     const unsigned int bytes_per_sample = active_alt_uses_24_bit_subslot() ? 3u : 2u;
     const unsigned int bytes_per_frame = bytes_per_sample * CHANNELS;
-    const bool gate_open = arc_audio_format_supported_quiet(active_alt, active_sample_rate);
+    const bool gate_open = audio_format_supported(active_alt, active_sample_rate, false);
 
     if (gate_open != audio_gate_open) {
         audio_gate_open = gate_open;
@@ -628,6 +758,18 @@ void usb_audio_task(void) {
         if (written < frames) {
             dropped_frames += frames - written;
         }
+
+        for (unsigned int frame = 0; frame < written; frame++) {
+            if (pcm_frames[frame * CHANNELS] == 0 &&
+                pcm_frames[frame * CHANNELS + 1] == 0) {
+                current_zero_run_frames++;
+                if (current_zero_run_frames > max_zero_run_frames) {
+                    max_zero_run_frames = current_zero_run_frames;
+                }
+            } else {
+                current_zero_run_frames = 0;
+            }
+        }
     }
 
     if (gate_open && !output_enabled && spdif_buffered_frames() >= refill_target_frames) {
@@ -639,18 +781,45 @@ void usb_audio_task(void) {
     const uint64_t now_us = time_us_64();
     if (now_us >= next_diag_log_us) {
         spdif_usb_stats_t stats;
+        realtime_core1_stack_stats_t stack_stats;
         spdif_take_usb_stats(&stats);
-        printf("usb-audio: buf=%u lo=%u hi=%u under=%u dma-late=%u drop=%u gated=%u task-gap=%lluus read-gap=%lluus avail-hi=%u\n",
+        realtime_core1_stack_stats(&stack_stats);
+        const uint32_t irq_state = save_and_disable_interrupts();
+        const uint32_t packet_gap_us = max_packet_gap_us;
+        const uint32_t packet_late = late_packet_count;
+        const uint16_t packet_min = min_packet_bytes == UINT16_MAX ?
+                                        0 : min_packet_bytes;
+        const uint16_t packet_max = max_packet_bytes;
+        max_packet_gap_us = 0;
+        late_packet_count = 0;
+        min_packet_bytes = UINT16_MAX;
+        max_packet_bytes = 0;
+        restore_interrupts(irq_state);
+        printf("usb-audio: buf=%u lo=%u hi=%u under=%u dma-late=%u rearm-race=%u build-max=%uus dma-seq=%u pio-stall=%u drop=%u gated=%u\n",
                stats.buffered_frames,
                stats.low_water_frames,
                stats.high_water_frames,
                stats.underrun_frames,
                stats.dma_late_blocks,
+               stats.dma_rearm_races,
+               stats.dma_max_build_us,
+               stats.dma_sequence_errors,
+               stats.pio_stall_events,
                dropped_frames,
-               gated_frames,
+               gated_frames);
+        printf("usb-audio: pkt-gap=%uus pkt-late=%u pkt=%u..%u zero-run=%u task-gap=%lluus read-gap=%lluus avail-hi=%u stack-hi=%u/%u free=%u canary=%s\n",
+               packet_gap_us,
+               packet_late,
+               packet_min,
+               packet_max,
+               max_zero_run_frames,
                (unsigned long long)max_audio_task_gap_us,
                (unsigned long long)max_audio_read_gap_us,
-               max_usb_available_bytes);
+               max_usb_available_bytes,
+               stack_stats.high_water_bytes,
+               stack_stats.size_bytes,
+               stack_stats.free_bytes,
+               stack_stats.canary_ok ? "ok" : "BAD");
         if (output_enabled && stats.underrun_frames > 0) {
             output_enabled = false;
             refill_target_frames = RECOVER_BUFFER_FRAMES;
@@ -662,11 +831,12 @@ void usb_audio_task(void) {
         max_audio_task_gap_us = 0;
         max_audio_read_gap_us = 0;
         max_usb_available_bytes = 0;
+        max_zero_run_frames = current_zero_run_frames;
         next_diag_log_us = now_us + 2000000;
     }
 
     if (!gate_open && now_us >= next_gate_log_us) {
-        arc_audio_format_supported(active_alt, active_sample_rate);
+        audio_format_supported(active_alt, active_sample_rate, true);
         next_gate_log_us = now_us + 1000000;
     }
 
