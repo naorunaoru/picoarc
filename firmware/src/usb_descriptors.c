@@ -18,9 +18,9 @@
 #endif
 #else
 #if PICOARC_DEBUG_USB
-#define USB_PID 0x4015
+#define USB_PID 0x4017
 #else
-#define USB_PID 0x4014
+#define USB_PID 0x4016
 #endif
 #endif
 #define USB_BCD 0x0201

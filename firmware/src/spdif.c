@@ -6,6 +6,9 @@
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
 #include "hardware/pio.h"
+#if PICOARC_UAC_VERSION == 2
+#include "pico/critical_section.h"
+#endif
 #include "pico/multicore.h"
 #include "pico/stdlib.h"
 #include "picoarc_log.h"
@@ -23,6 +26,10 @@ enum {
     SPDIF_WORDS_PER_BLOCK = SPDIF_FRAMES_PER_BLOCK * SPDIF_WORDS_PER_FRAME,
     // One slot stays empty so read == write can unambiguously mean empty.
     USB_RING_FRAMES = 2048,
+#if PICOARC_UAC_VERSION == 2
+    SPDIF_RATE_PPM_SCALE = 1000000,
+    SPDIF_CLKDIV_Q16_SCALE = 1 << 16,
+#endif
 };
 
 typedef enum {
@@ -61,6 +68,15 @@ static volatile unsigned int spdif_dma_late_blocks;
 static bmc_byte_t bmc_byte[2][256];
 static uint8_t bmc_tail[2][2][8];
 static uint32_t dma_words[2][SPDIF_WORDS_PER_BLOCK];
+#if PICOARC_UAC_VERSION == 2
+static volatile uint32_t adaptive_clkdiv_q16;
+static volatile uint32_t adaptive_clock_generation;
+static volatile bool adaptive_clock_enabled;
+static uint32_t adaptive_sample_rate_hz = SPDIF_DEFAULT_SAMPLE_RATE_HZ;
+static volatile unsigned int adaptive_buffered_frames_snapshot;
+static volatile bool adaptive_buffered_frames_valid;
+static critical_section_t adaptive_clock_critical_section;
+#endif
 
 static unsigned int buffered_frames_from(unsigned int read, unsigned int write) {
     if (write >= read) {
@@ -329,6 +345,15 @@ static void build_dma_block(uint32_t *words, unsigned int *frame_index, unsigned
             encode_live_frame(&words[frame * SPDIF_WORDS_PER_FRAME], *frame_index, level);
             *frame_index = (*frame_index + 1) % SPDIF_FRAMES_PER_BLOCK;
         }
+#if PICOARC_UAC_VERSION == 2
+        critical_section_enter_blocking(&adaptive_clock_critical_section);
+        if (current_mode == SPDIF_MODE_USB_AUDIO) {
+            adaptive_buffered_frames_snapshot = buffered_frames_from(
+                usb_ring_read, usb_ring_write);
+            adaptive_buffered_frames_valid = true;
+        }
+        critical_section_exit(&adaptive_clock_critical_section);
+#endif
         return;
     }
 
@@ -351,6 +376,49 @@ static void start_dma_block(const uint32_t *words) {
                           true);
 }
 
+#if PICOARC_UAC_VERSION == 2
+static uint32_t clkdiv_q16_for_rate_adjustment(uint32_t rate_hz,
+                                               int32_t adjustment_ppm) {
+    const uint64_t adjusted_scale = (uint64_t)(SPDIF_RATE_PPM_SCALE +
+                                                adjustment_ppm);
+    const uint64_t numerator = (uint64_t)clock_get_hz(clk_sys) *
+                               SPDIF_CLKDIV_Q16_SCALE *
+                               SPDIF_RATE_PPM_SCALE;
+    const uint64_t denominator = (uint64_t)rate_hz *
+                                 SPDIF_HALF_BITS_PER_FRAME *
+                                 adjusted_scale;
+    return (uint32_t)((numerator + denominator / 2u) / denominator);
+}
+
+static void apply_adaptive_clock_divider(uint32_t *dither_accumulator,
+                                         uint32_t *seen_generation) {
+    critical_section_enter_blocking(&adaptive_clock_critical_section);
+    if (!adaptive_clock_enabled) {
+        critical_section_exit(&adaptive_clock_critical_section);
+        return;
+    }
+
+    const uint32_t generation = adaptive_clock_generation;
+    if (generation != *seen_generation) {
+        *dither_accumulator = 0;
+        *seen_generation = generation;
+    }
+
+    const uint32_t target_q16 = adaptive_clkdiv_q16;
+    uint32_t divider_q8 = target_q16 >> 8;
+    *dither_accumulator += target_q16 & 0xffu;
+    if (*dither_accumulator >= 0x100u) {
+        divider_q8++;
+        *dither_accumulator -= 0x100u;
+    }
+
+    pio_sm_set_clkdiv_int_frac8(spdif_pio, spdif_sm,
+                                divider_q8 >> 8,
+                                (uint8_t)(divider_q8 & 0xffu));
+    critical_section_exit(&adaptive_clock_critical_section);
+}
+#endif
+
 static void build_silence_block(uint32_t *words) {
     for (size_t i = 0; i < SPDIF_WORDS_PER_BLOCK; i++) {
         words[i] = 0;
@@ -370,6 +438,10 @@ static void audio_core_main(void) {
     unsigned int live_frame_index = 0;
     unsigned int live_level = 0;
     unsigned int block = 0;
+#if PICOARC_UAC_VERSION == 2
+    uint32_t clock_dither_accumulator = 0;
+    uint32_t seen_clock_generation = adaptive_clock_generation;
+#endif
 
     build_dma_block(dma_words[block], &live_frame_index, &live_level);
     start_dma_block(dma_words[block]);
@@ -381,6 +453,13 @@ static void audio_core_main(void) {
             spdif_dma_late_blocks++;
         }
         dma_channel_wait_for_finish_blocking(spdif_dma_chan);
+#if PICOARC_UAC_VERSION == 2
+        // Limit divider changes to one per 192-frame DMA cycle. The PIO FIFO
+        // can still hold the tail of the previous block, so do not restart the
+        // divider or claim that this is an exact wire-level block boundary.
+        apply_adaptive_clock_divider(&clock_dither_accumulator,
+                                     &seen_clock_generation);
+#endif
         start_dma_block(dma_words[block]);
         block ^= 1u;
     }
@@ -389,6 +468,9 @@ static void audio_core_main(void) {
 void spdif_start(unsigned int pin) {
     build_bmc_tables();
     build_silence_block(silence_words);
+#if PICOARC_UAC_VERSION == 2
+    critical_section_init(&adaptive_clock_critical_section);
+#endif
 
     spdif_pio = pio0;
     spdif_sm = pio_claim_unused_sm(spdif_pio, true);
@@ -420,8 +502,17 @@ void spdif_start(unsigned int pin) {
 }
 
 void spdif_set_mode(spdif_mode_t mode) {
+#if PICOARC_UAC_VERSION == 2
+    critical_section_enter_blocking(&adaptive_clock_critical_section);
+#endif
     const spdif_mode_t previous = current_mode;
     current_mode = mode;
+#if PICOARC_UAC_VERSION == 2
+    if (previous != mode) {
+        adaptive_buffered_frames_valid = false;
+    }
+    critical_section_exit(&adaptive_clock_critical_section);
+#endif
     if (previous != mode) {
         printf("spdif: mode +%llums %s -> %s buf=%u\n",
                (unsigned long long)(time_us_64() / 1000),
@@ -438,13 +529,62 @@ void spdif_set_sample_rate(uint32_t rate_hz) {
         return;
     }
 
+#if PICOARC_UAC_VERSION == 2
+    // Prevent core 1 from restoring the previous adaptive divider while this
+    // discrete UAC2 rate transition is being programmed.
+    const uint32_t nominal_clkdiv_q16 = clkdiv_q16_for_rate_adjustment(
+        rate_hz, 0);
+    critical_section_enter_blocking(&adaptive_clock_critical_section);
+    adaptive_clock_enabled = false;
+#endif
     const float divider = (float)clock_get_hz(clk_sys) /
                           (float)(rate_hz * SPDIF_HALF_BITS_PER_FRAME);
     pio_sm_set_enabled(spdif_pio, spdif_sm, false);
     pio_sm_set_clkdiv(spdif_pio, spdif_sm, divider);
     pio_sm_clkdiv_restart(spdif_pio, spdif_sm);
     pio_sm_set_enabled(spdif_pio, spdif_sm, true);
+#if PICOARC_UAC_VERSION == 2
+    adaptive_sample_rate_hz = rate_hz;
+    adaptive_clkdiv_q16 = nominal_clkdiv_q16;
+    adaptive_clock_generation++;
+    critical_section_exit(&adaptive_clock_critical_section);
+#endif
 }
+
+#if PICOARC_UAC_VERSION == 2
+void spdif_set_rate_adjustment_ppm(int32_t adjustment_ppm) {
+    if (!spdif_pio) {
+        return;
+    }
+
+    // The USB-side controller currently clamps more tightly. Keep this API
+    // independently bounded so a future caller cannot underflow the scale.
+    if (adjustment_ppm > 10000) {
+        adjustment_ppm = 10000;
+    } else if (adjustment_ppm < -10000) {
+        adjustment_ppm = -10000;
+    }
+
+    const uint32_t requested_clkdiv_q16 = clkdiv_q16_for_rate_adjustment(
+        adaptive_sample_rate_hz, adjustment_ppm);
+    critical_section_enter_blocking(&adaptive_clock_critical_section);
+    adaptive_clkdiv_q16 = requested_clkdiv_q16;
+    adaptive_clock_enabled = true;
+    critical_section_exit(&adaptive_clock_critical_section);
+}
+
+bool spdif_adaptive_buffered_frames(unsigned int *frames) {
+    bool valid = false;
+    critical_section_enter_blocking(&adaptive_clock_critical_section);
+    if (current_mode == SPDIF_MODE_USB_AUDIO &&
+        adaptive_buffered_frames_valid) {
+        *frames = adaptive_buffered_frames_snapshot;
+        valid = true;
+    }
+    critical_section_exit(&adaptive_clock_critical_section);
+    return valid;
+}
+#endif
 
 spdif_mode_t spdif_get_mode(void) {
     return current_mode;
@@ -507,6 +647,12 @@ void spdif_clear_usb_buffer(void) {
     usb_high_water_frames = 0;
     usb_low_water_frames = USB_RING_FRAMES;
     spdif_dma_late_blocks = 0;
+#if PICOARC_UAC_VERSION == 2
+    critical_section_enter_blocking(&adaptive_clock_critical_section);
+    adaptive_buffered_frames_snapshot = 0;
+    adaptive_buffered_frames_valid = false;
+    critical_section_exit(&adaptive_clock_critical_section);
+#endif
 }
 
 void spdif_take_usb_stats(spdif_usb_stats_t *stats) {

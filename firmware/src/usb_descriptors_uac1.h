@@ -6,6 +6,7 @@
 #define PICOARC_AUDIO_ENTITY_OUTPUT_TERMINAL  0x03
 
 #define PICOARC_AUDIO_ALT_MAX PICOARC_AUDIO_ALT_PCM_24
+#define PICOARC_AUDIO_HAS_FEEDBACK_EP 1
 #define PICOARC_AUDIO_HAS_INTERRUPT_EP 0
 
 // The debug configuration already contains the CDC function's IAD. Windows

@@ -1,6 +1,7 @@
 #ifndef PICOARC_SPDIF_H
 #define PICOARC_SPDIF_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef enum {
@@ -33,6 +34,14 @@ spdif_stream_format_t spdif_get_stream_format(void);
 // PIO clkdiv changes. The USB audio path clears and refills its buffers around
 // USB SET_CUR rate changes.
 void spdif_set_sample_rate(uint32_t rate_hz);
+#if PICOARC_UAC_VERSION == 2
+// Adapt the S/PDIF carrier to the USB host clock. Positive values consume the
+// receive ring faster. The divider is updated once per 192-frame DMA cycle.
+void spdif_set_rate_adjustment_ppm(int32_t adjustment_ppm);
+// Ring occupancy sampled by the encoder at a consistent point immediately
+// after it stages the next 192-frame DMA block.
+bool spdif_adaptive_buffered_frames(unsigned int *frames);
+#endif
 // samples is interleaved L/R 24-bit audio left-aligned in int32_t: the audio
 // MSB sits at bit 31 and the audio LSB at bit 8. Bits 7..0 are ignored. 16-bit
 // callers shift their value left by 16 before calling.

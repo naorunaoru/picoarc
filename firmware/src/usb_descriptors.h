@@ -30,8 +30,8 @@
 #define ITF_NUM_TOTAL                   2
 #endif
 
-// Streaming alternates shared by UAC1 and UAC2. UAC2 adds an IEC 61937 alt in
-// its class-specific descriptor header.
+// Streaming alternates shared by UAC1 and UAC2. UAC2 adds IEC 61937 alternates
+// in its class-specific descriptor header.
 #define PICOARC_AUDIO_ALT_ZERO          0
 #define PICOARC_AUDIO_ALT_PCM_16        1
 #define PICOARC_AUDIO_ALT_PCM_20        2
