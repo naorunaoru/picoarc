@@ -29,9 +29,9 @@ On the HDMI side, it pretends to be a TV: responds to DDC queries with a plausib
 - PCM at 32/44.1/48/88.2/96 kHz (higher sample rates are out of the question because RP2040 only has USB Full Speed)
 - 16/20/24-bit
 
-The optional UAC2 target additionally exposes IEC 61937 Dolby Digital/DTS
-passthrough. It is omitted from the default UAC1 target because host-driver
-support for that Type III transport is inconsistent.
+The optional UAC2 target additionally exposes separate IEC 61937 Dolby Digital
+(AC-3) and DTS passthrough alternates. They are omitted from the default UAC1
+target because host-driver support for Type III transport is inconsistent.
 
 ## Hardware
 
@@ -93,8 +93,9 @@ firmware/build-debug-uac2/picoarc-debug-uac2.uf2
 
 UAC1 is the recommended full-speed target and is the mode tested for Windows
 compatibility. Treat UAC2 as experimental on full-speed hosts; it is retained
-for IEC 61937 and legacy testing and uses upstream TinyUSB's four-byte feedback
-format.
+for IEC 61937 and uses an adaptive OUT endpoint without explicit feedback. The
+firmware follows the host's delivery rate by servoing the S/PDIF PIO clock from
+the receive-buffer level.
 
 The equivalent helper option is `--usb-audio-class uac2` (or `--uac uac2`),
 for example `./picoarc build release --uac uac2`. Direct CMake builds can set

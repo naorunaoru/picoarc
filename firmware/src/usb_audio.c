@@ -22,16 +22,24 @@ enum {
     // Read up to ~2 ms of raw USB bytes per task pass; sized for the highest
     // advertised rate so all supported rates fit in the same buffers.
     READ_FRAMES_BUDGET = 2 * MAX_FRAMES_PER_MS,
+#if PICOARC_UAC_VERSION == 1
     START_BUFFER_FRAMES = 256,
     RECOVER_BUFFER_FRAMES = 256,
     FEEDBACK_TARGET_FRAMES = 256,
-#if PICOARC_UAC_VERSION == 1
     FEEDBACK_UPDATE_US = 2000,
-#else
-    FEEDBACK_UPDATE_US = 4000,
-#endif
     FEEDBACK_P_GAIN_Q16_PER_FRAME = 16,
     FEEDBACK_MAX_ADJUST_Q16 = 1 << 15,
+#else
+    // Core 1 stages audio in 192-frame S/PDIF blocks. Preload one full block
+    // beyond the post-prefetch control target before enabling live output.
+    START_BUFFER_FRAMES = 512,
+    RECOVER_BUFFER_FRAMES = 512,
+    ADAPTIVE_CLOCK_TARGET_FRAMES = 256,
+    ADAPTIVE_CLOCK_UPDATE_US = 20000,
+    ADAPTIVE_CLOCK_P_GAIN_PPM_PER_FRAME = 4,
+    ADAPTIVE_CLOCK_I_DIVISOR = 128,
+    ADAPTIVE_CLOCK_MAX_ADJUST_PPM = 1000,
+#endif
 };
 
 #define HOST_VOLUME_MIN_DB (-20)
@@ -52,7 +60,13 @@ static unsigned int refill_target_frames;
 static unsigned int dropped_frames;
 static unsigned int gated_frames;
 static uint64_t next_diag_log_us;
+#if PICOARC_UAC_VERSION == 1
 static uint64_t next_feedback_us;
+#else
+static uint64_t next_adaptive_clock_us;
+static int32_t adaptive_clock_integral_error;
+static int32_t adaptive_clock_adjust_ppm;
+#endif
 static bool audio_gate_open;
 static uint64_t next_gate_log_us;
 static uint64_t last_audio_task_us;
@@ -70,7 +84,8 @@ static uint8_t control_notifications_pending;
 
 static bool active_alt_is_iec61937(void) {
 #if PICOARC_UAC_VERSION == 2
-    return active_alt == PICOARC_AUDIO_ALT_IEC61937;
+    return active_alt == PICOARC_AUDIO_ALT_IEC61937_AC3 ||
+           active_alt == PICOARC_AUDIO_ALT_IEC61937_DTS;
 #else
     return false;
 #endif
@@ -98,8 +113,10 @@ static const char *active_alt_format_name(void) {
     case PICOARC_AUDIO_ALT_PCM_24:
         return "PCM 24-bit";
 #if PICOARC_UAC_VERSION == 2
-    case PICOARC_AUDIO_ALT_IEC61937:
-        return "IEC 61937 DD/DTS";
+    case PICOARC_AUDIO_ALT_IEC61937_AC3:
+        return "IEC 61937 AC-3";
+    case PICOARC_AUDIO_ALT_IEC61937_DTS:
+        return "IEC 61937 DTS";
 #endif
     default:
         return "off";
@@ -320,6 +337,7 @@ bool usb_audio_take_recovery_request(void) {
     return requested;
 }
 
+#if PICOARC_UAC_VERSION == 1
 static void update_feedback(bool force) {
     if (!streaming) {
         return;
@@ -343,6 +361,66 @@ static void update_feedback(bool force) {
     tud_audio_n_fb_set(0, feedback_q16);
     next_feedback_us = now_us + FEEDBACK_UPDATE_US;
 }
+#else
+static void reset_adaptive_clock(void) {
+    next_adaptive_clock_us = 0;
+    adaptive_clock_integral_error = 0;
+    adaptive_clock_adjust_ppm = 0;
+    spdif_set_rate_adjustment_ppm(0);
+}
+
+static void update_adaptive_clock(bool force) {
+    if (!streaming || !output_enabled || !audio_gate_open) {
+        return;
+    }
+
+    const uint64_t now_us = time_us_64();
+    if (!force && now_us < next_adaptive_clock_us) {
+        return;
+    }
+
+    unsigned int buffered_frames;
+    if (!spdif_adaptive_buffered_frames(&buffered_frames)) {
+        return;
+    }
+
+    const int32_t error = (int32_t)buffered_frames -
+                          ADAPTIVE_CLOCK_TARGET_FRAMES;
+    const int32_t integral_limit = ADAPTIVE_CLOCK_MAX_ADJUST_PPM *
+                                   ADAPTIVE_CLOCK_I_DIVISOR;
+    int32_t candidate_integral = adaptive_clock_integral_error + error;
+    if (candidate_integral > integral_limit) {
+        candidate_integral = integral_limit;
+    } else if (candidate_integral < -integral_limit) {
+        candidate_integral = -integral_limit;
+    }
+
+    const int32_t proportional_ppm = error *
+                                     ADAPTIVE_CLOCK_P_GAIN_PPM_PER_FRAME;
+    int32_t adjust_ppm = proportional_ppm +
+                         candidate_integral / ADAPTIVE_CLOCK_I_DIVISOR;
+    // Do not wind the integral farther into a saturated output. It may still
+    // unwind immediately when the buffer error changes direction.
+    if ((adjust_ppm > ADAPTIVE_CLOCK_MAX_ADJUST_PPM && error > 0) ||
+        (adjust_ppm < -ADAPTIVE_CLOCK_MAX_ADJUST_PPM && error < 0)) {
+        adjust_ppm = proportional_ppm +
+                     adaptive_clock_integral_error /
+                         ADAPTIVE_CLOCK_I_DIVISOR;
+    } else {
+        adaptive_clock_integral_error = candidate_integral;
+    }
+
+    if (adjust_ppm > ADAPTIVE_CLOCK_MAX_ADJUST_PPM) {
+        adjust_ppm = ADAPTIVE_CLOCK_MAX_ADJUST_PPM;
+    } else if (adjust_ppm < -ADAPTIVE_CLOCK_MAX_ADJUST_PPM) {
+        adjust_ppm = -ADAPTIVE_CLOCK_MAX_ADJUST_PPM;
+    }
+
+    adaptive_clock_adjust_ppm = adjust_ppm;
+    spdif_set_rate_adjustment_ppm(adjust_ppm);
+    next_adaptive_clock_us = now_us + ADAPTIVE_CLOCK_UPDATE_US;
+}
+#endif
 
 static void apply_sample_rate(uint32_t sample_rate) {
     if (sample_rate == active_sample_rate) {
@@ -356,8 +434,12 @@ static void apply_sample_rate(uint32_t sample_rate) {
     refill_target_frames = START_BUFFER_FRAMES;
     spdif_clear_usb_buffer();
     spdif_set_mode(idle_spdif_mode());
+#if PICOARC_UAC_VERSION == 1
     next_feedback_us = 0;
     update_feedback(true);
+#else
+    reset_adaptive_clock();
+#endif
     printf("usb-audio: sample rate set to %lu Hz\n",
            (unsigned long)active_sample_rate);
 }
@@ -724,13 +806,19 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
         gated_frames = 0;
         next_diag_log_us = now_us + 2000000;
         next_gate_log_us = 0;
+#if PICOARC_UAC_VERSION == 1
         next_feedback_us = 0;
+#else
+        reset_adaptive_clock();
+#endif
         last_audio_task_us = 0;
         max_audio_task_gap_us = 0;
         last_audio_read_us = 0;
         max_audio_read_gap_us = 0;
         max_usb_available_bytes = 0;
+#if PICOARC_UAC_VERSION == 1
         update_feedback(true);
+#endif
         printf("usb-audio: streaming %s (alt=%u, %lu Hz, %s), spdif=%s gate=%s\n",
                streaming ? "on" : "off", alt,
                (unsigned long)active_sample_rate, active_alt_format_name(),
@@ -784,14 +872,19 @@ void usb_audio_stop_streaming(void) {
     stream_packet_count = 0;
     observed_stream_packet_count = 0;
     recovery_requested = false;
+#if PICOARC_UAC_VERSION == 2
+    reset_adaptive_clock();
+#endif
 }
 
+#if PICOARC_UAC_VERSION == 1
 void tud_audio_feedback_params_cb(uint8_t func_id, uint8_t alt_itf, audio_feedback_params_t *feedback_param) {
     (void)func_id;
     (void)alt_itf;
     feedback_param->method = AUDIO_FEEDBACK_METHOD_DISABLED;
     feedback_param->sample_freq = active_sample_rate;
 }
+#endif
 
 void usb_audio_task(void) {
 #if PICOARC_UAC_VERSION == 2
@@ -824,7 +917,9 @@ void usb_audio_task(void) {
     }
     last_audio_task_us = task_now_us;
 
+#if PICOARC_UAC_VERSION == 1
     update_feedback(false);
+#endif
 
     const unsigned int bytes_per_sample = active_alt_uses_24_bit_subslot() ? 3u : 2u;
     const unsigned int bytes_per_frame = bytes_per_sample * CHANNELS;
@@ -836,6 +931,9 @@ void usb_audio_task(void) {
         refill_target_frames = START_BUFFER_FRAMES;
         spdif_clear_usb_buffer();
         spdif_set_mode(gate_open ? SPDIF_MODE_SILENCE : idle_spdif_mode());
+#if PICOARC_UAC_VERSION == 2
+        reset_adaptive_clock();
+#endif
         printf("usb-audio: ARC gate %s (alt=%u, %lu Hz, %s)\n",
                gate_open ? "open" : "closed",
                active_alt,
@@ -903,6 +1001,9 @@ void usb_audio_task(void) {
     if (gate_open && !output_enabled && spdif_buffered_frames() >= refill_target_frames) {
         output_enabled = true;
         spdif_set_mode(SPDIF_MODE_USB_AUDIO);
+#if PICOARC_UAC_VERSION == 2
+        update_adaptive_clock(true);
+#endif
         printf("usb-audio: output on buffered=%u\n", spdif_buffered_frames());
     }
 
@@ -910,6 +1011,7 @@ void usb_audio_task(void) {
     if (now_us >= next_diag_log_us) {
         spdif_usb_stats_t stats;
         spdif_take_usb_stats(&stats);
+#if PICOARC_UAC_VERSION == 1
         printf("usb-audio: buf=%u lo=%u hi=%u under=%u dma-late=%u drop=%u gated=%u task-gap=%lluus read-gap=%lluus avail-hi=%u\n",
                stats.buffered_frames,
                stats.low_water_frames,
@@ -921,10 +1023,27 @@ void usb_audio_task(void) {
                (unsigned long long)max_audio_task_gap_us,
                (unsigned long long)max_audio_read_gap_us,
                max_usb_available_bytes);
+#else
+        printf("usb-audio: buf=%u lo=%u hi=%u under=%u dma-late=%u drop=%u gated=%u task-gap=%lluus read-gap=%lluus avail-hi=%u clock=%ldppm\n",
+               stats.buffered_frames,
+               stats.low_water_frames,
+               stats.high_water_frames,
+               stats.underrun_frames,
+               stats.dma_late_blocks,
+               dropped_frames,
+               gated_frames,
+               (unsigned long long)max_audio_task_gap_us,
+               (unsigned long long)max_audio_read_gap_us,
+               max_usb_available_bytes,
+               (long)adaptive_clock_adjust_ppm);
+#endif
         if (output_enabled && stats.underrun_frames > 0) {
             output_enabled = false;
             refill_target_frames = RECOVER_BUFFER_FRAMES;
             spdif_set_mode(idle_spdif_mode());
+#if PICOARC_UAC_VERSION == 2
+            reset_adaptive_clock();
+#endif
             printf("usb-audio: output paused for refill buffered=%u\n", spdif_buffered_frames());
         }
         dropped_frames = 0;
@@ -940,5 +1059,9 @@ void usb_audio_task(void) {
         next_gate_log_us = now_us + 1000000;
     }
 
+#if PICOARC_UAC_VERSION == 1
     update_feedback(false);
+#else
+    update_adaptive_clock(false);
+#endif
 }

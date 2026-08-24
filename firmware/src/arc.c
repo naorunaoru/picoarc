@@ -1893,8 +1893,11 @@ static bool audio_format_supported(uint8_t alt, uint32_t sample_rate, bool log_r
         supported = (sad_pcm_rates_24 & rate_bit) != 0;
         break;
 #if PICOARC_UAC_VERSION == 2
-    case PICOARC_AUDIO_ALT_IEC61937:
-        supported = ((sad_ac3_rates | sad_dts_rates) & rate_bit) != 0;
+    case PICOARC_AUDIO_ALT_IEC61937_AC3:
+        supported = (sad_ac3_rates & rate_bit) != 0;
+        break;
+    case PICOARC_AUDIO_ALT_IEC61937_DTS:
+        supported = (sad_dts_rates & rate_bit) != 0;
         break;
 #endif
     default:
