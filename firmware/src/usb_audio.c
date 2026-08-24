@@ -25,7 +25,11 @@ enum {
     START_BUFFER_FRAMES = 256,
     RECOVER_BUFFER_FRAMES = 256,
     FEEDBACK_TARGET_FRAMES = 256,
+#if PICOARC_UAC_VERSION == 1
+    FEEDBACK_UPDATE_US = 2000,
+#else
     FEEDBACK_UPDATE_US = 4000,
+#endif
     FEEDBACK_P_GAIN_Q16_PER_FRAME = 16,
     FEEDBACK_MAX_ADJUST_Q16 = 1 << 15,
 };
@@ -60,9 +64,16 @@ static uint64_t stream_packet_deadline_us;
 static volatile uint32_t stream_packet_count;
 static uint32_t observed_stream_packet_count;
 static bool recovery_requested;
+#if PICOARC_UAC_VERSION == 2
+static uint8_t control_notifications_pending;
+#endif
 
 static bool active_alt_is_iec61937(void) {
+#if PICOARC_UAC_VERSION == 2
     return active_alt == PICOARC_AUDIO_ALT_IEC61937;
+#else
+    return false;
+#endif
 }
 
 static spdif_mode_t idle_spdif_mode(void) {
@@ -86,13 +97,16 @@ static const char *active_alt_format_name(void) {
         return "PCM 20-bit";
     case PICOARC_AUDIO_ALT_PCM_24:
         return "PCM 24-bit";
+#if PICOARC_UAC_VERSION == 2
     case PICOARC_AUDIO_ALT_IEC61937:
         return "IEC 61937 DD/DTS";
+#endif
     default:
         return "off";
     }
 }
 
+#if PICOARC_UAC_VERSION == 2
 static bool sample_rate_supported(uint32_t sample_rate) {
     switch (sample_rate) {
     case PICOARC_AUDIO_SAMPLE_RATE_32K:
@@ -105,6 +119,33 @@ static bool sample_rate_supported(uint32_t sample_rate) {
         return false;
     }
 }
+#else
+static uint32_t closest_supported_sample_rate(uint32_t requested) {
+    // UAC1 5.2.3.2.3.1 requires a discrete-frequency endpoint to round an
+    // unsupported SET_CUR value and report the result through GET_CUR.
+    static const uint32_t sample_rates[] = {
+        PICOARC_AUDIO_SAMPLE_RATE_32K,
+        PICOARC_AUDIO_SAMPLE_RATE_44K1,
+        PICOARC_AUDIO_SAMPLE_RATE_48K,
+        PICOARC_AUDIO_SAMPLE_RATE_88K2,
+        PICOARC_AUDIO_SAMPLE_RATE_96K,
+    };
+
+    uint32_t closest = sample_rates[0];
+    uint32_t closest_delta = requested > closest ? requested - closest : closest - requested;
+
+    for (unsigned int i = 1; i < TU_ARRAY_SIZE(sample_rates); i++) {
+        const uint32_t candidate = sample_rates[i];
+        const uint32_t delta = requested > candidate ? requested - candidate : candidate - requested;
+        if (delta < closest_delta) {
+            closest = candidate;
+            closest_delta = delta;
+        }
+    }
+
+    return closest;
+}
+#endif
 
 static int16_t host_volume_min_256(void) {
     return HOST_VOLUME_MIN_DB * 256;
@@ -167,59 +208,106 @@ static int16_t cec_volume_to_usb_volume(uint8_t cec_volume) {
                      (((int32_t)(cec_volume - SOUNDBAR_VOLUME_MIN) * host_span + soundbar_span / 2) / soundbar_span));
 }
 
-static void set_all_mute(int8_t value) {
+static bool set_all_mute(int8_t value) {
     const int8_t normalized = value ? 1 : 0;
+    bool changed = false;
 
     for (unsigned int i = 0; i <= CHANNELS; i++) {
+        changed = changed || mute[i] != normalized;
         mute[i] = normalized;
     }
+
+    return changed;
 }
 
-static void set_all_volume(int16_t value) {
+static bool set_all_volume(int16_t value) {
+    bool changed = false;
+
     for (unsigned int i = 0; i <= CHANNELS; i++) {
+        changed = changed || volume[i] != value;
         volume[i] = value;
+    }
+
+    return changed;
+}
+
+#if PICOARC_UAC_VERSION == 2
+enum {
+    CONTROL_NOTIFICATION_MUTE = 1u << 0,
+    CONTROL_NOTIFICATION_VOLUME = 1u << 1,
+};
+
+static void queue_host_control_change(uint8_t control_selector) {
+    if (control_selector == AUDIO20_FU_CTRL_MUTE) {
+        control_notifications_pending |= CONTROL_NOTIFICATION_MUTE;
+    } else if (control_selector == AUDIO20_FU_CTRL_VOLUME) {
+        control_notifications_pending |= CONTROL_NOTIFICATION_VOLUME;
     }
 }
 
-static void notify_host_control_change(uint8_t control_selector) {
+static void update_control_notifications(void) {
+    uint8_t pending_bit;
+    uint8_t control_selector;
+
+    if (control_notifications_pending & CONTROL_NOTIFICATION_MUTE) {
+        pending_bit = CONTROL_NOTIFICATION_MUTE;
+        control_selector = AUDIO20_FU_CTRL_MUTE;
+    } else if (control_notifications_pending & CONTROL_NOTIFICATION_VOLUME) {
+        pending_bit = CONTROL_NOTIFICATION_VOLUME;
+        control_selector = AUDIO20_FU_CTRL_VOLUME;
+    } else {
+        return;
+    }
+
     const audio_interrupt_data_t data = {
         .v2 = {
             .bInfo = 0,
             .bAttribute = AUDIO20_CS_REQ_CUR,
             .wValue_cn_or_mcn = 0,
             .wValue_cs = control_selector,
-            .wIndex_ep_or_int = 0,
-            .wIndex_entity_id = UAC2_ENTITY_FEATURE_UNIT,
+            .wIndex_ep_or_int = ITF_NUM_AUDIO_CONTROL,
+            .wIndex_entity_id = PICOARC_AUDIO_ENTITY_FEATURE_UNIT,
         },
     };
 
-    tud_audio_int_write(&data);
+    if (tud_audio_int_write(&data)) {
+        control_notifications_pending &= (uint8_t)~pending_bit;
+    }
 }
+#endif
 
 void usb_audio_set_cec_audio_status(uint8_t cec_volume, bool muted, bool notify_host) {
     const int8_t usb_mute = muted ? 1 : 0;
     const int16_t usb_volume = cec_volume_to_usb_volume(cec_volume);
-    const bool mute_changed = mute[0] != usb_mute;
-    const bool volume_changed = volume[0] != usb_volume;
+    const bool mute_changed = set_all_mute(usb_mute);
+    const bool volume_changed = set_all_volume(usb_volume);
 
-    set_all_mute(usb_mute);
-    set_all_volume(usb_volume);
+#if PICOARC_UAC_VERSION == 2
     if (notify_host && mute_changed) {
-        notify_host_control_change(AUDIO20_FU_CTRL_MUTE);
+        queue_host_control_change(AUDIO20_FU_CTRL_MUTE);
     }
     if (notify_host && volume_changed) {
-        notify_host_control_change(AUDIO20_FU_CTRL_VOLUME);
+        queue_host_control_change(AUDIO20_FU_CTRL_VOLUME);
     }
+#else
+    (void)notify_host;
+    (void)mute_changed;
+    (void)volume_changed;
+#endif
 }
 
 void usb_audio_set_cec_mute_status(bool muted, bool notify_host) {
     const int8_t usb_mute = muted ? 1 : 0;
-    const bool mute_changed = mute[0] != usb_mute;
+    const bool changed = set_all_mute(usb_mute);
 
-    set_all_mute(usb_mute);
-    if (notify_host && mute_changed) {
-        notify_host_control_change(AUDIO20_FU_CTRL_MUTE);
+#if PICOARC_UAC_VERSION == 2
+    if (notify_host && changed) {
+        queue_host_control_change(AUDIO20_FU_CTRL_MUTE);
     }
+#else
+    (void)notify_host;
+    (void)changed;
+#endif
 }
 
 bool usb_audio_is_streaming(void) {
@@ -256,20 +344,192 @@ static void update_feedback(bool force) {
     next_feedback_us = now_us + FEEDBACK_UPDATE_US;
 }
 
+static void apply_sample_rate(uint32_t sample_rate) {
+    if (sample_rate == active_sample_rate) {
+        return;
+    }
+
+    active_sample_rate = sample_rate;
+    spdif_set_sample_rate(active_sample_rate);
+    output_enabled = false;
+    audio_gate_open = false;
+    refill_target_frames = START_BUFFER_FRAMES;
+    spdif_clear_usb_buffer();
+    spdif_set_mode(idle_spdif_mode());
+    next_feedback_us = 0;
+    update_feedback(true);
+    printf("usb-audio: sample rate set to %lu Hz\n",
+           (unsigned long)active_sample_rate);
+}
+
+#if PICOARC_UAC_VERSION == 1
+
+bool tud_audio_get_req_ep_cb(uint8_t rhport, tusb_control_request_t const *request) {
+    const uint8_t endpoint = TU_U16_LOW(request->wIndex);
+    const uint8_t control_selector = TU_U16_HIGH(request->wValue);
+
+    if (endpoint != PICOARC_AUDIO_EP_OUT ||
+        control_selector != AUDIO10_EP_CTRL_SAMPLING_FREQ ||
+        request->bRequest != AUDIO10_CS_REQ_GET_CUR ||
+        request->wLength != 3) {
+        return false;
+    }
+
+    uint8_t frequency[3] = {
+        (uint8_t)(active_sample_rate & 0xffu),
+        (uint8_t)((active_sample_rate >> 8) & 0xffu),
+        (uint8_t)((active_sample_rate >> 16) & 0xffu),
+    };
+    return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
+                                                       frequency,
+                                                       sizeof(frequency));
+}
+
+bool tud_audio_set_req_ep_cb(uint8_t rhport, tusb_control_request_t const *request, uint8_t *buf) {
+    (void)rhport;
+    const uint8_t endpoint = TU_U16_LOW(request->wIndex);
+    const uint8_t control_selector = TU_U16_HIGH(request->wValue);
+
+    if (endpoint != PICOARC_AUDIO_EP_OUT ||
+        control_selector != AUDIO10_EP_CTRL_SAMPLING_FREQ ||
+        request->bRequest != AUDIO10_CS_REQ_SET_CUR ||
+        request->wLength != 3) {
+        return false;
+    }
+
+    const uint32_t requested = (uint32_t)buf[0] |
+                               ((uint32_t)buf[1] << 8) |
+                               ((uint32_t)buf[2] << 16);
+    apply_sample_rate(closest_supported_sample_rate(requested));
+    return true;
+}
+
+static bool feature_get_request(uint8_t rhport, tusb_control_request_t const *request) {
+    const uint8_t control_selector = TU_U16_HIGH(request->wValue);
+    const uint8_t channel_number = TU_U16_LOW(request->wValue);
+
+    if (channel_number != 0) {
+        return false;
+    }
+
+    if (control_selector == AUDIO10_FU_CTRL_MUTE &&
+        request->bRequest == AUDIO10_CS_REQ_GET_CUR) {
+        uint8_t current = (uint8_t)mute[channel_number];
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
+                                                           &current,
+                                                           sizeof(current));
+    }
+
+    if (control_selector == AUDIO10_FU_CTRL_VOLUME) {
+        int16_t value;
+
+        switch (request->bRequest) {
+        case AUDIO10_CS_REQ_GET_CUR:
+            value = volume[channel_number];
+            break;
+        case AUDIO10_CS_REQ_GET_MIN:
+            value = host_volume_min_256();
+            break;
+        case AUDIO10_CS_REQ_GET_MAX:
+            value = host_volume_max_256();
+            break;
+        case AUDIO10_CS_REQ_GET_RES:
+            value = host_volume_step_256();
+            break;
+        default:
+            return false;
+        }
+
+        uint16_t response = tu_htole16((uint16_t)value);
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
+                                                           &response,
+                                                           sizeof(response));
+    }
+
+    return false;
+}
+
+bool tud_audio_get_req_entity_cb(uint8_t rhport, tusb_control_request_t const *request) {
+    const uint8_t entity_id = TU_U16_HIGH(request->wIndex);
+
+    if (entity_id == PICOARC_AUDIO_ENTITY_FEATURE_UNIT) {
+        return feature_get_request(rhport, request);
+    }
+
+    return false;
+}
+
+bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *request, uint8_t *buf) {
+    (void)rhport;
+    const uint8_t entity_id = TU_U16_HIGH(request->wIndex);
+    const uint8_t control_selector = TU_U16_HIGH(request->wValue);
+    const uint8_t channel_number = TU_U16_LOW(request->wValue);
+
+    if (request->bRequest != AUDIO10_CS_REQ_SET_CUR ||
+        entity_id != PICOARC_AUDIO_ENTITY_FEATURE_UNIT ||
+        channel_number != 0) {
+        return false;
+    }
+
+    if (control_selector == AUDIO10_FU_CTRL_MUTE) {
+        if (request->wLength != 1) {
+            return false;
+        }
+        const int8_t requested_mute = buf[0] ? 1 : 0;
+        set_all_mute(requested_mute);
+        if (!streaming) {
+            printf("usb-audio: host mute=%s ch=%u\n",
+                   requested_mute ? "on" : "off",
+                   channel_number);
+        }
+        arc_request_mute_sync(requested_mute != 0);
+        return true;
+    }
+
+    if (control_selector == AUDIO10_FU_CTRL_VOLUME) {
+        if (request->wLength != 2) {
+            return false;
+        }
+        const int16_t requested_volume = clamp_host_volume(
+            (int16_t)tu_le16toh(tu_unaligned_read16(buf)));
+        set_all_volume(requested_volume);
+        const uint8_t cec_volume = usb_volume_to_cec_volume(requested_volume);
+        if (!streaming) {
+            printf("usb-audio: host volume=%ld.%02lddB cec=%u ch=%u\n",
+                   (long)(requested_volume / 256),
+                   (long)(((requested_volume < 0 ? -requested_volume : requested_volume) % 256) * 100 / 256),
+                   cec_volume,
+                   channel_number);
+        }
+        arc_request_volume_sync(cec_volume);
+        return true;
+    }
+
+    return false;
+}
+
+#else
+
+_Static_assert(sizeof(audio20_control_range_4_n_t(PICOARC_AUDIO_SAMPLE_RATE_COUNT)) <=
+                   CFG_TUD_AUDIO_CTRL_BUF_SZ,
+               "UAC2 sample-rate range exceeds TinyUSB control buffer");
+
 static bool clock_get_request(uint8_t rhport, tusb_control_request_t const *request) {
     const uint8_t control_selector = TU_U16_HIGH(request->wValue);
 
-    if (control_selector == AUDIO20_CS_CTRL_SAM_FREQ && request->bRequest == AUDIO20_CS_REQ_CUR) {
-        audio20_control_cur_4_t cur = {.bCur = (int32_t)tu_htole32(active_sample_rate)};
-        return tud_audio_buffer_and_schedule_control_xfer(rhport, request, &cur, sizeof(cur));
+    if (control_selector == AUDIO20_CS_CTRL_SAM_FREQ &&
+        request->bRequest == AUDIO20_CS_REQ_CUR) {
+        audio20_control_cur_4_t cur = {
+            .bCur = (int32_t)tu_htole32(active_sample_rate),
+        };
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
+                                                           &cur, sizeof(cur));
     }
 
-    if (control_selector == AUDIO20_CS_CTRL_SAM_FREQ && request->bRequest == AUDIO20_CS_REQ_RANGE) {
-        // Discrete ARC/SPDIF rates that fit every advertised PCM alt over
-        // full-speed USB. Most hosts treat each
-        // sub-range whose bMin == bMax as a single supported value.
-        audio20_control_range_4_n_t(5) range = {
-            .wNumSubRanges = tu_htole16(5),
+    if (control_selector == AUDIO20_CS_CTRL_SAM_FREQ &&
+        request->bRequest == AUDIO20_CS_REQ_RANGE) {
+        audio20_control_range_4_n_t(PICOARC_AUDIO_SAMPLE_RATE_COUNT) range = {
+            .wNumSubRanges = tu_htole16(PICOARC_AUDIO_SAMPLE_RATE_COUNT),
             .subrange[0] = {
                 .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_32K),
                 .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_32K),
@@ -296,12 +556,15 @@ static bool clock_get_request(uint8_t rhport, tusb_control_request_t const *requ
                 .bRes = 0,
             },
         };
-        return tud_audio_buffer_and_schedule_control_xfer(rhport, request, &range, sizeof(range));
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
+                                                           &range, sizeof(range));
     }
 
-    if (control_selector == AUDIO20_CS_CTRL_CLK_VALID && request->bRequest == AUDIO20_CS_REQ_CUR) {
+    if (control_selector == AUDIO20_CS_CTRL_CLK_VALID &&
+        request->bRequest == AUDIO20_CS_REQ_CUR) {
         audio20_control_cur_1_t valid = {.bCur = 1};
-        return tud_audio_buffer_and_schedule_control_xfer(rhport, request, &valid, sizeof(valid));
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
+                                                           &valid, sizeof(valid));
     }
 
     return false;
@@ -311,94 +574,89 @@ static bool feature_get_request(uint8_t rhport, tusb_control_request_t const *re
     const uint8_t control_selector = TU_U16_HIGH(request->wValue);
     const uint8_t channel_number = TU_U16_LOW(request->wValue);
 
-    if (channel_number > CHANNELS) {
+    if (channel_number != 0) {
         return false;
     }
 
-    if (control_selector == AUDIO20_FU_CTRL_MUTE && request->bRequest == AUDIO20_CS_REQ_CUR) {
+    if (control_selector == AUDIO20_FU_CTRL_MUTE &&
+        request->bRequest == AUDIO20_CS_REQ_CUR) {
         audio20_control_cur_1_t cur = {.bCur = mute[channel_number]};
-        return tud_audio_buffer_and_schedule_control_xfer(rhport, request, &cur, sizeof(cur));
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
+                                                           &cur, sizeof(cur));
     }
 
-    if (control_selector == AUDIO20_FU_CTRL_VOLUME && request->bRequest == AUDIO20_CS_REQ_CUR) {
-        audio20_control_cur_2_t cur = {.bCur = tu_htole16(volume[channel_number])};
-        return tud_audio_buffer_and_schedule_control_xfer(rhport, request, &cur, sizeof(cur));
+    if (control_selector == AUDIO20_FU_CTRL_VOLUME &&
+        request->bRequest == AUDIO20_CS_REQ_CUR) {
+        audio20_control_cur_2_t cur = {
+            .bCur = (int16_t)tu_htole16((uint16_t)volume[channel_number]),
+        };
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
+                                                           &cur, sizeof(cur));
     }
 
-    if (control_selector == AUDIO20_FU_CTRL_VOLUME && request->bRequest == AUDIO20_CS_REQ_RANGE) {
+    if (control_selector == AUDIO20_FU_CTRL_VOLUME &&
+        request->bRequest == AUDIO20_CS_REQ_RANGE) {
         audio20_control_range_2_n_t(1) range = {
             .wNumSubRanges = tu_htole16(1),
             .subrange[0] = {
-                .bMin = tu_htole16(host_volume_min_256()),
-                .bMax = tu_htole16(host_volume_max_256()),
-                .bRes = tu_htole16(host_volume_step_256()),
+                .bMin = (int16_t)tu_htole16((uint16_t)host_volume_min_256()),
+                .bMax = (int16_t)tu_htole16((uint16_t)host_volume_max_256()),
+                .bRes = tu_htole16((uint16_t)host_volume_step_256()),
             },
         };
-        return tud_audio_buffer_and_schedule_control_xfer(rhport, request, &range, sizeof(range));
+        return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
+                                                           &range, sizeof(range));
     }
 
     return false;
 }
 
-bool tud_audio_get_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p_request) {
-    const uint8_t entity_id = TU_U16_HIGH(p_request->wIndex);
+bool tud_audio_get_req_entity_cb(uint8_t rhport, tusb_control_request_t const *request) {
+    const uint8_t entity_id = TU_U16_HIGH(request->wIndex);
 
-    if (entity_id == UAC2_ENTITY_CLOCK) {
-        return clock_get_request(rhport, p_request);
+    if (entity_id == PICOARC_AUDIO_ENTITY_CLOCK) {
+        return clock_get_request(rhport, request);
     }
-
-    if (entity_id == UAC2_ENTITY_FEATURE_UNIT) {
-        return feature_get_request(rhport, p_request);
+    if (entity_id == PICOARC_AUDIO_ENTITY_FEATURE_UNIT) {
+        return feature_get_request(rhport, request);
     }
 
     return false;
 }
 
-bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p_request, uint8_t *buf) {
+bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *request, uint8_t *buf) {
     (void)rhport;
-    const uint8_t entity_id = TU_U16_HIGH(p_request->wIndex);
-    const uint8_t control_selector = TU_U16_HIGH(p_request->wValue);
-    const uint8_t channel_number = TU_U16_LOW(p_request->wValue);
+    const uint8_t entity_id = TU_U16_HIGH(request->wIndex);
+    const uint8_t control_selector = TU_U16_HIGH(request->wValue);
+    const uint8_t channel_number = TU_U16_LOW(request->wValue);
 
-    if (p_request->bRequest != AUDIO20_CS_REQ_CUR) {
+    if (request->bRequest != AUDIO20_CS_REQ_CUR) {
         return false;
     }
 
-    if (entity_id == UAC2_ENTITY_CLOCK && control_selector == AUDIO20_CS_CTRL_SAM_FREQ) {
-        if (p_request->wLength != sizeof(audio20_control_cur_4_t)) {
+    if (entity_id == PICOARC_AUDIO_ENTITY_CLOCK &&
+        control_selector == AUDIO20_CS_CTRL_SAM_FREQ) {
+        if (request->wLength != sizeof(audio20_control_cur_4_t)) {
             return false;
         }
-        const int32_t requested = ((audio20_control_cur_4_t const *)buf)->bCur;
-        if (!sample_rate_supported((uint32_t)requested)) {
+        const uint32_t requested = tu_le32toh(tu_unaligned_read32(buf));
+        if (!sample_rate_supported(requested)) {
             return false;
         }
-        if ((uint32_t)requested != active_sample_rate) {
-            active_sample_rate = (uint32_t)requested;
-            spdif_set_sample_rate(active_sample_rate);
-            output_enabled = false;
-            audio_gate_open = false;
-            refill_target_frames = START_BUFFER_FRAMES;
-            spdif_clear_usb_buffer();
-            spdif_set_mode(idle_spdif_mode());
-            printf("usb-audio: sample rate set to %lu Hz\n",
-                   (unsigned long)active_sample_rate);
-        }
+        apply_sample_rate(requested);
         return true;
     }
 
-    if (entity_id != UAC2_ENTITY_FEATURE_UNIT) {
-        return false;
-    }
-
-    if (channel_number > CHANNELS) {
+    if (entity_id != PICOARC_AUDIO_ENTITY_FEATURE_UNIT ||
+        channel_number != 0) {
         return false;
     }
 
     if (control_selector == AUDIO20_FU_CTRL_MUTE) {
-        if (p_request->wLength != sizeof(audio20_control_cur_1_t)) {
+        if (request->wLength != sizeof(audio20_control_cur_1_t)) {
             return false;
         }
-        const int8_t requested_mute = ((audio20_control_cur_1_t const *)buf)->bCur ? 1 : 0;
+        const int8_t requested_mute = buf[0] ? 1 : 0;
         set_all_mute(requested_mute);
         if (!streaming) {
             printf("usb-audio: host mute=%s ch=%u\n",
@@ -410,10 +668,11 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
     }
 
     if (control_selector == AUDIO20_FU_CTRL_VOLUME) {
-        if (p_request->wLength != sizeof(audio20_control_cur_2_t)) {
+        if (request->wLength != sizeof(audio20_control_cur_2_t)) {
             return false;
         }
-        const int16_t requested_volume = ((audio20_control_cur_2_t const *)buf)->bCur;
+        const int16_t requested_volume = clamp_host_volume(
+            (int16_t)tu_le16toh(tu_unaligned_read16(buf)));
         set_all_volume(requested_volume);
         const uint8_t cec_volume = usb_volume_to_cec_volume(requested_volume);
         if (!streaming) {
@@ -430,19 +689,26 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *p
     return false;
 }
 
+#endif
+
 bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request) {
     (void)rhport;
     uint8_t const itf = tu_u16_low(tu_le16toh(request->wIndex));
     uint8_t const alt = tu_u16_low(tu_le16toh(request->wValue));
 
     if (itf == ITF_NUM_AUDIO_STREAMING) {
+        if (alt > PICOARC_AUDIO_ALT_MAX) {
+            return false;
+        }
+
         const uint64_t now_us = time_us_64();
         active_alt = alt;
         streaming = alt != PICOARC_AUDIO_ALT_ZERO;
         stream_packet_count = 0;
         observed_stream_packet_count = 0;
-        stream_packet_deadline_us = streaming ?
-            now_us + (uint64_t)PICOARC_USB_STREAM_PACKET_TIMEOUT_MS * 1000u : 0;
+        // Arm recovery only after the first packet. Windows may select an
+        // active alt before playback starts and legitimately send no data.
+        stream_packet_deadline_us = 0;
         recovery_requested = false;
         const bool initial_gate_open = streaming &&
                                        arc_audio_format_supported_quiet(active_alt, active_sample_rate);
@@ -528,6 +794,10 @@ void tud_audio_feedback_params_cb(uint8_t func_id, uint8_t alt_itf, audio_feedba
 }
 
 void usb_audio_task(void) {
+#if PICOARC_UAC_VERSION == 2
+    update_control_notifications();
+#endif
+
     if (!streaming) {
         return;
     }
@@ -605,7 +875,7 @@ void usb_audio_task(void) {
 
         if (bytes_per_sample == 3u) {
             // Unpack interleaved 20/24-bit little-endian subslots into the
-            // encoder's 24-bit-left-aligned int32 representation. UAC2 PCM is
+            // encoder's 24-bit-left-aligned int32 representation. PCM is
             // left-justified within the subslot, so 20-bit trailing padding
             // naturally stays in the low bits.
             for (unsigned int i = 0; i < frames * CHANNELS; i++) {
@@ -616,8 +886,8 @@ void usb_audio_task(void) {
                 pcm_frames[i] = (int32_t)raw;
             }
         } else {
-            // 16-bit PCM and IEC 61937 both ride in the same 16-bit subslot;
-            // promote into the encoder's 24-bit-left-aligned representation.
+            // Promote 16-bit PCM/IEC 61937 words into the encoder's
+            // 24-bit-left-aligned representation.
             const int16_t *src = (const int16_t *)pcm_bytes;
             for (unsigned int i = 0; i < frames * CHANNELS; i++) {
                 pcm_frames[i] = (int32_t)src[i] << 16;

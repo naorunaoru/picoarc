@@ -8,16 +8,27 @@
 #include "usb_descriptors.h"
 
 #define USB_VID 0xcafe
-#define USB_PID 0x4011
-#define USB_BCD 0x0101
+// Every audio-class/layout combination gets its own PID so host descriptor and
+// class-driver caches cannot cross-bind UAC1, UAC2, release, or debug builds.
+#if PICOARC_UAC_VERSION == 1
+#if PICOARC_DEBUG_USB
+#define USB_PID 0x4013
+#else
+#define USB_PID 0x4012
+#endif
+#else
+#if PICOARC_DEBUG_USB
+#define USB_PID 0x4015
+#else
+#define USB_PID 0x4014
+#endif
+#endif
+#define USB_BCD 0x0201
 #define USB_STRING_MAX_CHARS 32
 
 #define EPNUM_CDC_NOTIF 0x81
 #define EPNUM_CDC_OUT   0x02
 #define EPNUM_CDC_IN    0x82
-#define EPNUM_AUDIO_OUT 0x03
-#define EPNUM_AUDIO_FB  0x83
-#define EPNUM_AUDIO_INT 0x84
 
 enum {
     STRID_LANGID = 0,
@@ -37,9 +48,15 @@ tusb_desc_device_t const desc_device = {
     .bLength = sizeof(tusb_desc_device_t),
     .bDescriptorType = TUSB_DESC_DEVICE,
     .bcdUSB = 0x0200,
+#if PICOARC_DEBUG_USB || PICOARC_UAC_VERSION == 2
     .bDeviceClass = TUSB_CLASS_MISC,
     .bDeviceSubClass = MISC_SUBCLASS_COMMON,
     .bDeviceProtocol = MISC_PROTOCOL_IAD,
+#else
+    .bDeviceClass = 0x00,
+    .bDeviceSubClass = 0x00,
+    .bDeviceProtocol = 0x00,
+#endif
     .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,
     .idVendor = USB_VID,
     .idProduct = USB_PID,
@@ -64,18 +81,21 @@ uint8_t const *tud_descriptor_device_cb(void) {
 #define DEBUG_USB_DESC_LEN 0
 #endif
 
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + DEBUG_USB_DESC_LEN + TUD_AUDIO_PICOARC_DESC_LEN)
+#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + DEBUG_USB_DESC_LEN \
+    + PICOARC_AUDIO_IAD_DESC_LEN + TUD_AUDIO_PICOARC_DESC_LEN)
 
 uint8_t const desc_configuration[] = {
     TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 250),
 #if PICOARC_DEBUG_USB
     TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, STRID_CDC, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64),
+#if PICOARC_UAC_VERSION == 1
+    TUD_AUDIO10_PICOARC_DESC_IAD(ITF_NUM_AUDIO_CONTROL, STRID_AUDIO),
+#endif
 #endif
     TUD_AUDIO_PICOARC_DESCRIPTOR(ITF_NUM_AUDIO_CONTROL, STRID_AUDIO,
-                                 EPNUM_AUDIO_OUT,
-                                 EPNUM_AUDIO_FB,
-                                 3,
-                                 EPNUM_AUDIO_INT),
+                                 PICOARC_AUDIO_EP_OUT,
+                                 PICOARC_AUDIO_EP_FB,
+                                 PICOARC_AUDIO_EP_INT),
 #if PICOARC_DEBUG_USB
     TUD_RPI_RESET_DESCRIPTOR(ITF_NUM_RESET, STRID_RESET),
 #endif

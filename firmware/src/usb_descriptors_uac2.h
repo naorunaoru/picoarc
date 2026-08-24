@@ -1,0 +1,114 @@
+#ifndef PICOARC_USB_DESCRIPTORS_UAC2_H
+#define PICOARC_USB_DESCRIPTORS_UAC2_H
+
+#define PICOARC_AUDIO_ENTITY_INPUT_TERMINAL   0x01
+#define PICOARC_AUDIO_ENTITY_FEATURE_UNIT     0x02
+#define PICOARC_AUDIO_ENTITY_OUTPUT_TERMINAL  0x03
+#define PICOARC_AUDIO_ENTITY_CLOCK            0x04
+
+#define PICOARC_AUDIO_ALT_IEC61937 4
+#define PICOARC_AUDIO_ALT_MAX PICOARC_AUDIO_ALT_IEC61937
+#define PICOARC_AUDIO_HAS_INTERRUPT_EP 1
+
+// The UAC2 descriptor template contains its own IAD.
+#define PICOARC_AUDIO_IAD_DESC_LEN 0
+
+#define AUDIO_DATA_FORMAT_TYPE_III_IEC61937_AC3      (1u << 0)
+#define AUDIO_DATA_FORMAT_TYPE_III_IEC61937_DTS_I    (1u << 7)
+#define AUDIO_DATA_FORMAT_TYPE_III_IEC61937_DTS_II   (1u << 8)
+#define AUDIO_DATA_FORMAT_TYPE_III_IEC61937_DTS_III  (1u << 9)
+#define PICOARC_AUDIO_FORMAT_IEC61937_DD_DTS \
+    (AUDIO_DATA_FORMAT_TYPE_III_IEC61937_AC3 | \
+     AUDIO_DATA_FORMAT_TYPE_III_IEC61937_DTS_I | \
+     AUDIO_DATA_FORMAT_TYPE_III_IEC61937_DTS_II | \
+     AUDIO_DATA_FORMAT_TYPE_III_IEC61937_DTS_III)
+
+#define TUD_AUDIO20_DESC_TYPE_III_FORMAT_LEN TUD_AUDIO20_DESC_TYPE_I_FORMAT_LEN
+#define TUD_AUDIO20_DESC_TYPE_III_FORMAT(_subslotsize, _bitresolution) \
+    TUD_AUDIO20_DESC_TYPE_III_FORMAT_LEN, TUSB_DESC_CS_INTERFACE, \
+    AUDIO20_CS_AS_INTERFACE_FORMAT_TYPE, AUDIO20_FORMAT_TYPE_III, \
+    _subslotsize, _bitresolution
+
+#define TUD_AUDIO_PICOARC_DESC_LEN (TUD_AUDIO20_DESC_IAD_LEN \
+    + TUD_AUDIO20_DESC_STD_AC_LEN \
+    + TUD_AUDIO20_DESC_CS_AC_LEN \
+    + TUD_AUDIO20_DESC_CLK_SRC_LEN \
+    + TUD_AUDIO20_DESC_INPUT_TERM_LEN \
+    + TUD_AUDIO20_DESC_OUTPUT_TERM_LEN \
+    + TUD_AUDIO20_DESC_FEATURE_UNIT_LEN(PICOARC_AUDIO_CHANNELS) \
+    + TUD_AUDIO20_DESC_STD_AC_INT_EP_LEN \
+    + TUD_AUDIO20_DESC_STD_AS_LEN /* alt 0 */ \
+    + 4 * (TUD_AUDIO20_DESC_STD_AS_LEN \
+           + TUD_AUDIO20_DESC_CS_AS_INT_LEN \
+           + TUD_AUDIO20_DESC_TYPE_I_FORMAT_LEN \
+           + TUD_AUDIO20_DESC_STD_AS_ISO_EP_LEN \
+           + TUD_AUDIO20_DESC_CS_AS_ISO_EP_LEN \
+           + TUD_AUDIO20_DESC_STD_AS_ISO_FB_EP_LEN))
+
+#define TUD_AUDIO20_PICOARC_PCM_ALT(_itfnum, _alt, _subslotsize, _bitresolution, _epout, _epsize, _epfb) \
+    TUD_AUDIO20_DESC_STD_AS_INT((uint8_t)((_itfnum) + 1), _alt, 0x02, 0x00), \
+    TUD_AUDIO20_DESC_CS_AS_INT(PICOARC_AUDIO_ENTITY_INPUT_TERMINAL, AUDIO20_CTRL_NONE, \
+                               AUDIO20_FORMAT_TYPE_I, AUDIO20_DATA_FORMAT_TYPE_I_PCM, \
+                               PICOARC_AUDIO_CHANNELS, AUDIO20_CHANNEL_CONFIG_NON_PREDEFINED, 0x00), \
+    TUD_AUDIO20_DESC_TYPE_I_FORMAT(_subslotsize, _bitresolution), \
+    TUD_AUDIO20_DESC_STD_AS_ISO_EP(_epout, \
+                                   (uint8_t)(TUSB_XFER_ISOCHRONOUS | \
+                                             TUSB_ISO_EP_ATT_ASYNCHRONOUS | \
+                                             TUSB_ISO_EP_ATT_DATA), \
+                                   _epsize, 0x01), \
+    TUD_AUDIO20_DESC_CS_AS_ISO_EP(AUDIO20_CS_AS_ISO_DATA_EP_ATT_NON_MAX_PACKETS_OK, \
+                                  AUDIO20_CTRL_NONE, \
+                                  AUDIO20_CS_AS_ISO_DATA_EP_LOCK_DELAY_UNIT_MILLISEC, 0x0001), \
+    /* UAC2 uses 16.16 feedback, including at full speed. */ \
+    TUD_AUDIO20_DESC_STD_AS_ISO_FB_EP(_epfb, 4, 0x01)
+
+#define TUD_AUDIO_PICOARC_DESCRIPTOR(_itfnum, _stridx, _epout, _epfb, _epint) \
+    TUD_AUDIO20_DESC_IAD(_itfnum, 0x02, 0x00), \
+    TUD_AUDIO20_DESC_STD_AC(_itfnum, 0x01, _stridx), \
+    TUD_AUDIO20_DESC_CS_AC(0x0200, AUDIO20_FUNC_DESKTOP_SPEAKER, \
+                           TUD_AUDIO20_DESC_CLK_SRC_LEN + TUD_AUDIO20_DESC_INPUT_TERM_LEN + \
+                           TUD_AUDIO20_DESC_OUTPUT_TERM_LEN + \
+                           TUD_AUDIO20_DESC_FEATURE_UNIT_LEN(PICOARC_AUDIO_CHANNELS), \
+                           AUDIO20_CS_AS_INTERFACE_CTRL_LATENCY_POS), \
+    TUD_AUDIO20_DESC_CLK_SRC(PICOARC_AUDIO_ENTITY_CLOCK, \
+                             AUDIO20_CLOCK_SOURCE_ATT_INT_PRO_CLK, \
+                             AUDIO20_CTRL_RW << AUDIO20_CLOCK_SOURCE_CTRL_CLK_FRQ_POS, \
+                             PICOARC_AUDIO_ENTITY_INPUT_TERMINAL, 0x00), \
+    TUD_AUDIO20_DESC_INPUT_TERM(PICOARC_AUDIO_ENTITY_INPUT_TERMINAL, \
+                                AUDIO_TERM_TYPE_USB_STREAMING, 0x00, \
+                                PICOARC_AUDIO_ENTITY_CLOCK, PICOARC_AUDIO_CHANNELS, \
+                                AUDIO20_CHANNEL_CONFIG_NON_PREDEFINED, 0x00, 0x0000, 0x00), \
+    TUD_AUDIO20_DESC_OUTPUT_TERM(PICOARC_AUDIO_ENTITY_OUTPUT_TERMINAL, \
+                                 AUDIO_TERM_TYPE_OUT_DESKTOP_SPEAKER, \
+                                 0x00, \
+                                 PICOARC_AUDIO_ENTITY_FEATURE_UNIT, \
+                                 PICOARC_AUDIO_ENTITY_CLOCK, 0x0000, 0x00), \
+    TUD_AUDIO20_DESC_FEATURE_UNIT(PICOARC_AUDIO_ENTITY_FEATURE_UNIT, \
+                                  PICOARC_AUDIO_ENTITY_INPUT_TERMINAL, 0x00, \
+                                  AUDIO20_CTRL_RW << AUDIO20_FEATURE_UNIT_CTRL_MUTE_POS | \
+                                      AUDIO20_CTRL_RW << AUDIO20_FEATURE_UNIT_CTRL_VOLUME_POS, \
+                                  0x00000000, 0x00000000), \
+    TUD_AUDIO20_DESC_STD_AC_INT_EP(_epint, 0x01), \
+    TUD_AUDIO20_DESC_STD_AS_INT((uint8_t)((_itfnum) + 1), PICOARC_AUDIO_ALT_ZERO, 0x00, 0x00), \
+    TUD_AUDIO20_PICOARC_PCM_ALT(_itfnum, PICOARC_AUDIO_ALT_PCM_16, 2, 16, \
+                                _epout, PICOARC_AUDIO_EP_OUT_SZ_16, _epfb), \
+    TUD_AUDIO20_PICOARC_PCM_ALT(_itfnum, PICOARC_AUDIO_ALT_PCM_20, 3, 20, \
+                                _epout, PICOARC_AUDIO_EP_OUT_SZ_3B, _epfb), \
+    TUD_AUDIO20_PICOARC_PCM_ALT(_itfnum, PICOARC_AUDIO_ALT_PCM_24, 3, 24, \
+                                _epout, PICOARC_AUDIO_EP_OUT_SZ_3B, _epfb), \
+    TUD_AUDIO20_DESC_STD_AS_INT((uint8_t)((_itfnum) + 1), PICOARC_AUDIO_ALT_IEC61937, 0x02, 0x00), \
+    TUD_AUDIO20_DESC_CS_AS_INT(PICOARC_AUDIO_ENTITY_INPUT_TERMINAL, AUDIO20_CTRL_NONE, \
+                               AUDIO20_FORMAT_TYPE_III, PICOARC_AUDIO_FORMAT_IEC61937_DD_DTS, \
+                               PICOARC_AUDIO_CHANNELS, AUDIO20_CHANNEL_CONFIG_NON_PREDEFINED, 0x00), \
+    TUD_AUDIO20_DESC_TYPE_III_FORMAT(2, 16), \
+    TUD_AUDIO20_DESC_STD_AS_ISO_EP(_epout, \
+                                   (uint8_t)(TUSB_XFER_ISOCHRONOUS | \
+                                             TUSB_ISO_EP_ATT_ASYNCHRONOUS | \
+                                             TUSB_ISO_EP_ATT_DATA), \
+                                   PICOARC_AUDIO_EP_OUT_SZ_16, 0x01), \
+    TUD_AUDIO20_DESC_CS_AS_ISO_EP(AUDIO20_CS_AS_ISO_DATA_EP_ATT_NON_MAX_PACKETS_OK, \
+                                  AUDIO20_CTRL_NONE, \
+                                  AUDIO20_CS_AS_ISO_DATA_EP_LOCK_DELAY_UNIT_MILLISEC, 0x0001), \
+    TUD_AUDIO20_DESC_STD_AS_ISO_FB_EP(_epfb, 4, 0x01)
+
+#endif

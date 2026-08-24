@@ -65,7 +65,7 @@ jobs:
             python3
 
       - name: Build
-        run: make build
+        run: make build build-uac2
 
       - name: Resolve artifact version
         id: version
@@ -82,6 +82,7 @@ jobs:
           for variant in release debug; do
             for ext in uf2 bin hex elf; do
               cp "firmware/build-${variant}/picoarc-${variant}.${ext}" "dist/${{ steps.version.outputs.prefix }}-${variant}.${ext}"
+              cp "firmware/build-${variant}-uac2/picoarc-${variant}-uac2.${ext}" "dist/${{ steps.version.outputs.prefix }}-${variant}-uac2.${ext}"
             done
           done
 

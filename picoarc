@@ -15,6 +15,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 FIRMWARE = ROOT / "firmware"
 VARIANTS = ("release", "debug")
+USB_AUDIO_CLASSES = ("uac1", "uac2")
+DEFAULT_USB_AUDIO_CLASS = "uac1"
 DEFAULT_FLASH_VARIANT = "release"
 DEFAULT_RUN_VARIANT = "debug"
 TOOLCHAIN = Path("/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin")
@@ -37,16 +39,22 @@ def env():
     return result
 
 
-def build_dir(variant):
-    return FIRMWARE / f"build-{variant}"
+def audio_class_suffix(usb_audio_class):
+    if usb_audio_class == DEFAULT_USB_AUDIO_CLASS:
+        return ""
+    return f"-{usb_audio_class}"
 
 
-def firmware_basename(variant):
-    return f"picoarc-{variant}"
+def build_dir(variant, usb_audio_class):
+    return FIRMWARE / f"build-{variant}{audio_class_suffix(usb_audio_class)}"
 
 
-def firmware_path(variant, suffix):
-    return build_dir(variant) / f"{firmware_basename(variant)}.{suffix}"
+def firmware_basename(variant, usb_audio_class):
+    return f"picoarc-{variant}{audio_class_suffix(usb_audio_class)}"
+
+
+def firmware_path(variant, usb_audio_class, suffix):
+    return build_dir(variant, usb_audio_class) / f"{firmware_basename(variant, usb_audio_class)}.{suffix}"
 
 
 def selected_variants(variant):
@@ -57,9 +65,10 @@ def selected_variants(variant):
 
 def build(_args):
     for variant in selected_variants(_args.variant):
-        build = build_dir(variant)
+        build = build_dir(variant, _args.usb_audio_class)
         run(["cmake", "-S", FIRMWARE, "-B", build, "-G", "Ninja",
-             f"-DPICOARC_VARIANT={variant}"], env=env())
+             f"-DPICOARC_VARIANT={variant}",
+             f"-DPICOARC_USB_AUDIO_CLASS={_args.usb_audio_class}"], env=env())
         run(["cmake", "--build", build], env=env())
 
 
@@ -89,7 +98,7 @@ def reset_to_bootsel_via_serial(port=None):
 
 
 def flash(args):
-    build(argparse.Namespace(variant=args.variant))
+    build(argparse.Namespace(variant=args.variant, usb_audio_class=args.usb_audio_class))
 
     if args.serial_reset:
         reset_to_bootsel_via_serial(args.port)
@@ -97,7 +106,7 @@ def flash(args):
     cmd = ["picotool", "load", "-f"]
     if args.execute:
         cmd.append("-x")
-    cmd.append(str(firmware_path(args.variant, "uf2")))
+    cmd.append(str(firmware_path(args.variant, args.usb_audio_class, "uf2")))
     try:
         run(cmd)
     except subprocess.CalledProcessError as exc:
@@ -201,6 +210,15 @@ def run_all(args):
     monitor(args)
 
 
+def add_usb_audio_class_argument(parser):
+    parser.add_argument(
+        "--usb-audio-class", "--uac",
+        choices=USB_AUDIO_CLASSES,
+        default=DEFAULT_USB_AUDIO_CLASS,
+        help="USB Audio Class target (default: %(default)s)",
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(prog="picoarc")
     parser.set_defaults(func=None)
@@ -209,6 +227,7 @@ def main():
     build_parser = sub.add_parser("build", help="configure and build firmware")
     build_parser.add_argument("variant", nargs="?", choices=("all",) + VARIANTS, default="all",
                               help="firmware variant to build")
+    add_usb_audio_class_argument(build_parser)
     build_parser.set_defaults(func=build)
 
     flash_parser = sub.add_parser("flash", help="build and flash firmware")
@@ -218,6 +237,7 @@ def main():
                               help="skip the 1200-baud CDC reset before picotool")
     flash_parser.add_argument("--no-execute", action="store_false", dest="execute",
                               help="flash, then reboot with a separate picotool command")
+    add_usb_audio_class_argument(flash_parser)
     flash_parser.set_defaults(func=flash, execute=True, serial_reset=True)
 
     monitor_parser = sub.add_parser("monitor", help="open USB serial monitor")
@@ -234,6 +254,7 @@ def main():
     run_parser.add_argument("--settle", type=float, default=0.75)
     run_parser.add_argument("--no-serial-reset", action="store_false", dest="serial_reset")
     run_parser.add_argument("--no-execute", action="store_false", dest="execute")
+    add_usb_audio_class_argument(run_parser)
     run_parser.set_defaults(func=run_all, execute=True, serial_reset=True)
 
     args = parser.parse_args()
