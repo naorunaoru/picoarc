@@ -32,6 +32,21 @@ set(CMAKE_CXX_STANDARD 17)
 set(PICOARC_VARIANT "debug" CACHE STRING "Firmware variant to build: debug or release")
 set_property(CACHE PICOARC_VARIANT PROPERTY STRINGS debug release)
 
+set(PICOARC_USB_AUDIO_CLASS "uac1" CACHE STRING "USB Audio Class target: uac1 or uac2")
+set_property(CACHE PICOARC_USB_AUDIO_CLASS PROPERTY STRINGS uac1 uac2)
+
+if(PICOARC_USB_AUDIO_CLASS STREQUAL "uac1")
+    set(PICOARC_UAC_VERSION 1)
+    set(PICOARC_OUTPUT_SUFFIX "")
+elseif(PICOARC_USB_AUDIO_CLASS STREQUAL "uac2")
+    set(PICOARC_UAC_VERSION 2)
+    set(PICOARC_OUTPUT_SUFFIX "-uac2")
+else()
+    message(FATAL_ERROR
+        "Unsupported PICOARC_USB_AUDIO_CLASS '${PICOARC_USB_AUDIO_CLASS}'. Use 'uac1' or 'uac2'."
+    )
+endif()
+
 if(PICOARC_VARIANT STREQUAL "debug")
     set(PICOARC_LOGGING 1)
     set(PICOARC_DEBUG_USB 1)
@@ -66,6 +81,7 @@ target_compile_definitions(picoarc PRIVATE
     PICOARC_VARIANT="${PICOARC_VARIANT}"
     PICOARC_LOGGING=${PICOARC_LOGGING}
     PICOARC_DEBUG_USB=${PICOARC_DEBUG_USB}
+    PICOARC_UAC_VERSION=${PICOARC_UAC_VERSION}
     PICO_STDIO_USB_USE_DEFAULT_DESCRIPTORS=0
     PICO_STDIO_USB_ENABLE_IRQ_BACKGROUND_TASK=0
     PICO_STDIO_USB_ENABLE_TINYUSB_INIT=0
@@ -94,7 +110,7 @@ target_link_libraries(picoarc
 )
 
 set_target_properties(picoarc PROPERTIES
-    OUTPUT_NAME "picoarc-${PICOARC_VARIANT}"
+    OUTPUT_NAME "picoarc-${PICOARC_VARIANT}${PICOARC_OUTPUT_SUFFIX}"
 )
 
 pico_enable_stdio_usb(picoarc ${PICOARC_DEBUG_USB})

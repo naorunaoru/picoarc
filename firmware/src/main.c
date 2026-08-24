@@ -124,9 +124,7 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
 
 #if PICOARC_DEBUG_USB
     if (*state == ADAPTER_STATE_DEBUG_USB) {
-        if (usb_audio_is_streaming()) {
-            usb_audio_task();
-        }
+        usb_audio_task();
         return;
     }
 #endif

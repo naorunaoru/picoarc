@@ -30,8 +30,8 @@ void spdif_set_stream_format(spdif_stream_format_t format);
 spdif_stream_format_t spdif_get_stream_format(void);
 // Switch the PIO output clock to the given sample rate. The encoder block
 // layout (192 stereo frames per DMA block) is sample-rate-agnostic — only the
-// PIO clkdiv changes. The host is required by UAC2 to drop alt=0 before
-// SET CUR on the clock source, so streaming is stopped when this is called.
+// PIO clkdiv changes. The USB audio path clears and refills its buffers around
+// USB SET_CUR rate changes.
 void spdif_set_sample_rate(uint32_t rate_hz);
 // samples is interleaved L/R 24-bit audio left-aligned in int32_t: the audio
 // MSB sits at bit 31 and the audio LSB at bit 8. Bits 7..0 are ignored. 16-bit

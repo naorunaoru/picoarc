@@ -11,15 +11,12 @@ recursively.
 ## TinyUSB
 
 TinyUSB is a git submodule at `tinyusb`, pinned to
-[`naorunaoru/tinyusb`](https://github.com/naorunaoru/tinyusb) commit
-[`3bdd2e5edc198e06e91263c2afc877b7cbb9a3da`](https://github.com/naorunaoru/tinyusb/commit/3bdd2e5edc198e06e91263c2afc877b7cbb9a3da).
-It is based on upstream 0.21.0 and changes asynchronous feedback encoding to
-follow the USB bus speed: full-speed uses the three-byte 10.14 format and
-high-speed uses four-byte 16.16.
-
-This is required because PicoARC presents UAC2 on the RP2040's full-speed USB
-controller. TinyUSB 0.20.0 and later otherwise select the four-byte format from
-the UAC version, which macOS does not accept for this endpoint.
+[`hathach/tinyusb`](https://github.com/hathach/tinyusb) commit
+[`dae3f9a366bfcddbf9dcf1b48d7500286a849539`](https://github.com/hathach/tinyusb/commit/dae3f9a366bfcddbf9dcf1b48d7500286a849539),
+the upstream 0.21.0 release. It emits the UAC1 three-byte 10.14 and UAC2
+four-byte 16.16 asynchronous feedback formats. PicoARC therefore no longer
+carries its former full-speed UAC2 feedback patch; the optional UAC2 target is
+not feedback-compatible with that legacy macOS-oriented build.
 
 Initialize the dependencies from the repository root:
 
