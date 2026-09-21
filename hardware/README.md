@@ -1,6 +1,9 @@
 # PicoARC Hardware
 
-The fab-ready PicoARC PCB design lives in this directory. The circuit is
+The PicoARC PCB design lives in this directory. This branch contains
+[completed USB-powered DDC routing](experiments/usb-powered-ddc.md) for using
+the board with separate monitor-flashing firmware. Layout checks pass;
+electrical bring-up remains outstanding. The circuit is
 authored with the [Zener](https://docs.pcb.new/pages/spec) toolchain from
 [Diode](https://github.com/diodeinc/pcb), and the physical board layout is kept
 as a generated/synced [KiCad](https://kicad.org/) project.

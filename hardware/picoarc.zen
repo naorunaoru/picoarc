@@ -106,6 +106,7 @@ DDC_SDA_5V = Net("DDC_SDA_5V")
 DDC_SCL_5V = Net("DDC_SCL_5V")
 HdmiArc(
     name="HDMI",
+    VDD_5V=VDD_5V,
     VDD_3V3=VDD_3V3,
     GND=GND,
     ARC_TX=ARC_TX,
