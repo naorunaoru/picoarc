@@ -1,5 +1,5 @@
 .PHONY: build build-release build-debug build-uac2 build-release-uac2 build-debug-uac2 \
-	flash flash-debug flash-uac2 flash-debug-uac2 monitor run run-uac2
+	test-sanitizers flash flash-debug flash-uac2 flash-debug-uac2 monitor run run-uac2
 
 build:
 	./picoarc build
@@ -18,6 +18,11 @@ build-release-uac2:
 
 build-debug-uac2:
 	./picoarc build debug --uac uac2
+
+test-sanitizers:
+	cmake -S firmware/tests -B firmware/build-host-sanitizers -G Ninja -DCMAKE_BUILD_TYPE=Release
+	cmake --build firmware/build-host-sanitizers
+	ctest --test-dir firmware/build-host-sanitizers --output-on-failure
 
 flash:
 	./picoarc flash
