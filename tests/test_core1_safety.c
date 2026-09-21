@@ -58,10 +58,19 @@ int main(void) {
     assert(cec.pending && cec.volume_valid && cec.volume == 42);
     assert(!cec.muted && cec.notify_host);
 
+    cec_status_mailbox_t taken;
+    assert(cec_status_take(&cec, &taken));
+    assert(taken.volume_valid && taken.volume == 42 && !taken.muted);
+    cec_status_post_mute(&cec, true, false);
+    assert(cec_status_take(&cec, &taken));
+    assert(!taken.volume_valid && taken.muted);
+
     cec_status_post_full(&cec, 67, false, false);
     cec_status_post_mute(&cec, true, true);
     assert(cec.volume_valid && cec.volume == 67 && cec.muted);
     assert(cec.notify_host);
+    assert(cec_status_take(&cec, &taken));
+    assert(taken.volume_valid && taken.volume == 67 && taken.muted);
 
     cec_status_post_full(&cec, 10, true, false);
     cec_status_post_full(&cec, 11, false, false);

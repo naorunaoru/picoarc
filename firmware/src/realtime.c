@@ -144,10 +144,7 @@ static void apply_core0_controls(bool *attached,
     bool apply_audio_name = false;
     char audio_name[sizeof(shared.audio_name)];
     bool apply_cec_status;
-    bool cec_volume_valid;
-    uint8_t cec_audio_volume;
-    bool cec_audio_muted;
-    bool cec_audio_notify_host;
+    cec_status_mailbox_t cec_status;
 
     critical_section_enter_blocking(&shared_lock);
     desired_attached = shared.desired_usb_attached;
@@ -162,13 +159,7 @@ static void apply_core0_controls(bool *attached,
         apply_audio_name = true;
     }
 
-    apply_cec_status = shared.cec_status.pending;
-    cec_volume_valid = shared.cec_status.volume_valid;
-    cec_audio_volume = shared.cec_status.volume;
-    cec_audio_muted = shared.cec_status.muted;
-    cec_audio_notify_host = shared.cec_status.notify_host;
-    shared.cec_status.pending = false;
-    shared.cec_status.notify_host = false;
+    apply_cec_status = cec_status_take(&shared.cec_status, &cec_status);
     critical_section_exit(&shared_lock);
 
     if (apply_caps) {
@@ -181,12 +172,13 @@ static void apply_core0_controls(bool *attached,
             usb_descriptors_reset_audio_name();
         }
     }
-    if (apply_cec_status && cec_volume_valid) {
-        usb_audio_set_cec_audio_status(cec_audio_volume,
-                                       cec_audio_muted,
-                                       cec_audio_notify_host);
+    if (apply_cec_status && cec_status.volume_valid) {
+        usb_audio_set_cec_audio_status(cec_status.volume,
+                                       cec_status.muted,
+                                       cec_status.notify_host);
     } else if (apply_cec_status) {
-        usb_audio_set_cec_mute_status(cec_audio_muted, cec_audio_notify_host);
+        usb_audio_set_cec_mute_status(cec_status.muted,
+                                      cec_status.notify_host);
     }
 
     if (desired_attached == *attached) {
@@ -382,7 +374,17 @@ bool realtime_take_reset_request(realtime_reset_request_t *request) {
     return pending;
 }
 
+#if PICOARC_DEBUG_USB
 static uint8_t reset_interface_number;
+
+static void resetd_init(void) {
+    reset_interface_number = UINT8_MAX;
+}
+
+static void resetd_reset(uint8_t rhport) {
+    (void)rhport;
+    reset_interface_number = UINT8_MAX;
+}
 
 static uint16_t resetd_open(uint8_t rhport, tusb_desc_interface_t const *desc,
                             uint16_t max_len) {
@@ -430,8 +432,8 @@ static usbd_class_driver_t const reset_driver = {
 #if CFG_TUSB_DEBUG >= 2
     .name = "RESET",
 #endif
-    .init = NULL,
-    .reset = NULL,
+    .init = resetd_init,
+    .reset = resetd_reset,
     .open = resetd_open,
     .control_xfer_cb = resetd_control,
     .xfer_cb = resetd_xfer,
@@ -442,6 +444,7 @@ usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *count) {
     *count = 1;
     return &reset_driver;
 }
+#endif
 
 void realtime_post_volume_request(uint8_t volume) {
     critical_section_enter_blocking(&shared_lock);

@@ -29,4 +29,14 @@ static inline void cec_status_post_mute(cec_status_mailbox_t *box,
     box->notify_host |= notify_host;
 }
 
+static inline bool cec_status_take(cec_status_mailbox_t *box,
+                                   cec_status_mailbox_t *snapshot) {
+    if (!box->pending) return false;
+    *snapshot = *box;
+    box->pending = false;
+    box->volume_valid = false;
+    box->notify_host = false;
+    return true;
+}
+
 #endif
