@@ -344,8 +344,9 @@ bool realtime_take_usb_recovery_request(void) {
 }
 
 #if PICOARC_DEBUG_USB
-// TinyUSB invokes this callback from core 1. Entering the RP2040 boot ROM from
-// there wedges the other core, so defer the actual BOOTSEL reset to core 0.
+// TinyUSB invokes this callback from core 1. The BOOTSEL ROM path arms a short
+// watchdog reset, while core 0 normally feeds that watchdog. Defer the reset
+// to core 0 so it stops feeding before entering the ROM path.
 void tud_cdc_line_coding_cb(uint8_t itf,
                             cdc_line_coding_t const *line_coding) {
     (void)itf;

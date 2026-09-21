@@ -71,9 +71,9 @@ static volatile unsigned int usb_underrun_frames;
 static volatile unsigned int usb_high_water_frames;
 static volatile unsigned int usb_low_water_frames;
 static volatile unsigned int spdif_dma_late_blocks;
-static volatile unsigned int spdif_dma_rearm_races;
+static volatile unsigned int spdif_dma_build_deadline_misses;
 static volatile unsigned int spdif_dma_max_build_us;
-static volatile unsigned int spdif_dma_sequence_errors;
+static volatile unsigned int spdif_adaptive_skipped_updates;
 static volatile unsigned int spdif_pio_stall_events;
 static volatile uint32_t current_sample_rate = SPDIF_DEFAULT_SAMPLE_RATE_HZ;
 static volatile unsigned int current_sample_bits = 16;
@@ -640,7 +640,7 @@ void spdif_task(void) {
     const uint32_t completed = dma_completions;
     if (completed != adaptive_seen_dma_completions) {
         if (completed - adaptive_seen_dma_completions > 1) {
-            spdif_dma_sequence_errors +=
+            spdif_adaptive_skipped_updates +=
                 completed - adaptive_seen_dma_completions - 1;
         }
         adaptive_seen_dma_completions = completed;
@@ -672,7 +672,7 @@ void spdif_task(void) {
             spdif_dma_max_build_us = build_us;
         }
         if (build_us >= remaining_us) {
-            spdif_dma_rearm_races++;
+            spdif_dma_build_deadline_misses++;
         }
 
         irq_state = save_and_disable_interrupts();
@@ -842,9 +842,9 @@ void spdif_clear_usb_buffer(void) {
     adaptive_buffered_frames_valid = false;
     critical_section_exit(&adaptive_clock_critical_section);
 #endif
-    spdif_dma_rearm_races = 0;
+    spdif_dma_build_deadline_misses = 0;
     spdif_dma_max_build_us = 0;
-    spdif_dma_sequence_errors = 0;
+    spdif_adaptive_skipped_updates = 0;
     spdif_pio_stall_events = 0;
     restore_interrupts(irq_state);
 }
@@ -862,18 +862,18 @@ void spdif_take_usb_stats(spdif_usb_stats_t *stats) {
                                   usb_low_water_frames;
     stats->underrun_frames = usb_underrun_frames;
     stats->dma_late_blocks = spdif_dma_late_blocks;
-    stats->dma_rearm_races = spdif_dma_rearm_races;
+    stats->dma_build_deadline_misses = spdif_dma_build_deadline_misses;
     stats->dma_max_build_us = spdif_dma_max_build_us;
-    stats->dma_sequence_errors = spdif_dma_sequence_errors;
+    stats->adaptive_skipped_updates = spdif_adaptive_skipped_updates;
     stats->pio_stall_events = spdif_pio_stall_events;
 
     usb_high_water_frames = stats->buffered_frames;
     usb_low_water_frames = stats->buffered_frames;
     usb_underrun_frames = 0;
     spdif_dma_late_blocks = 0;
-    spdif_dma_rearm_races = 0;
+    spdif_dma_build_deadline_misses = 0;
     spdif_dma_max_build_us = 0;
-    spdif_dma_sequence_errors = 0;
+    spdif_adaptive_skipped_updates = 0;
     spdif_pio_stall_events = 0;
     restore_interrupts(irq_state);
 }

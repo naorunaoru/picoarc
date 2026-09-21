@@ -1161,15 +1161,15 @@ void usb_audio_task(void) {
         min_packet_bytes = UINT16_MAX;
         max_packet_bytes = 0;
         restore_interrupts(irq_state);
-        printf("usb-audio: buf=%u lo=%u hi=%u under=%u dma-late=%u rearm-race=%u build-max=%uus dma-seq=%u pio-stall=%u drop=%u gated=%u\n",
+        printf("usb-audio: buf=%u lo=%u hi=%u under=%u dma-late=%u build-miss=%u build-max=%uus clock-skip=%u pio-stall=%u drop=%u gated=%u\n",
                stats.buffered_frames,
                stats.low_water_frames,
                stats.high_water_frames,
                stats.underrun_frames,
                stats.dma_late_blocks,
-               stats.dma_rearm_races,
+               stats.dma_build_deadline_misses,
                stats.dma_max_build_us,
-               stats.dma_sequence_errors,
+               stats.adaptive_skipped_updates,
                stats.pio_stall_events,
                dropped_frames,
                gated_frames);

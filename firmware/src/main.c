@@ -377,7 +377,7 @@ int main(void) {
 #endif
 
     // Core 1 owns TinyUSB, UAC2, and S/PDIF for the rest of the boot. It does
-    // not pump USB until the chained S/PDIF DMA path is ready.
+    // not pump USB until the S/PDIF DMA buffers and completion IRQ are ready.
     realtime_start(PICOARC_SPDIF_PIN);
 #if PICOARC_DDC_EDID_ENABLE
     ddc_edid_init(PICOARC_DDC_EDID_SDA_PIN, PICOARC_DDC_EDID_SCL_PIN);

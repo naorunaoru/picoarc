@@ -8,6 +8,10 @@ __pycache__/
 
 # CMake and Pico SDK build outputs
 firmware/build*/
+/build-debug-uac1/
+/build-debug-uac2/
+/build-release-uac1/
+/build-release-uac2/
 *.bin
 *.dis
 *.elf
