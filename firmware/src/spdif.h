@@ -54,9 +54,9 @@ void spdif_set_rate_adjustment_ppm(int32_t adjustment_ppm);
 bool spdif_adaptive_buffered_frames(unsigned int *frames);
 #endif
 // samples is interleaved L/R 24-bit audio left-aligned in int32_t: the audio
-// MSB sits at bit 31 and the audio LSB at bit 8. Bits 7..0 are ignored. 16-bit
-// 16-bit callers should use defined multiplication by 65536 (see
-// pcm16_to_internal()) rather than left-shifting a negative signed value.
+// MSB sits at bit 31 and the audio LSB at bit 8. Bits 7..0 are ignored.
+// Callers use audio_samples_decode_le() to produce this representation without
+// shifting negative signed values.
 unsigned int spdif_write_pcm(const int32_t *samples, unsigned int frame_count);
 unsigned int spdif_buffered_frames(void);
 void spdif_clear_usb_buffer(void);
