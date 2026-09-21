@@ -121,7 +121,10 @@ static bool active_alt_uses_24_bit_subslot(void) {
 static unsigned int active_alt_sample_bits(void) {
     switch (active_alt) {
     case PICOARC_AUDIO_ALT_PCM_16:
-    case PICOARC_AUDIO_ALT_IEC61937:
+#if PICOARC_UAC_VERSION == 2
+    case PICOARC_AUDIO_ALT_IEC61937_AC3:
+    case PICOARC_AUDIO_ALT_IEC61937_DTS:
+#endif
         return 16;
     case PICOARC_AUDIO_ALT_PCM_20:
         return 20;
@@ -238,9 +241,12 @@ static bool audio_format_supported(uint8_t alt, uint32_t sample_rate,
     case PICOARC_AUDIO_ALT_PCM_24:
         supported = (arc_caps.pcm_rates_24 & rate_bit) != 0;
         break;
-    case PICOARC_AUDIO_ALT_IEC61937:
+#if PICOARC_UAC_VERSION == 2
+    case PICOARC_AUDIO_ALT_IEC61937_AC3:
+    case PICOARC_AUDIO_ALT_IEC61937_DTS:
         supported = ((arc_caps.ac3_rates | arc_caps.dts_rates) & rate_bit) != 0;
         break;
+#endif
     default:
         break;
     }
@@ -664,7 +670,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *r
                    requested_mute ? "on" : "off",
                    channel_number);
         }
-        arc_request_mute_sync(requested_mute != 0);
+        realtime_post_mute_request(requested_mute != 0);
         return true;
     }
 
@@ -683,7 +689,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *r
                    cec_volume,
                    channel_number);
         }
-        arc_request_volume_sync(cec_volume);
+        realtime_post_volume_request(cec_volume);
         return true;
     }
 

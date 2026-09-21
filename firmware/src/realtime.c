@@ -7,9 +7,11 @@
 #include "pico/stdlib.h"
 #include "picoarc_config.h"
 #include "picoarc_log.h"
+#include "cec_status_mailbox.h"
 #include "pico/usb_reset_interface.h"
 #include "spdif.h"
 #include "tusb.h"
+#include "device/usbd_pvt.h"
 #include "usb_audio.h"
 #include "usb_descriptors.h"
 
@@ -27,11 +29,7 @@ typedef struct {
     char audio_name[33];
     uint32_t audio_name_generation;
 
-    bool cec_status_pending;
-    bool cec_volume_valid;
-    uint8_t cec_audio_volume;
-    bool cec_audio_muted;
-    bool cec_audio_notify_host;
+    cec_status_mailbox_t cec_status;
 
     bool volume_request_pending;
     uint8_t requested_volume;
@@ -164,12 +162,13 @@ static void apply_core0_controls(bool *attached,
         apply_audio_name = true;
     }
 
-    apply_cec_status = shared.cec_status_pending;
-    cec_volume_valid = shared.cec_volume_valid;
-    cec_audio_volume = shared.cec_audio_volume;
-    cec_audio_muted = shared.cec_audio_muted;
-    cec_audio_notify_host = shared.cec_audio_notify_host;
-    shared.cec_status_pending = false;
+    apply_cec_status = shared.cec_status.pending;
+    cec_volume_valid = shared.cec_status.volume_valid;
+    cec_audio_volume = shared.cec_status.volume;
+    cec_audio_muted = shared.cec_status.muted;
+    cec_audio_notify_host = shared.cec_status.notify_host;
+    shared.cec_status.pending = false;
+    shared.cec_status.notify_host = false;
     critical_section_exit(&shared_lock);
 
     if (apply_caps) {
@@ -306,19 +305,13 @@ void realtime_set_audio_name(const char *name) {
 
 void realtime_set_cec_audio_status(uint8_t volume, bool muted, bool notify_host) {
     critical_section_enter_blocking(&shared_lock);
-    shared.cec_audio_volume = volume;
-    shared.cec_audio_muted = muted;
-    shared.cec_audio_notify_host = notify_host;
-    shared.cec_volume_valid = true;
-    shared.cec_status_pending = true;
+    cec_status_post_full(&shared.cec_status, volume, muted, notify_host);
     critical_section_exit(&shared_lock);
 }
 
 void realtime_set_cec_mute_status(bool muted, bool notify_host) {
     critical_section_enter_blocking(&shared_lock);
-    shared.cec_audio_muted = muted;
-    shared.cec_audio_notify_host |= notify_host;
-    shared.cec_status_pending = true;
+    cec_status_post_mute(&shared.cec_status, muted, notify_host);
     critical_section_exit(&shared_lock);
 }
 
@@ -437,9 +430,12 @@ static usbd_class_driver_t const reset_driver = {
 #if CFG_TUSB_DEBUG >= 2
     .name = "RESET",
 #endif
+    .init = NULL,
+    .reset = NULL,
     .open = resetd_open,
     .control_xfer_cb = resetd_control,
     .xfer_cb = resetd_xfer,
+    .sof = NULL,
 };
 
 usbd_class_driver_t const *usbd_app_driver_get_cb(uint8_t *count) {

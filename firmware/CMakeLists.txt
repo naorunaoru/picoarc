@@ -108,6 +108,7 @@ target_link_libraries(picoarc
     pico_i2c_slave
     pico_multicore
     pico_unique_id
+    pico_usb_reset_interface_headers
     hardware_clocks
     hardware_dma
     hardware_i2c
