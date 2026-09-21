@@ -10,8 +10,7 @@
 #include "picoarc_config.h"
 #include "picoarc_log.h"
 #include "pico/stdlib.h"
-#include "spdif.h"
-#include "usb_audio.h"
+#include "realtime.h"
 #include "usb_descriptors.h"
 
 static unsigned int hdmi_5v_pin;
@@ -707,7 +706,7 @@ static bool send_report_arc_initiated(void) {
 }
 
 static bool audio_is_streaming(void) {
-    return usb_audio_is_streaming();
+    return realtime_usb_streaming();
 }
 
 static const char *sad_format_name(uint8_t format_code) {
@@ -868,7 +867,7 @@ static void reset_soundbar_osd_name(void) {
     soundbar_name_probe_started = false;
     soundbar_name_ready = false;
     soundbar_name_deadline = make_timeout_time_ms(0);
-    usb_descriptors_reset_audio_name();
+    realtime_reset_audio_name();
 }
 
 static bool soundbar_name_ready_for_usb(void) {
@@ -931,7 +930,7 @@ static void capture_soundbar_osd_name(const cec_frame_t *frame) {
     }
 
     memcpy(soundbar_osd_name, name, out + 1);
-    usb_descriptors_set_audio_name(soundbar_osd_name);
+    realtime_set_audio_name(soundbar_osd_name);
     printf("arc: soundbar OSD name=\"%s\"; USB audio descriptor will use it\n", soundbar_osd_name);
 }
 
@@ -1111,7 +1110,7 @@ static void update_cec_audio_status(uint8_t status) {
     if (volume <= 100) {
         cec_audio_volume = volume;
         cec_audio_volume_known = true;
-        usb_audio_set_cec_audio_status(volume, muted, notify_host);
+        realtime_set_cec_audio_status(volume, muted, notify_host);
         if (absolute_volume_verify_pending) {
             absolute_volume_verify_pending = false;
             if (volume != absolute_volume_verify_target) {
@@ -1125,7 +1124,7 @@ static void update_cec_audio_status(uint8_t status) {
             }
         }
     } else {
-        usb_audio_set_cec_mute_status(muted, notify_host);
+        realtime_set_cec_mute_status(muted, notify_host);
         printf("arc: audio-status volume unknown muted=%s\n", muted ? "yes" : "no");
     }
 }
@@ -1169,7 +1168,7 @@ static bool continue_relative_volume_sync(bool source_5v, bool bus_high) {
                (unsigned long long)(tx_end_us - tx_start_us),
                cec_audio_volume,
                relative_volume_target,
-               spdif_buffered_frames());
+               realtime_spdif_buffered_frames());
     } else {
         printf("arc: relative volume step key=%s now=%u target=%u ack=%s src5v=%d idle=%d\n",
                user_control_name(key),
@@ -1189,7 +1188,7 @@ static bool continue_relative_volume_sync(bool source_5v, bool bus_high) {
                    (unsigned long long)(release_start_us / 1000),
                    release_ack ? "yes" : "no",
                    (unsigned long long)(release_end_us - release_start_us),
-                   spdif_buffered_frames());
+                   realtime_spdif_buffered_frames());
         }
     }
 
@@ -1854,6 +1853,22 @@ bool arc_audio_caps_ready(void) {
 
 bool arc_ready_for_usb(void) {
     return arc_initiated && arc_audio_caps_ready() && soundbar_name_ready_for_usb();
+}
+
+void arc_get_audio_caps_snapshot(picoarc_audio_caps_t *caps) {
+    if (!caps) {
+        return;
+    }
+
+    *caps = (picoarc_audio_caps_t){
+        .arc_initiated = arc_initiated,
+        .caps_ready = sad_query_finished(),
+        .pcm_rates_16 = sad_pcm_rates_16,
+        .pcm_rates_20 = sad_pcm_rates_20,
+        .pcm_rates_24 = sad_pcm_rates_24,
+        .ac3_rates = sad_ac3_rates,
+        .dts_rates = sad_dts_rates,
+    };
 }
 
 static bool audio_format_supported(uint8_t alt, uint32_t sample_rate, bool log_rejection) {

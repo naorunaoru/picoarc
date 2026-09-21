@@ -132,14 +132,25 @@ CC=clang make test-sanitizers
 ```
 
 The compiler selection is cached in `firmware/build-host-sanitizers`; remove
-that generated directory before switching compilers. The tests compile the
-same USB audio sample decoder used by the firmware and cover the supported
-16-, 20-, and 24-bit subslots, including IEC 61937 words, unaligned byte input,
-buffer bounds, and the maximum audio-task batch.
+that generated directory before switching compilers. CTest runs two suites
+with unconditional checks that remain active in Release builds. The audio
+suite compiles the same USB sample decoder used by the firmware and covers the
+supported 16-, 20-, and 24-bit subslots, including IEC 61937 words, unaligned
+byte input, buffer bounds, and the maximum audio-task batch. The core-1 suite
+exercises the production DMA ownership transitions, repeated missed refills,
+and CEC status ordering and coalescing.
+
+At 96 kHz, the joined eight-word PIO FIFO provides about 21 microseconds for
+the DMA completion IRQ to start the next prepared block. If core 1 misses a
+whole refill interval, the IRQ safely replays the completed 192-frame block
+and increments `dma_late_blocks`; that repetition can still be audible.
 
 The RP2040 firmware remains on its normal embedded build path and is not
-instrumented. Host tests cannot validate DMA and PIO timing, multicore races,
-interrupt behavior, or flash-blackout behavior on the device.
+instrumented. Host tests prove bounded source ownership but cannot validate
+DMA and PIO timing, carrier continuity, multicore races, interrupt behavior,
+USB behavior, reset behavior, or audio quality on hardware. No settings writer
+currently exists, and `copy_to_ram` plus `PICO_FLASH_ASSUME_CORE1_SAFE` is not
+flash-write validation.
 
 ## Flash
 

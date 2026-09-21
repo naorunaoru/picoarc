@@ -65,6 +65,8 @@ add_executable(picoarc
     src/audio_samples.c
     src/cec.c
     src/ddc_edid.c
+    src/picoarc_log.c
+    src/realtime.c
     src/spdif.c
     src/usb_audio.c
     src/usb_descriptors.c
@@ -83,12 +85,17 @@ target_compile_definitions(picoarc PRIVATE
     PICOARC_LOGGING=${PICOARC_LOGGING}
     PICOARC_DEBUG_USB=${PICOARC_DEBUG_USB}
     PICOARC_UAC_VERSION=${PICOARC_UAC_VERSION}
+    PICO_FLASH_ASSUME_CORE1_SAFE=1
     PICO_STDIO_USB_USE_DEFAULT_DESCRIPTORS=0
     PICO_STDIO_USB_ENABLE_IRQ_BACKGROUND_TASK=0
     PICO_STDIO_USB_ENABLE_TINYUSB_INIT=0
-    PICO_STDIO_USB_ENABLE_RESET_VIA_BAUD_RATE=1
+    # TinyUSB runs on core 1, but the RP2040 ROM BOOTSEL entry must be made
+    # from core 0. realtime.c supplies a mailbox-backed 1200-baud callback.
+    PICO_STDIO_USB_ENABLE_RESET_VIA_BAUD_RATE=0
     PICO_STDIO_USB_RESET_MAGIC_BAUD_RATE=1200
-    PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=1
+    # realtime.c owns the vendor reset driver so both reset paths can cross
+    # the mailbox before core 0 enters ROM or arms the watchdog.
+    PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=0
     PICO_STDIO_USB_RESET_BOOTSEL_INTERFACE_DISABLE_MASK=0
     PICO_STDIO_USB_RESET_RESET_TO_FLASH_DELAY_MS=100
     PICO_STDIO_USB_RESET_INTERFACE_SUPPORT_RESET_TO_BOOTSEL=1
@@ -101,6 +108,7 @@ target_link_libraries(picoarc
     pico_i2c_slave
     pico_multicore
     pico_unique_id
+    pico_usb_reset_interface_headers
     hardware_clocks
     hardware_dma
     hardware_i2c
@@ -113,6 +121,11 @@ target_link_libraries(picoarc
 set_target_properties(picoarc PROPERTIES
     OUTPUT_NAME "picoarc-${PICOARC_VARIANT}${PICOARC_OUTPUT_SUFFIX}"
 )
+
+# Settings writes will temporarily make XIP unavailable. Copy the complete
+# firmware image into SRAM at boot so core 1 can continue servicing USB and
+# S/PDIF while core 0 performs a flash erase/program operation.
+pico_set_binary_type(picoarc copy_to_ram)
 
 pico_enable_stdio_usb(picoarc ${PICOARC_DEBUG_USB})
 pico_enable_stdio_uart(picoarc 0)
