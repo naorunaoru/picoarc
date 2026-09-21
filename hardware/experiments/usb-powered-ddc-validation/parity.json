@@ -1,0 +1,21 @@
+{
+  "result": "pass",
+  "components": 72,
+  "unique_pins": 240,
+  "numbered_physical_pads": 246,
+  "nets": 77,
+  "checks": [
+    "reference set",
+    "component values",
+    "footprint IDs",
+    "schematic UUIDs",
+    "every numbered physical pad net, including duplicate pads and no-connect nets"
+  ],
+  "sha256": {
+    "layout.kicad_pcb": "7de4d0086b631079f5f2e6e851ca473afa46f1d986250ac9870acb5fadf493c0",
+    "default.net": "2b919c5ec8237be52787048cb475fa753f6adb3c8468a63503d8ace2abad0ab2",
+    "snapshot.layout.json": "c5734af6468df5861e544da739f67139c8e33d38e12ea840c0f66bd84f51960d",
+    "layout.kicad_pro": "540bb176ab7d53ac7b1c4a4e604e4435ea4044ea8ca56f997d20ca8046ba9a62",
+    "layout.kicad_dru": "4c793d7bae4892b7ea1c63a275a58c897049646241240ba92af0e64c8040d741"
+  }
+}

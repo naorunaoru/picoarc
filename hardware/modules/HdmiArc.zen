@@ -245,7 +245,10 @@ Resistor(
 # (100pF) filter, per TI SCPS113O — the internal reference then regulates the
 # gate node to ~VREF1+Vth. Never hard-tie VREF2 to the 5V rail (pass-FET damage
 # risk) or EN to 3V3 (below the VREF1+0.6V enable minimum). USB power keeps the
-# DDC translator available even when the connected device does not source HDMI +5V.
+# DDC translator available for USB-DDC master firmware (e.g. monitor flashing)
+# even when the target does not source HDMI +5V. This does not supply HDMI pin 18
+# or change stock ARC/EDID firmware. See experiments/usb-powered-ddc.md for
+# pull-up loading and powered-off target limitations in the two operating roles.
 Resistor(
     name="R8",
     value="2.2kohm",
