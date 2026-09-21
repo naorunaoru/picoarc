@@ -1,0 +1,30 @@
+name: Host sanitizers
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.compiler }} ASan + UBSan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - gcc
+          - clang
+
+    steps:
+      - name: Checkout PicoARC
+        uses: actions/checkout@v4
+
+      - name: Run host sanitizer tests
+        env:
+          CC: ${{ matrix.compiler }}
+        run: make test-sanitizers

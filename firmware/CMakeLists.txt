@@ -62,6 +62,7 @@ pico_sdk_init()
 add_executable(picoarc
     src/main.c
     src/arc.c
+    src/audio_samples.c
     src/cec.c
     src/ddc_edid.c
     src/spdif.c

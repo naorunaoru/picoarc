@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "arc.h"
+#include "audio_samples.h"
 #include "picoarc_config.h"
 #include "picoarc_log.h"
 #include "pico/time.h"
@@ -971,26 +972,13 @@ void usb_audio_task(void) {
             continue;
         }
 
-        if (bytes_per_sample == 3u) {
-            // Unpack interleaved 20/24-bit little-endian subslots into the
-            // encoder's 24-bit-left-aligned int32 representation. PCM is
-            // left-justified within the subslot, so 20-bit trailing padding
-            // naturally stays in the low bits.
-            for (unsigned int i = 0; i < frames * CHANNELS; i++) {
-                const uint8_t *p = &pcm_bytes[i * 3];
-                const uint32_t raw = ((uint32_t)p[0] << 8) |
-                                     ((uint32_t)p[1] << 16) |
-                                     ((uint32_t)p[2] << 24);
-                pcm_frames[i] = (int32_t)raw;
-            }
-        } else {
-            // Promote 16-bit PCM/IEC 61937 words into the encoder's
-            // 24-bit-left-aligned representation.
-            const int16_t *src = (const int16_t *)pcm_bytes;
-            for (unsigned int i = 0; i < frames * CHANNELS; i++) {
-                pcm_frames[i] = (int32_t)src[i] << 16;
-            }
-        }
+        // Decode complete little-endian USB subslots into the encoder's
+        // 24-bit-left-aligned representation. 20-bit PCM is left-justified
+        // within its 24-bit subslot, so its trailing padding is preserved.
+        (void)audio_samples_decode_le(pcm_frames, frames * CHANNELS,
+                                      pcm_bytes,
+                                      frames * bytes_per_frame,
+                                      bytes_per_sample);
 
         unsigned int written = spdif_write_pcm(pcm_frames, frames);
         if (written < frames) {

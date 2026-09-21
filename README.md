@@ -119,6 +119,28 @@ provides one. The debug variant keeps the USB serial log and reset interface
 online for bring-up work, so it enumerates immediately with the default audio
 descriptor.
 
+## Host sanitizer tests
+
+The host tests require CMake, Ninja, and a native Clang or GCC installation
+with AddressSanitizer and UndefinedBehaviorSanitizer runtimes. They do not need
+the Pico SDK, Arm compiler, or initialized submodules. Run them with the
+default C compiler or select one before the first configure:
+
+```sh
+make test-sanitizers
+CC=clang make test-sanitizers
+```
+
+The compiler selection is cached in `firmware/build-host-sanitizers`; remove
+that generated directory before switching compilers. The tests compile the
+same USB audio sample decoder used by the firmware and cover the supported
+16-, 20-, and 24-bit subslots, including IEC 61937 words, unaligned byte input,
+buffer bounds, and the maximum audio-task batch.
+
+The RP2040 firmware remains on its normal embedded build path and is not
+instrumented. Host tests cannot validate DMA and PIO timing, multicore races,
+interrupt behavior, or flash-blackout behavior on the device.
+
 ## Flash
 
 Connect the Pico over USB, then run:
