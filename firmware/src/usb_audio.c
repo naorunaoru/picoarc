@@ -243,8 +243,10 @@ static bool audio_format_supported(uint8_t alt, uint32_t sample_rate,
         break;
 #if PICOARC_UAC_VERSION == 2
     case PICOARC_AUDIO_ALT_IEC61937_AC3:
+        supported = (arc_caps.ac3_rates & rate_bit) != 0;
+        break;
     case PICOARC_AUDIO_ALT_IEC61937_DTS:
-        supported = ((arc_caps.ac3_rates | arc_caps.dts_rates) & rate_bit) != 0;
+        supported = (arc_caps.dts_rates & rate_bit) != 0;
         break;
 #endif
     default:
