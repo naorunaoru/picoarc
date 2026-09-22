@@ -1,6 +1,8 @@
 # PicoARC Hardware
 
-The fab-ready PicoARC PCB design lives in this directory. The circuit is
+The PicoARC PCB design lives in this directory. This branch contains an
+unfinished SWD connector alternative; its schematic and existing edge-pad
+layout are not synchronized for fabrication. The circuit is
 authored with the [Zener](https://docs.pcb.new/pages/spec) toolchain from
 [Diode](https://github.com/diodeinc/pcb), and the physical board layout is kept
 as a generated/synced [KiCad](https://kicad.org/) project.
@@ -26,6 +28,15 @@ Edit the Zen module tree when changing the circuit, then regenerate/sync the
 KiCad layout from that source.
 
 ## Debug Probe Access
+
+This draft replaces the schematic's edge-pad module with the earlier
+JST-SH `SM03B-SRSS-TB` connector proposal and two 100 ohm series resistors.
+Connector placement and cable clearance are unresolved. See
+[the SWD experiment notes](experiments/swd-connector.md) for recovery
+provenance and completion criteria.
+
+The checked-in PCB still contains the mainline edge-pad design described
+below; it has not been regenerated or routed for the connector proposal.
 
 `TP_SWD` is a compact row of three 1.0 x 2.0 mm edge test pads on 1.5 mm pitch.
 Connect it to Raspberry Pi Debug Probe using pogo pins or soldered leads. Its

@@ -1,19 +1,49 @@
-"""Compact SWD debug port."""
+"""Draft JST-SH SWD connector alternative; placement is unresolved.
+
+Recovered from the pre-edge-pad connector experiment. The checked-in PCB
+still has the merged edge pads; synchronize and place this circuit before
+using it for fabrication. See ../experiments/swd-connector.md.
+"""
 
 load("@stdlib/interfaces.zen", "Swd")
 
+Resistor = Module("@stdlib/generics/Resistor.zen")
 swd = io("swd", Swd)
 GND = io("GND", Ground)
 
-# Target perspective: pin 1 = SC / SWCLK, pin 2 = GND, pin 3 = SD / SWDIO.
+# Raspberry Pi 3-pin Debug Connector Specification:
+#   pin 1 = SC / SWCLK, pin 2 = GND, pin 3 = SD / SWDIO, target perspective.
+# The 100 ohm series resistors are the recommended target-side source termination.
+_SWD_CONN_SWCLK = Net("SWD_CONN_SWCLK")
+_SWD_CONN_SWDIO = Net("SWD_CONN_SWDIO")
+
+Resistor(
+    name="R_SWDCLK",
+    value="100ohm",
+    package="0402",
+    mpn="0402WGF1000TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=swd.SWCLK,
+    P2=_SWD_CONN_SWCLK,
+)
+Resistor(
+    name="R_SWDIO",
+    value="100ohm",
+    package="0402",
+    mpn="0402WGF1000TCE",
+    manufacturer="UNI-ROYAL(Uniroyal Elec)",
+    P1=swd.SWDIO,
+    P2=_SWD_CONN_SWDIO,
+)
 Component(
-    name="TP_SWD",
-    prefix="TP",
+    name="J_SWD",
     symbol=Symbol(
         library="gitlab.com/kicad/libraries/kicad-symbols/Connector_Generic.kicad_sym",
         name="Conn_01x03",
     ),
-    footprint=File("../footprints/picoarc.pretty/SWD_EdgePads_1x03_P1.50mm.kicad_mod"),
-    pins={"Pin_1": swd.SWCLK, "Pin_2": GND, "Pin_3": swd.SWDIO},
-    skip_bom=True,
+    footprint=File(
+        "gitlab.com/kicad/libraries/kicad-footprints/Connector_JST.pretty/JST_SH_SM03B-SRSS-TB_1x03-1MP_P1.00mm_Horizontal.kicad_mod"
+    ),
+    pins={"Pin_1": _SWD_CONN_SWCLK, "Pin_2": GND, "Pin_3": _SWD_CONN_SWDIO},
+    part=Part(mpn="SM03B-SRSS-TB", manufacturer="JST"),
 )
