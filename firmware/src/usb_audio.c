@@ -187,9 +187,6 @@ static int16_t clamp_host_volume(int16_t usb_volume) {
 }
 
 static uint8_t clamp_soundbar_volume(uint8_t cec_volume) {
-    if (cec_volume < SOUNDBAR_VOLUME_MIN) {
-        return SOUNDBAR_VOLUME_MIN;
-    }
     if (cec_volume > SOUNDBAR_VOLUME_MAX) {
         return SOUNDBAR_VOLUME_MAX;
     }
