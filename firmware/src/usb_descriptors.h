@@ -1,6 +1,9 @@
 #ifndef PICOARC_USB_DESCRIPTORS_H
 #define PICOARC_USB_DESCRIPTORS_H
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #ifndef PICOARC_DEBUG_USB
 #define PICOARC_DEBUG_USB 1
 #endif
@@ -68,6 +71,15 @@
 #else
 #include "usb_descriptors_uac2.h"
 #endif
+
+// Rebuild only while USB is detached; descriptors stay stable during enumeration.
+void usb_descriptors_prepare_audio(void);
+bool usb_descriptors_audio_changed(void);
+uint8_t usb_descriptors_audio_rate_mask(uint8_t format);
+uint8_t usb_descriptors_audio_format(uint8_t usb_alt);
+uint32_t usb_audio_rate_at(unsigned int index);
+bool usb_audio_rate_in_mask(uint8_t mask, uint32_t rate);
+uint32_t usb_audio_nearest_rate(uint8_t mask, uint32_t requested);
 
 void usb_descriptors_set_audio_name(const char *name);
 void usb_descriptors_reset_audio_name(void);

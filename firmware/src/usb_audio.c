@@ -12,6 +12,14 @@
 #include "spdif.h"
 #include "tusb.h"
 #include "usb_descriptors.h"
+#if PICOARC_USB_DIAGNOSTICS
+#include "ddc_edid.h"
+#include "diagnostics_trace.h"
+#include "hardware/gpio.h"
+#include "hardware/structs/io_bank0.h"
+#include "hardware/structs/watchdog.h"
+#include "pico/bootrom.h"
+#endif
 
 enum {
     DEFAULT_SAMPLE_RATE = PICOARC_AUDIO_SAMPLE_RATE_DEFAULT,
@@ -79,6 +87,23 @@ static uint64_t stream_packet_deadline_us;
 static volatile uint32_t stream_packet_count;
 static uint32_t observed_stream_packet_count;
 static bool recovery_requested;
+#if PICOARC_USB_DIAGNOSTICS
+static volatile uint32_t diagnostics_rx_packets;
+static volatile uint32_t diagnostics_rx_bytes;
+static uint32_t diagnostics_nonzero_bytes;
+static uint32_t diagnostics_written_frames;
+static uint32_t diagnostics_gated_frames;
+static bool diagnostics_usb_reconnect_pending;
+static uint32_t diagnostics_usb_reconnect_requests;
+static uint32_t diagnostics_usb_reconnect_uptime_ms;
+static bool diagnostics_hdmi_recovery_pending;
+static uint32_t diagnostics_hdmi_recovery_requests;
+static uint32_t diagnostics_hdmi_recovery_uptime_ms;
+static uint8_t diagnostics_isolated_pending;
+static uint32_t diagnostics_isolated_requests;
+static uint32_t diagnostics_isolated_uptime_ms;
+static uint32_t diagnostics_last_isolated_action;
+#endif
 #if PICOARC_UAC_VERSION == 2
 static uint8_t control_notifications_pending;
 #endif
@@ -124,46 +149,17 @@ static const char *active_alt_format_name(void) {
     }
 }
 
-#if PICOARC_UAC_VERSION == 2
-static bool sample_rate_supported(uint32_t sample_rate) {
-    switch (sample_rate) {
-    case PICOARC_AUDIO_SAMPLE_RATE_32K:
-    case PICOARC_AUDIO_SAMPLE_RATE_44K1:
-    case PICOARC_AUDIO_SAMPLE_RATE_48K:
-    case PICOARC_AUDIO_SAMPLE_RATE_88K2:
-    case PICOARC_AUDIO_SAMPLE_RATE_96K:
-        return true;
-    default:
-        return false;
-    }
-}
-#else
-static uint32_t closest_supported_sample_rate(uint32_t requested) {
-    // UAC1 5.2.3.2.3.1 requires a discrete-frequency endpoint to round an
-    // unsupported SET_CUR value and report the result through GET_CUR.
-    static const uint32_t sample_rates[] = {
-        PICOARC_AUDIO_SAMPLE_RATE_32K,
-        PICOARC_AUDIO_SAMPLE_RATE_44K1,
-        PICOARC_AUDIO_SAMPLE_RATE_48K,
-        PICOARC_AUDIO_SAMPLE_RATE_88K2,
-        PICOARC_AUDIO_SAMPLE_RATE_96K,
-    };
-
-    uint32_t closest = sample_rates[0];
-    uint32_t closest_delta = requested > closest ? requested - closest : closest - requested;
-
-    for (unsigned int i = 1; i < TU_ARRAY_SIZE(sample_rates); i++) {
-        const uint32_t candidate = sample_rates[i];
-        const uint32_t delta = requested > candidate ? requested - candidate : candidate - requested;
-        if (delta < closest_delta) {
-            closest = candidate;
-            closest_delta = delta;
+static uint8_t available_rate_mask(uint8_t format) {
+    uint8_t live = 0;
+    if (format == 0) {
+        for (unsigned int i = 1; i <= PICOARC_AUDIO_ALT_MAX; ++i) {
+            live |= arc_audio_rate_mask(i);
         }
+    } else {
+        live = arc_audio_rate_mask(format);
     }
-
-    return closest;
+    return usb_descriptors_audio_rate_mask(format) & live;
 }
-#endif
 
 static int16_t host_volume_min_256(void) {
     return HOST_VOLUME_MIN_DB * 256;
@@ -191,9 +187,6 @@ static int16_t clamp_host_volume(int16_t usb_volume) {
 }
 
 static uint8_t clamp_soundbar_volume(uint8_t cec_volume) {
-    if (cec_volume < SOUNDBAR_VOLUME_MIN) {
-        return SOUNDBAR_VOLUME_MIN;
-    }
     if (cec_volume > SOUNDBAR_VOLUME_MAX) {
         return SOUNDBAR_VOLUME_MAX;
     }
@@ -333,8 +326,12 @@ bool usb_audio_is_streaming(void) {
 }
 
 bool usb_audio_take_recovery_request(void) {
-    const bool requested = recovery_requested;
+    bool requested = recovery_requested;
     recovery_requested = false;
+#if PICOARC_USB_DIAGNOSTICS
+    requested |= diagnostics_usb_reconnect_pending;
+    diagnostics_usb_reconnect_pending = false;
+#endif
     return requested;
 }
 
@@ -445,6 +442,15 @@ static void apply_sample_rate(uint32_t sample_rate) {
            (unsigned long)active_sample_rate);
 }
 
+void usb_audio_prepare_connection(void) {
+    usb_descriptors_prepare_audio();
+    const uint32_t rate = usb_audio_nearest_rate(usb_descriptors_audio_rate_mask(0),
+                                               PICOARC_AUDIO_SAMPLE_RATE_DEFAULT);
+    if (rate != 0) {
+        apply_sample_rate(rate);
+    }
+}
+
 #if PICOARC_UAC_VERSION == 1
 
 bool tud_audio_get_req_ep_cb(uint8_t rhport, tusb_control_request_t const *request) {
@@ -483,7 +489,12 @@ bool tud_audio_set_req_ep_cb(uint8_t rhport, tusb_control_request_t const *reque
     const uint32_t requested = (uint32_t)buf[0] |
                                ((uint32_t)buf[1] << 8) |
                                ((uint32_t)buf[2] << 16);
-    apply_sample_rate(closest_supported_sample_rate(requested));
+    // UAC1 requires rounding unsupported discrete-frequency requests.
+    const uint32_t selected = usb_audio_nearest_rate(available_rate_mask(active_alt), requested);
+    if (selected == 0) {
+        return false;
+    }
+    apply_sample_rate(selected);
     return true;
 }
 
@@ -611,41 +622,27 @@ static bool clock_get_request(uint8_t rhport, tusb_control_request_t const *requ
 
     if (control_selector == AUDIO20_CS_CTRL_SAM_FREQ &&
         request->bRequest == AUDIO20_CS_REQ_RANGE) {
-        audio20_control_range_4_n_t(PICOARC_AUDIO_SAMPLE_RATE_COUNT) range = {
-            .wNumSubRanges = tu_htole16(PICOARC_AUDIO_SAMPLE_RATE_COUNT),
-            .subrange[0] = {
-                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_32K),
-                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_32K),
-                .bRes = 0,
-            },
-            .subrange[1] = {
-                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_44K1),
-                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_44K1),
-                .bRes = 0,
-            },
-            .subrange[2] = {
-                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_48K),
-                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_48K),
-                .bRes = 0,
-            },
-            .subrange[3] = {
-                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_88K2),
-                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_88K2),
-                .bRes = 0,
-            },
-            .subrange[4] = {
-                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_96K),
-                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_96K),
-                .bRes = 0,
-            },
-        };
+        audio20_control_range_4_n_t(PICOARC_AUDIO_SAMPLE_RATE_COUNT) range = {0};
+        const uint8_t mask = usb_descriptors_audio_rate_mask(0);
+        unsigned int count = 0;
+        for (unsigned int i = 0; i < PICOARC_AUDIO_SAMPLE_RATE_COUNT; ++i) {
+            const uint32_t rate = usb_audio_rate_at(i);
+            if (usb_audio_rate_in_mask(mask, rate)) {
+                range.subrange[count].bMin = (int32_t)tu_htole32(rate);
+                range.subrange[count].bMax = (int32_t)tu_htole32(rate);
+                ++count;
+            }
+        }
+        range.wNumSubRanges = tu_htole16(count);
         return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
-                                                           &range, sizeof(range));
+                                                           &range, 2 + 12 * count);
     }
 
     if (control_selector == AUDIO20_CS_CTRL_CLK_VALID &&
         request->bRequest == AUDIO20_CS_REQ_CUR) {
-        audio20_control_cur_1_t valid = {.bCur = 1};
+        audio20_control_cur_1_t valid = {
+            .bCur = usb_audio_rate_in_mask(available_rate_mask(active_alt), active_sample_rate),
+        };
         return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
                                                            &valid, sizeof(valid));
     }
@@ -723,7 +720,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *r
             return false;
         }
         const uint32_t requested = tu_le32toh(tu_unaligned_read32(buf));
-        if (!sample_rate_supported(requested)) {
+        if (!usb_audio_rate_in_mask(available_rate_mask(active_alt), requested)) {
             return false;
         }
         apply_sample_rate(requested);
@@ -780,12 +777,27 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
     uint8_t const alt = tu_u16_low(tu_le16toh(request->wValue));
 
     if (itf == ITF_NUM_AUDIO_STREAMING) {
-        if (alt > PICOARC_AUDIO_ALT_MAX) {
+        const uint8_t format = usb_descriptors_audio_format(alt);
+        if (alt != 0 && (format == 0 || available_rate_mask(format) == 0)) {
             return false;
         }
+#if PICOARC_UAC_VERSION == 2
+        if (alt != 0 && !usb_audio_rate_in_mask(available_rate_mask(format), active_sample_rate)) {
+            return false;
+        }
+#else
+        // UAC1 hosts select the interface before setting its endpoint rate.
+        if (alt != 0) {
+            apply_sample_rate(usb_audio_nearest_rate(available_rate_mask(format), active_sample_rate));
+        }
+#endif
 
         const uint64_t now_us = time_us_64();
-        active_alt = alt;
+        active_alt = format;
+#if PICOARC_USB_DIAGNOSTICS
+        diagnostics_trace_record((uint32_t)(now_us / 1000u), DIAGNOSTICS_TRACE_USB_ALT,
+                                  0, alt, NULL, 0);
+#endif
         streaming = alt != PICOARC_AUDIO_ALT_ZERO;
         stream_packet_count = 0;
         observed_stream_packet_count = 0;
@@ -846,6 +858,10 @@ bool tud_audio_rx_done_isr(uint8_t rhport, uint16_t n_bytes_received,
     (void)ep_out;
     (void)cur_alt_setting;
 
+#if PICOARC_USB_DIAGNOSTICS
+    diagnostics_rx_packets++;
+    diagnostics_rx_bytes += n_bytes_received;
+#endif
     if (n_bytes_received > 0) {
         stream_packet_count++;
     }
@@ -957,6 +973,11 @@ void usb_audio_task(void) {
         }
 
         uint16_t read = tud_audio_read(pcm_bytes, bytes);
+#if PICOARC_USB_DIAGNOSTICS
+        for (uint16_t i = 0; i < read; i++) {
+            diagnostics_nonzero_bytes += pcm_bytes[i] != 0;
+        }
+#endif
         unsigned int frames = read / bytes_per_frame;
         const uint64_t read_now_us = time_us_64();
         if (last_audio_read_us != 0) {
@@ -969,6 +990,9 @@ void usb_audio_task(void) {
 
         if (!gate_open) {
             gated_frames += frames;
+#if PICOARC_USB_DIAGNOSTICS
+            diagnostics_gated_frames += frames;
+#endif
             continue;
         }
 
@@ -981,6 +1005,9 @@ void usb_audio_task(void) {
                                       bytes_per_sample);
 
         unsigned int written = spdif_write_pcm(pcm_frames, frames);
+#if PICOARC_USB_DIAGNOSTICS
+        diagnostics_written_frames += written;
+#endif
         if (written < frames) {
             dropped_frames += frames - written;
         }
@@ -1053,3 +1080,239 @@ void usb_audio_task(void) {
     update_adaptive_clock(false);
 #endif
 }
+
+#if PICOARC_USB_DIAGNOSTICS
+bool usb_audio_take_hdmi_recovery_request(void) {
+    const bool requested = diagnostics_hdmi_recovery_pending;
+    diagnostics_hdmi_recovery_pending = false;
+    return requested;
+}
+
+uint8_t usb_audio_take_isolated_recovery_request(void) {
+    const uint8_t requested = diagnostics_isolated_pending;
+    diagnostics_isolated_pending = 0;
+    return requested;
+}
+
+static uint32_t audio_diagnostics_flags(void) {
+    return (streaming ? 1u : 0u) |
+           (output_enabled ? 2u : 0u) |
+           (audio_gate_open ? 4u : 0u) |
+           (tud_mounted() ? 8u : 0u) |
+           (tud_suspended() ? 16u : 0u) |
+           (arc_is_initiated() ? 32u : 0u) |
+           (arc_system_audio_enabled() ? 64u : 0u) |
+           (arc_audio_caps_ready() ? 128u : 0u) |
+           (arc_hdmi_connected() ? 256u : 0u) |
+           ((watchdog_hw->reason & WATCHDOG_REASON_TIMER_BITS) ? 512u : 0u) |
+           ((watchdog_hw->reason & WATCHDOG_REASON_FORCE_BITS) ? 1024u : 0u) |
+           2048u | 4096u;
+}
+
+void usb_audio_trace_state(void) {
+    static bool initialized;
+    static uint32_t previous_flags;
+    static uint32_t previous_rate;
+    static uint8_t previous_alt;
+    static uint8_t previous_mode;
+    const uint32_t flags = audio_diagnostics_flags();
+    const uint8_t mode = spdif_get_mode();
+    if (!initialized || flags != previous_flags || active_sample_rate != previous_rate ||
+        active_alt != previous_alt || mode != previous_mode) {
+        const uint8_t bytes[] = { active_alt, mode };
+        diagnostics_trace_record((uint32_t)(time_us_64() / 1000u), DIAGNOSTICS_TRACE_STATE,
+                                  flags, active_sample_rate, bytes, sizeof(bytes));
+        initialized = true;
+        previous_flags = flags;
+        previous_rate = active_sample_rate;
+        previous_alt = active_alt;
+        previous_mode = mode;
+    }
+}
+
+// Sixteen little-endian uint32_t values. Version 2 adds reset-cause flags;
+// version 3 adds an output hardware query; version 4 adds an encoded-block
+// snapshot; version 5 adds explicit targeted recovery and its status query.
+// Version 6 adds HDMI recovery and read-only DDC/HPD/CEC status.
+// Version 8 adds a retained event trace and isolated manual recovery commands.
+// The base field layout is unchanged. Lifetime counters wrap naturally
+// and are not cleared on a host query or streaming transition.
+typedef struct {
+    uint32_t version;
+    uint32_t uptime_ms;
+    uint32_t flags;
+    uint32_t sample_rate;
+    uint32_t active_alt;
+    uint32_t rx_packets;
+    uint32_t rx_bytes;
+    uint32_t nonzero_bytes;
+    uint32_t written_frames;
+    uint32_t gated_frames;
+    uint32_t buffered_frames;
+    uint32_t spdif_mode;
+    spdif_diagnostics_t spdif;
+} audio_diagnostics_t;
+
+_Static_assert(sizeof(audio_diagnostics_t) == 64, "Audio diagnostics wire size changed");
+_Static_assert(sizeof(spdif_output_diagnostics_t) == 64, "Output diagnostics wire size changed");
+_Static_assert(sizeof(spdif_block_diagnostics_t) == 3136, "Block diagnostics wire size changed");
+
+typedef struct {
+    uint32_t version;
+    spdif_restart_diagnostics_t output;
+    uint32_t usb_reconnect_requests;
+    uint32_t last_usb_reconnect_ms;
+    uint32_t hdmi_recovery_requests;
+    uint32_t last_hdmi_recovery_ms;
+    uint32_t isolated_requests;
+    uint32_t last_isolated_ms;
+    uint32_t last_isolated_action;
+    uint32_t reserved[4];
+} audio_recovery_diagnostics_t;
+_Static_assert(sizeof(audio_recovery_diagnostics_t) == 64, "Recovery diagnostics wire size changed");
+
+typedef struct {
+    uint32_t version;
+    uint32_t hpd_gpio_ctrl;
+    uint32_t hpd_gpio_status;
+    uint32_t gpio_levels;
+    uint32_t cec_audio_status;
+    ddc_edid_diagnostics_t ddc;
+} hdmi_diagnostics_t;
+_Static_assert(sizeof(hdmi_diagnostics_t) == 64, "HDMI diagnostics wire size changed");
+
+bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage,
+                                tusb_control_request_t const *request) {
+    // The explicit BOOTSEL command has no payload or parameters. Complete
+    // its status stage before leaving the running application.
+    if (request->bmRequestType == 0x40 && request->bRequest == 0x5c &&
+        request->wValue == 0 && request->wIndex == 0 && request->wLength == 0) {
+        if (stage == CONTROL_STAGE_SETUP) {
+            return tud_control_status(rhport, request);
+        }
+        if (stage == CONTROL_STAGE_ACK) {
+            reset_usb_boot(0, 0);
+        }
+        return true;
+    }
+
+    // Explicit recovery: 1 restarts only the transmitter on core 1; 2 asks
+    // the main adapter task to reconnect USB; 3 restarts HDMI negotiation and
+    // the EDID responder; 4..7 isolate DDC, HPD, CEC messages and CEC RX.
+    // Never mutate on a read/setup.
+    if (request->bmRequestType == 0x40 && request->bRequest == 0x5e &&
+        (request->wValue >= 1 && request->wValue <= 7) &&
+        request->wIndex == 0 && request->wLength == 0) {
+        if (stage == CONTROL_STAGE_SETUP) {
+            if (request->wValue >= 4 && diagnostics_isolated_pending) {
+                return false;
+            }
+            return tud_control_status(rhport, request);
+        }
+        if (stage == CONTROL_STAGE_ACK) {
+            diagnostics_trace_record((uint32_t)(time_us_64() / 1000u),
+                                      DIAGNOSTICS_TRACE_RECOVERY, 0, request->wValue, NULL, 0);
+            if (request->wValue == 1) {
+                spdif_request_output_restart();
+            } else if (request->wValue == 2) {
+                diagnostics_usb_reconnect_requests++;
+                diagnostics_usb_reconnect_uptime_ms = (uint32_t)(time_us_64() / 1000u);
+                diagnostics_usb_reconnect_pending = true;
+            } else if (request->wValue == 3) {
+                diagnostics_hdmi_recovery_requests++;
+                diagnostics_hdmi_recovery_uptime_ms = (uint32_t)(time_us_64() / 1000u);
+                diagnostics_hdmi_recovery_pending = true;
+            } else {
+                diagnostics_isolated_requests++;
+                diagnostics_isolated_uptime_ms = (uint32_t)(time_us_64() / 1000u);
+                diagnostics_last_isolated_action = request->wValue;
+                diagnostics_isolated_pending = request->wValue;
+            }
+        }
+        return true;
+    }
+
+    // Diagnostic reads are device-to-host, vendor, device recipient only.
+    // Unsupported requests stall without changing state.
+    if (request->bmRequestType != 0xc0 ||
+        (request->bRequest != 0x5a && request->bRequest != 0x5b &&
+         request->bRequest != 0x5d && request->bRequest != 0x5f &&
+         request->bRequest != 0x60 && request->bRequest != 0x61) ||
+        request->wValue != 0 || request->wIndex != 0 ||
+        request->wLength == 0 ||
+        request->wLength > (request->bRequest == 0x61 ? sizeof(diagnostics_trace_snapshot_t) :
+            (request->bRequest == 0x5d ? sizeof(spdif_block_diagnostics_t) : sizeof(audio_diagnostics_t)))) {
+        return false;
+    }
+    if (stage != CONTROL_STAGE_SETUP) {
+        return true;
+    }
+
+    if (request->bRequest == 0x5b) {
+        static spdif_output_diagnostics_t output;
+        spdif_get_output_diagnostics(&output);
+        return tud_control_xfer(rhport, request, &output, sizeof(output));
+    }
+
+    if (request->bRequest == 0x5d) {
+        static spdif_block_diagnostics_t block;
+        spdif_get_block_diagnostics(&block);
+        return tud_control_xfer(rhport, request, &block, sizeof(block));
+    }
+
+    if (request->bRequest == 0x5f) {
+        static audio_recovery_diagnostics_t recovery;
+        recovery = (audio_recovery_diagnostics_t) {
+            .version = 4,
+            .usb_reconnect_requests = diagnostics_usb_reconnect_requests,
+            .last_usb_reconnect_ms = diagnostics_usb_reconnect_uptime_ms,
+            .hdmi_recovery_requests = diagnostics_hdmi_recovery_requests,
+            .last_hdmi_recovery_ms = diagnostics_hdmi_recovery_uptime_ms,
+            .isolated_requests = diagnostics_isolated_requests,
+            .last_isolated_ms = diagnostics_isolated_uptime_ms,
+            .last_isolated_action = diagnostics_last_isolated_action,
+        };
+        spdif_get_restart_diagnostics(&recovery.output);
+        return tud_control_xfer(rhport, request, &recovery, sizeof(recovery));
+    }
+
+    if (request->bRequest == 0x60) {
+        static hdmi_diagnostics_t hdmi;
+        hdmi = (hdmi_diagnostics_t) {
+            .version = 1,
+            .hpd_gpio_ctrl = io_bank0_hw->io[PICOARC_HPD_GATE_PIN].ctrl,
+            .hpd_gpio_status = io_bank0_hw->io[PICOARC_HPD_GATE_PIN].status,
+            .gpio_levels = gpio_get_all(),
+            .cec_audio_status = arc_get_audio_status_diagnostics(),
+        };
+        ddc_edid_get_diagnostics(&hdmi.ddc);
+        return tud_control_xfer(rhport, request, &hdmi, sizeof(hdmi));
+    }
+
+    if (request->bRequest == 0x61) {
+        static diagnostics_trace_snapshot_t trace;
+        diagnostics_trace_snapshot((uint32_t)(time_us_64() / 1000u), &trace);
+        return tud_control_xfer(rhport, request, &trace, sizeof(trace));
+    }
+
+    // Keep the response alive through the asynchronous EP0 transfer. Do not
+    // take a core-1 lock: the query must work when the output core is wedged.
+    static audio_diagnostics_t diagnostics;
+    diagnostics = (audio_diagnostics_t) {
+        .version = 8,
+        .uptime_ms = (uint32_t)(time_us_64() / 1000u),
+        .flags = audio_diagnostics_flags(),
+        .sample_rate = active_sample_rate,
+        .active_alt = active_alt,
+        .rx_packets = diagnostics_rx_packets,
+        .rx_bytes = diagnostics_rx_bytes,
+        .nonzero_bytes = diagnostics_nonzero_bytes,
+        .written_frames = diagnostics_written_frames,
+        .gated_frames = diagnostics_gated_frames,
+        .buffered_frames = spdif_buffered_frames(),
+        .spdif_mode = spdif_get_mode(),
+    };
+    spdif_get_diagnostics(&diagnostics.spdif);
+    return tud_control_xfer(rhport, request, &diagnostics, sizeof(diagnostics));
+}
+#endif

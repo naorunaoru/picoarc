@@ -6,6 +6,7 @@
 
 #include "cec.h"
 #include "ddc_edid.h"
+#include "diagnostics_trace.h"
 #include "hardware/gpio.h"
 #include "picoarc_config.h"
 #include "picoarc_log.h"
@@ -24,6 +25,10 @@ static absolute_time_t source_5v_debounce_until;
 #if PICOARC_HPD_GATE_ENABLE
 static bool hpd_release_pending;
 static absolute_time_t hpd_release_at;
+#if PICOARC_USB_DIAGNOSTICS
+static bool diagnostics_hpd_pending;
+static absolute_time_t diagnostics_hpd_release_at;
+#endif
 #endif
 static unsigned int probe_step;
 static unsigned int streaming_probe_step;
@@ -1456,32 +1461,37 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
     switch (opcode) {
     case 0x83:
         if (allow_tx) {
+            const bool ack = send_report_physical_address(CEC_LOGICAL_TV, tv_physical_address, 0x00);
             printf("arc: reply report-physical-address 0000 tv ack=%s\n",
-                   send_report_physical_address(CEC_LOGICAL_TV, tv_physical_address, 0x00) ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     case 0x8c:
         if (allow_tx) {
+            const bool ack = send_device_vendor_id(CEC_LOGICAL_TV);
             printf("arc: reply device-vendor-id ack=%s\n",
-                   send_device_vendor_id(CEC_LOGICAL_TV) ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     case 0x8f:
         if (allow_tx) {
+            const bool ack = send_power_status_on(CEC_LOGICAL_TV, initiator);
             printf("arc: reply report-power-status:on ack=%s\n",
-                   send_power_status_on(CEC_LOGICAL_TV, initiator) ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     case 0x9f:
         if (allow_tx) {
+            const bool ack = send_cec_version(CEC_LOGICAL_TV, initiator);
             printf("arc: reply cec-version:2.0 ack=%s\n",
-                   send_cec_version(CEC_LOGICAL_TV, initiator) ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     case 0x46:
         if (allow_tx) {
+            const bool ack = send_set_osd_name(CEC_LOGICAL_TV, initiator, "PicoARC");
             printf("arc: reply set-osd-name:PicoARC ack=%s\n",
-                   send_set_osd_name(CEC_LOGICAL_TV, initiator, "PicoARC") ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     case 0x00:
@@ -1521,28 +1531,30 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
     case 0xc0:
         if (initiator == CEC_LOGICAL_AUDIO_SYSTEM) {
             arc_initiated = true;
+            const bool ack = send_report_arc_initiated();
             printf("arc: initiate-arc from soundbar; report-arc-initiated ack=%s\n",
-                   send_report_arc_initiated() ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     case 0xc3:
         if (initiator == CEC_LOGICAL_AUDIO_SYSTEM && allow_tx) {
+            const bool ack = send_initiate_arc();
             printf("arc: request from soundbar; initiate-arc ack=%s\n",
-                   send_initiate_arc() ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     default:
         if (allow_tx) {
+            const bool ack = send_feature_abort(CEC_LOGICAL_TV, initiator, opcode, 0x00);
             printf("arc: feature-abort opcode=0x%02x ack=%s\n",
                    opcode,
-                   send_feature_abort(CEC_LOGICAL_TV, initiator, opcode, 0x00) ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     }
 }
 
-void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
-    hdmi_5v_pin = hdmi_5v_gpio;
+static void reset_arc_session(void) {
     arc_initiated = false;
     system_audio_mode = false;
     last_streaming = false;
@@ -1591,7 +1603,11 @@ void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
     hpd_release_pending = false;
     hpd_release_at = make_timeout_time_ms(0);
 #endif
+}
 
+void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
+    hdmi_5v_pin = hdmi_5v_gpio;
+    reset_arc_session();
     cec_init(cec_pin);
     cec_set_logical_address(CEC_LOGICAL_TV);
     cec_passive_reset();
@@ -1599,6 +1615,41 @@ void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
     printf("arc: CEC on GP%u, HDMI +5V sense on GP%u\n", cec_pin, hdmi_5v_pin);
     printf("arc: TV ARC endpoint mode\n");
 }
+
+#if PICOARC_USB_DIAGNOSTICS
+void arc_restart_negotiation(void) {
+    // Reuse existing PIO programs and DMA channels; reinitializing CEC would
+    // claim additional hardware resources. The session reset holds HPD low
+    // and the normal HDMI debounce/hotplug path releases it after the pulse.
+    reset_arc_session();
+    ddc_cec_wait_logged = false;
+    cec_reset_receiver();
+}
+
+void arc_diagnostics_hpd_pulse(void) {
+#if PICOARC_HPD_GATE_ENABLE
+    gpio_put(PICOARC_HPD_GATE_PIN, true);
+    diagnostics_hpd_pending = true;
+    diagnostics_hpd_release_at = make_timeout_time_ms(PICOARC_HPD_REPLUG_LOW_MS);
+#endif
+}
+
+void arc_diagnostics_cec_request(void) {
+    // Resend only the existing ARC/system-audio messages. Preserve cached
+    // session state, EDID, HPD and USB; peer replies may change normal state.
+    send_system_audio_mode_request();
+    send_request_arc_initiation();
+}
+#endif
+
+#if PICOARC_USB_DIAGNOSTICS
+uint32_t arc_get_audio_status_diagnostics(void) {
+    return (uint32_t)cec_audio_volume |
+           (cec_audio_muted ? 1u << 7 : 0u) |
+           (cec_audio_volume_known ? 1u << 8 : 0u) |
+           (cec_audio_mute_known ? 1u << 9 : 0u);
+}
+#endif
 
 void arc_task(void) {
     cec_frame_t frame;
@@ -1655,6 +1706,16 @@ void arc_task(void) {
     }
 
 #if PICOARC_HPD_GATE_ENABLE
+#if PICOARC_USB_DIAGNOSTICS
+    if (diagnostics_hpd_pending && time_reached(diagnostics_hpd_release_at)) {
+        diagnostics_hpd_pending = false;
+        if (source_5v && !hpd_release_pending) {
+            gpio_put(PICOARC_HPD_GATE_PIN, false);
+        }
+        diagnostics_trace_record(to_ms_since_boot(get_absolute_time()),
+                                  DIAGNOSTICS_TRACE_RECOVERY, 2, PICOARC_DIAGNOSTICS_HPD, NULL, 0);
+    }
+#endif
     if (source_5v && hpd_release_pending) {
         if (!time_reached(hpd_release_at)) {
             return;
@@ -1856,6 +1917,24 @@ bool arc_ready_for_usb(void) {
     return arc_initiated && arc_audio_caps_ready() && soundbar_name_ready_for_usb();
 }
 
+uint8_t arc_audio_rate_mask(uint8_t alt) {
+    if (!arc_initiated || !sad_query_finished()) {
+        return 0;
+    }
+    uint8_t rates = 0;
+    switch (alt) {
+    case PICOARC_AUDIO_ALT_PCM_16: rates = sad_pcm_rates_16; break;
+    case PICOARC_AUDIO_ALT_PCM_20: rates = sad_pcm_rates_20; break;
+    case PICOARC_AUDIO_ALT_PCM_24: rates = sad_pcm_rates_24; break;
+#if PICOARC_UAC_VERSION == 2
+    case PICOARC_AUDIO_ALT_IEC61937_AC3: rates = sad_ac3_rates; break;
+    case PICOARC_AUDIO_ALT_IEC61937_DTS: rates = sad_dts_rates; break;
+#endif
+    default: break;
+    }
+    return rates & PICOARC_AUDIO_USB_RATE_MASK;
+}
+
 static bool audio_format_supported(uint8_t alt, uint32_t sample_rate, bool log_rejection) {
     if (alt == PICOARC_AUDIO_ALT_ZERO) {
         return true;
@@ -1880,30 +1959,7 @@ static bool audio_format_supported(uint8_t alt, uint32_t sample_rate, bool log_r
         return false;
     }
 
-    const uint8_t rate_bit = sample_rate_to_sad_bit(sample_rate);
-    bool supported = false;
-    switch (alt) {
-    case PICOARC_AUDIO_ALT_PCM_16:
-        supported = (sad_pcm_rates_16 & rate_bit) != 0;
-        break;
-    case PICOARC_AUDIO_ALT_PCM_20:
-        supported = (sad_pcm_rates_20 & rate_bit) != 0;
-        break;
-    case PICOARC_AUDIO_ALT_PCM_24:
-        supported = (sad_pcm_rates_24 & rate_bit) != 0;
-        break;
-#if PICOARC_UAC_VERSION == 2
-    case PICOARC_AUDIO_ALT_IEC61937_AC3:
-        supported = (sad_ac3_rates & rate_bit) != 0;
-        break;
-    case PICOARC_AUDIO_ALT_IEC61937_DTS:
-        supported = (sad_dts_rates & rate_bit) != 0;
-        break;
-#endif
-    default:
-        supported = false;
-        break;
-    }
+    const bool supported = (arc_audio_rate_mask(alt) & sample_rate_to_sad_bit(sample_rate)) != 0;
 
     if (!supported && log_rejection) {
         printf("arc: reject audio alt=%u rate=%lu; caps pcm16=0x%02x pcm20=0x%02x pcm24=0x%02x ac3=0x%02x dts=0x%02x\n",

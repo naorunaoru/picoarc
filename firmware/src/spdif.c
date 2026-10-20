@@ -6,13 +6,17 @@
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
 #include "hardware/pio.h"
-#if PICOARC_UAC_VERSION == 2
+#if PICOARC_UAC_VERSION == 2 || PICOARC_USB_DIAGNOSTICS
 #include "pico/critical_section.h"
 #endif
 #include "pico/multicore.h"
 #include "pico/stdlib.h"
 #include "picoarc_log.h"
 #include "spdif.pio.h"
+#if PICOARC_USB_DIAGNOSTICS
+#include "hardware/structs/io_bank0.h"
+#include "hardware/structs/padsbank0.h"
+#endif
 
 enum {
     // Each S/PDIF audio frame is 2 subframes × 32 bits × 2 half-bits = 128
@@ -68,6 +72,19 @@ static volatile unsigned int spdif_dma_late_blocks;
 static bmc_byte_t bmc_byte[2][256];
 static uint8_t bmc_tail[2][2][8];
 static uint32_t dma_words[2][SPDIF_WORDS_PER_BLOCK];
+#if PICOARC_USB_DIAGNOSTICS
+static volatile uint32_t diagnostics_dma_blocks;
+static volatile uint32_t diagnostics_encoded_nonzero_frames;
+static unsigned int diagnostics_output_pin;
+static unsigned int diagnostics_program_offset;
+static pio_sm_config diagnostics_initial_config;
+static volatile uint32_t diagnostics_restart_requested;
+static volatile uint32_t diagnostics_restart_completed;
+static volatile uint32_t diagnostics_restart_uptime_ms;
+#if PICOARC_UAC_VERSION == 1
+static critical_section_t diagnostics_configuration_critical_section;
+#endif
+#endif
 #if PICOARC_UAC_VERSION == 2
 static volatile uint32_t adaptive_clkdiv_q16;
 static volatile uint32_t adaptive_clock_generation;
@@ -327,6 +344,9 @@ static void encode_live_frame(uint32_t *words, unsigned int frame_index, unsigne
     const bool c_bit = channel_status_bit(frame_index, current_stream_format);
 
     read_usb_frame(&left, &right);
+#if PICOARC_USB_DIAGNOSTICS
+    diagnostics_encoded_nonzero_frames += left != 0 || right != 0;
+#endif
     encode_subframe_fast(&words[0], frame_index == 0 ? PREAMBLE_B : PREAMBLE_M, left, c_bit, level);
     encode_subframe_fast(&words[2], PREAMBLE_W, right, c_bit, level);
 }
@@ -434,6 +454,32 @@ static void build_silence_block(uint32_t *words) {
     }
 }
 
+#if PICOARC_USB_DIAGNOSTICS
+static void restart_output_on_core1(void) {
+    // Only this core owns the DMA channel. Abort before taking the config
+    // lock so even an output stall cannot hold up USB tasks behind the lock.
+    dma_channel_abort(spdif_dma_chan);
+#if PICOARC_UAC_VERSION == 2
+    critical_section_enter_blocking(&adaptive_clock_critical_section);
+#else
+    critical_section_enter_blocking(&diagnostics_configuration_critical_section);
+#endif
+    pio_sm_set_enabled(spdif_pio, spdif_sm, false);
+    pio_sm_config config = diagnostics_initial_config;
+    config.clkdiv = spdif_pio->sm[spdif_sm].clkdiv;
+    pio_sm_init(spdif_pio, spdif_sm, diagnostics_program_offset, &config);
+    pio_gpio_init(spdif_pio, diagnostics_output_pin);
+    pio_sm_set_pins_with_mask(spdif_pio, spdif_sm, 0, 1u << diagnostics_output_pin);
+    pio_sm_set_consecutive_pindirs(spdif_pio, spdif_sm, diagnostics_output_pin, 1, true);
+    pio_sm_set_enabled(spdif_pio, spdif_sm, true);
+#if PICOARC_UAC_VERSION == 2
+    critical_section_exit(&adaptive_clock_critical_section);
+#else
+    critical_section_exit(&diagnostics_configuration_critical_section);
+#endif
+}
+#endif
+
 static void audio_core_main(void) {
     unsigned int live_frame_index = 0;
     unsigned int live_level = 0;
@@ -452,7 +498,26 @@ static void audio_core_main(void) {
         if (!dma_channel_is_busy(spdif_dma_chan)) {
             spdif_dma_late_blocks++;
         }
+#if PICOARC_USB_DIAGNOSTICS
+        // A manual restart can also recover a transmitter whose FIFO/DREQ
+        // prevents DMA completion. Do not wait indefinitely before servicing it.
+        while (dma_channel_is_busy(spdif_dma_chan) &&
+               diagnostics_restart_requested == diagnostics_restart_completed) {
+            tight_loop_contents();
+        }
+        const uint32_t restart_sequence = diagnostics_restart_requested;
+        const bool restart = restart_sequence != diagnostics_restart_completed;
+        if (restart) {
+            restart_output_on_core1();
+            live_frame_index = 0;
+            live_level = 0;
+#if PICOARC_UAC_VERSION == 2
+            clock_dither_accumulator = 0;
+#endif
+        }
+#else
         dma_channel_wait_for_finish_blocking(spdif_dma_chan);
+#endif
 #if PICOARC_UAC_VERSION == 2
         // Limit divider changes to one per 192-frame DMA cycle. The PIO FIFO
         // can still hold the tail of the previous block, so do not restart the
@@ -461,15 +526,28 @@ static void audio_core_main(void) {
                                      &seen_clock_generation);
 #endif
         start_dma_block(dma_words[block]);
+#if PICOARC_USB_DIAGNOSTICS
+        diagnostics_dma_blocks++;
+        if (restart) {
+            diagnostics_restart_uptime_ms = (uint32_t)(time_us_64() / 1000u);
+            __dmb();
+            diagnostics_restart_completed = restart_sequence;
+        }
+#endif
         block ^= 1u;
     }
 }
 
 void spdif_start(unsigned int pin) {
+#if PICOARC_USB_DIAGNOSTICS
+    diagnostics_output_pin = pin;
+#endif
     build_bmc_tables();
     build_silence_block(silence_words);
 #if PICOARC_UAC_VERSION == 2
     critical_section_init(&adaptive_clock_critical_section);
+#elif PICOARC_USB_DIAGNOSTICS
+    critical_section_init(&diagnostics_configuration_critical_section);
 #endif
 
     spdif_pio = pio0;
@@ -486,6 +564,11 @@ void spdif_start(unsigned int pin) {
     sm_config_set_clkdiv(&config,
                          (float)clock_get_hz(clk_sys) /
                              (SPDIF_DEFAULT_SAMPLE_RATE_HZ * SPDIF_HALF_BITS_PER_FRAME));
+
+#if PICOARC_USB_DIAGNOSTICS
+    diagnostics_program_offset = offset;
+    diagnostics_initial_config = config;
+#endif
 
     pio_sm_init(spdif_pio, spdif_sm, offset, &config);
     pio_sm_set_enabled(spdif_pio, spdif_sm, true);
@@ -536,6 +619,8 @@ void spdif_set_sample_rate(uint32_t rate_hz) {
         rate_hz, 0);
     critical_section_enter_blocking(&adaptive_clock_critical_section);
     adaptive_clock_enabled = false;
+#elif PICOARC_USB_DIAGNOSTICS
+    critical_section_enter_blocking(&diagnostics_configuration_critical_section);
 #endif
     const float divider = (float)clock_get_hz(clk_sys) /
                           (float)(rate_hz * SPDIF_HALF_BITS_PER_FRAME);
@@ -548,6 +633,8 @@ void spdif_set_sample_rate(uint32_t rate_hz) {
     adaptive_clkdiv_q16 = nominal_clkdiv_q16;
     adaptive_clock_generation++;
     critical_section_exit(&adaptive_clock_critical_section);
+#elif PICOARC_USB_DIAGNOSTICS
+    critical_section_exit(&diagnostics_configuration_critical_section);
 #endif
 }
 
@@ -673,3 +760,108 @@ void spdif_take_usb_stats(spdif_usb_stats_t *stats) {
     usb_underrun_frames = 0;
     spdif_dma_late_blocks = 0;
 }
+
+#if PICOARC_USB_DIAGNOSTICS
+void spdif_request_output_restart(void) {
+    diagnostics_restart_requested++;
+}
+
+void spdif_get_restart_diagnostics(spdif_restart_diagnostics_t *diagnostics) {
+    *diagnostics = (spdif_restart_diagnostics_t) {
+        .requested = diagnostics_restart_requested,
+        .completed = diagnostics_restart_completed,
+        .last_uptime_ms = diagnostics_restart_uptime_ms,
+    };
+}
+
+void spdif_get_diagnostics(spdif_diagnostics_t *diagnostics) {
+    diagnostics->dma_blocks = diagnostics_dma_blocks;
+    diagnostics->dma_remaining = dma_hw->ch[spdif_dma_chan].transfer_count;
+    diagnostics->dma_ctrl = dma_hw->ch[spdif_dma_chan].ctrl_trig;
+    diagnostics->pio_fdebug = spdif_pio->fdebug;
+}
+
+static uint32_t diagnostics_hash(const void *data, size_t size, uint32_t hash) {
+    const uint8_t *bytes = data;
+    for (size_t i = 0; i < size; i++) {
+        hash = (hash ^ bytes[i]) * UINT32_C(16777619);
+    }
+    return hash;
+}
+
+void spdif_get_output_diagnostics(spdif_output_diagnostics_t *diagnostics) {
+    uint32_t table_hash = diagnostics_hash(bmc_byte, sizeof(bmc_byte),
+                                           UINT32_C(2166136261));
+    table_hash = diagnostics_hash(bmc_tail, sizeof(bmc_tail), table_hash);
+    *diagnostics = (spdif_output_diagnostics_t) {
+        .version = 1,
+        .gpio_ctrl = io_bank0_hw->io[diagnostics_output_pin].ctrl,
+        .gpio_status = io_bank0_hw->io[diagnostics_output_pin].status,
+        .pio_ctrl = spdif_pio->ctrl,
+        .pio_clkdiv = spdif_pio->sm[spdif_sm].clkdiv,
+        .pio_execctrl = spdif_pio->sm[spdif_sm].execctrl,
+        .pio_shiftctrl = spdif_pio->sm[spdif_sm].shiftctrl,
+        .pio_pinctrl = spdif_pio->sm[spdif_sm].pinctrl,
+        .pio_addr = spdif_pio->sm[spdif_sm].addr,
+        .pio_fstat = spdif_pio->fstat,
+        .dma_read_addr = dma_hw->ch[spdif_dma_chan].read_addr,
+        .stream_format = current_stream_format,
+        .encoded_nonzero_frames = diagnostics_encoded_nonzero_frames,
+        .encoder_table_hash = table_hash,
+        .dma_block_hash = diagnostics_hash(dma_words, sizeof(dma_words),
+                                           UINT32_C(2166136261)),
+        .silence_block_hash = diagnostics_hash(silence_words, sizeof(silence_words),
+                                               UINT32_C(2166136261)),
+    };
+}
+
+void spdif_get_block_diagnostics(spdif_block_diagnostics_t *diagnostics) {
+    _Static_assert(SPDIF_DIAGNOSTIC_BLOCK_WORDS == SPDIF_WORDS_PER_BLOCK,
+                   "Diagnostic block size does not match the encoder");
+    *diagnostics = (spdif_block_diagnostics_t) {
+        .version = 1,
+        .spdif_mode = current_mode,
+        .stream_format = current_stream_format,
+        .pio_clkdiv = spdif_pio->sm[spdif_sm].clkdiv,
+        .pio_instruction = spdif_pio->sm[spdif_sm].instr,
+        .gpio_pad = pads_bank0_hw->io[diagnostics_output_pin],
+        .clk_sys_hz = clock_get_hz(clk_sys),
+        .uptime_ms = (uint32_t)(time_us_64() / 1000u),
+        .word_count = SPDIF_WORDS_PER_BLOCK,
+    };
+
+    for (unsigned int attempt = 0; attempt < 3; attempt++) {
+        const uint32_t before = diagnostics_dma_blocks;
+        const uintptr_t read_before = dma_hw->ch[spdif_dma_chan].read_addr;
+        const uint32_t remaining = dma_hw->ch[spdif_dma_chan].transfer_count;
+        unsigned int block = 0;
+        while (block < 2 &&
+               !(read_before >= (uintptr_t)dma_words[block] &&
+                 read_before < (uintptr_t)(dma_words[block] + SPDIF_WORDS_PER_BLOCK))) {
+            block++;
+        }
+        if (block == 2 || remaining == 0 || remaining > SPDIF_WORDS_PER_BLOCK) {
+            continue;
+        }
+
+        // Only core 1 writes these buffers, and it builds the other buffer
+        // while DMA consumes this one. A barrier and the counter/address
+        // checks reject a copy that overlaps a handoff or later reuse.
+        __dmb();
+        copy_block(diagnostics->words, dma_words[block]);
+        __dmb();
+        const uintptr_t read_after = dma_hw->ch[spdif_dma_chan].read_addr;
+        diagnostics->dma_blocks_before = before;
+        diagnostics->dma_blocks_after = diagnostics_dma_blocks;
+        diagnostics->block_index = block;
+        diagnostics->dma_remaining_before = remaining;
+        diagnostics->dma_remaining_after = dma_hw->ch[spdif_dma_chan].transfer_count;
+        if (before == diagnostics->dma_blocks_after &&
+            read_after >= read_before &&
+            read_after <= (uintptr_t)(dma_words[block] + SPDIF_WORDS_PER_BLOCK)) {
+            diagnostics->stable = 1;
+            return;
+        }
+    }
+}
+#endif

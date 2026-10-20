@@ -6,6 +6,9 @@
 
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
+#if PICOARC_USB_DIAGNOSTICS
+#include "hardware/irq.h"
+#endif
 #include "pico/i2c_slave.h"
 #include "pico/stdlib.h"
 #include "picoarc_config.h"
@@ -137,6 +140,52 @@ void ddc_edid_note_hotplug(void) {
     cycle_start_bytes = bytes_sent;
 #endif
 }
+
+#if PICOARC_USB_DIAGNOSTICS
+void ddc_edid_restart(bool hotplug) {
+#if PICOARC_DDC_EDID_ENABLE
+    // Disable the IRQ before the SDK removes its handler, then reset both
+    // FIFOs and the byte-offset parser. Full HDMI recovery holds HPD low;
+    // the explicit DDC-only diagnostic leaves HPD, ARC and settle timers intact.
+    irq_set_enabled(I2C1_IRQ, false);
+    i2c_slave_deinit(i2c1);
+    i2c_deinit(i2c1);
+    edid_offset = 0;
+    write_index = 0;
+    i2c_init(i2c1, 100000);
+    i2c_slave_init(i2c1, DDC_EDID_ADDRESS, ddc_edid_handler);
+    if (hotplug) {
+        ddc_edid_note_hotplug();
+    }
+#else
+    (void)hotplug;
+#endif
+}
+#endif
+
+#if PICOARC_USB_DIAGNOSTICS
+void ddc_edid_get_diagnostics(ddc_edid_diagnostics_t *diagnostics) {
+    *diagnostics = (ddc_edid_diagnostics_t){0};
+#if PICOARC_DDC_EDID_ENABLE
+    const i2c_hw_t *hw = i2c_get_hw(i2c1);
+    // These registers do not clear interrupts or consume FIFO data. The
+    // counters and register values are observations, not an atomic snapshot.
+    *diagnostics = (ddc_edid_diagnostics_t) {
+        .enable = hw->enable,
+        .status = hw->status,
+        .raw_intr_stat = hw->raw_intr_stat,
+        .tx_abrt_source = hw->tx_abrt_source,
+        .rx_fifo_level = hw->rxflr,
+        .tx_fifo_level = hw->txflr,
+        .offset_writes = offset_writes,
+        .read_requests = read_requests,
+        .bytes_sent = bytes_sent,
+        .edid_offset = edid_offset,
+        .write_index = write_index,
+    };
+#endif
+}
+#endif
 
 bool ddc_edid_ready_for_cec(void) {
 #if PICOARC_DDC_EDID_ENABLE
