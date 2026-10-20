@@ -6,6 +6,7 @@
 
 #include "cec.h"
 #include "ddc_edid.h"
+#include "diagnostics_trace.h"
 #include "hardware/gpio.h"
 #include "picoarc_config.h"
 #include "picoarc_log.h"
@@ -24,6 +25,10 @@ static absolute_time_t source_5v_debounce_until;
 #if PICOARC_HPD_GATE_ENABLE
 static bool hpd_release_pending;
 static absolute_time_t hpd_release_at;
+#if PICOARC_USB_DIAGNOSTICS
+static bool diagnostics_hpd_pending;
+static absolute_time_t diagnostics_hpd_release_at;
+#endif
 #endif
 static unsigned int probe_step;
 static unsigned int streaming_probe_step;
@@ -1549,8 +1554,7 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
     }
 }
 
-void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
-    hdmi_5v_pin = hdmi_5v_gpio;
+static void reset_arc_session(void) {
     arc_initiated = false;
     system_audio_mode = false;
     last_streaming = false;
@@ -1599,7 +1603,11 @@ void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
     hpd_release_pending = false;
     hpd_release_at = make_timeout_time_ms(0);
 #endif
+}
 
+void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
+    hdmi_5v_pin = hdmi_5v_gpio;
+    reset_arc_session();
     cec_init(cec_pin);
     cec_set_logical_address(CEC_LOGICAL_TV);
     cec_passive_reset();
@@ -1607,6 +1615,41 @@ void arc_init(unsigned int cec_pin, unsigned int hdmi_5v_gpio) {
     printf("arc: CEC on GP%u, HDMI +5V sense on GP%u\n", cec_pin, hdmi_5v_pin);
     printf("arc: TV ARC endpoint mode\n");
 }
+
+#if PICOARC_USB_DIAGNOSTICS
+void arc_restart_negotiation(void) {
+    // Reuse existing PIO programs and DMA channels; reinitializing CEC would
+    // claim additional hardware resources. The session reset holds HPD low
+    // and the normal HDMI debounce/hotplug path releases it after the pulse.
+    reset_arc_session();
+    ddc_cec_wait_logged = false;
+    cec_reset_receiver();
+}
+
+void arc_diagnostics_hpd_pulse(void) {
+#if PICOARC_HPD_GATE_ENABLE
+    gpio_put(PICOARC_HPD_GATE_PIN, true);
+    diagnostics_hpd_pending = true;
+    diagnostics_hpd_release_at = make_timeout_time_ms(PICOARC_HPD_REPLUG_LOW_MS);
+#endif
+}
+
+void arc_diagnostics_cec_request(void) {
+    // Resend only the existing ARC/system-audio messages. Preserve cached
+    // session state, EDID, HPD and USB; peer replies may change normal state.
+    send_system_audio_mode_request();
+    send_request_arc_initiation();
+}
+#endif
+
+#if PICOARC_USB_DIAGNOSTICS
+uint32_t arc_get_audio_status_diagnostics(void) {
+    return (uint32_t)cec_audio_volume |
+           (cec_audio_muted ? 1u << 7 : 0u) |
+           (cec_audio_volume_known ? 1u << 8 : 0u) |
+           (cec_audio_mute_known ? 1u << 9 : 0u);
+}
+#endif
 
 void arc_task(void) {
     cec_frame_t frame;
@@ -1663,6 +1706,16 @@ void arc_task(void) {
     }
 
 #if PICOARC_HPD_GATE_ENABLE
+#if PICOARC_USB_DIAGNOSTICS
+    if (diagnostics_hpd_pending && time_reached(diagnostics_hpd_release_at)) {
+        diagnostics_hpd_pending = false;
+        if (source_5v && !hpd_release_pending) {
+            gpio_put(PICOARC_HPD_GATE_PIN, false);
+        }
+        diagnostics_trace_record(to_ms_since_boot(get_absolute_time()),
+                                  DIAGNOSTICS_TRACE_RECOVERY, 2, PICOARC_DIAGNOSTICS_HPD, NULL, 0);
+    }
+#endif
     if (source_5v && hpd_release_pending) {
         if (!time_reached(hpd_release_at)) {
             return;

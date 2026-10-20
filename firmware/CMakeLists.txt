@@ -35,6 +35,8 @@ set_property(CACHE PICOARC_VARIANT PROPERTY STRINGS debug release)
 set(PICOARC_USB_AUDIO_CLASS "uac1" CACHE STRING "USB Audio Class target: uac1 or uac2")
 set_property(CACHE PICOARC_USB_AUDIO_CLASS PROPERTY STRINGS uac1 uac2)
 
+option(PICOARC_USB_DIAGNOSTICS "Expose USB audio diagnostics and explicit recovery/BOOTSEL commands" OFF)
+
 if(PICOARC_USB_AUDIO_CLASS STREQUAL "uac1")
     set(PICOARC_UAC_VERSION 1)
     set(PICOARC_OUTPUT_SUFFIX "")
@@ -57,6 +59,10 @@ else()
     message(FATAL_ERROR "Unsupported PICOARC_VARIANT '${PICOARC_VARIANT}'. Use 'debug' or 'release'.")
 endif()
 
+if(PICOARC_USB_DIAGNOSTICS)
+    string(APPEND PICOARC_OUTPUT_SUFFIX "-diagnostics")
+endif()
+
 pico_sdk_init()
 
 add_executable(picoarc
@@ -66,6 +72,7 @@ add_executable(picoarc
     src/audio_rates.c
     src/cec.c
     src/ddc_edid.c
+    src/diagnostics_trace.c
     src/spdif.c
     src/usb_audio.c
     src/usb_descriptors.c
@@ -84,6 +91,7 @@ target_compile_definitions(picoarc PRIVATE
     PICOARC_LOGGING=${PICOARC_LOGGING}
     PICOARC_DEBUG_USB=${PICOARC_DEBUG_USB}
     PICOARC_UAC_VERSION=${PICOARC_UAC_VERSION}
+    PICOARC_USB_DIAGNOSTICS=$<BOOL:${PICOARC_USB_DIAGNOSTICS}>
     PICO_STDIO_USB_USE_DEFAULT_DESCRIPTORS=0
     PICO_STDIO_USB_ENABLE_IRQ_BACKGROUND_TASK=0
     PICO_STDIO_USB_ENABLE_TINYUSB_INIT=0

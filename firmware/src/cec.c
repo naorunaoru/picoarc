@@ -1,4 +1,5 @@
 #include "cec.h"
+#include "diagnostics_trace.h"
 
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
@@ -349,6 +350,10 @@ static bool cec_send_frame_internal(const uint8_t *bytes, size_t len) {
     }
 
     if (!wait_bus_idle(CEC_IDLE_BEFORE_TX_US, 100000)) {
+#if PICOARC_USB_DIAGNOSTICS
+        diagnostics_trace_record((uint32_t)(now_us() / 1000u), DIAGNOSTICS_TRACE_CEC_TX,
+                                  2, len, bytes, len);
+#endif
         return false;
     }
 
@@ -386,6 +391,10 @@ static bool cec_send_frame_internal(const uint8_t *bytes, size_t len) {
     }
 
     trace_send_result(bytes, len, local_directed, broadcast, all_acked);
+#if PICOARC_USB_DIAGNOSTICS
+    diagnostics_trace_record((uint32_t)(now_us() / 1000u), DIAGNOSTICS_TRACE_CEC_TX,
+                              all_acked ? 1 : 0, len, bytes, len);
+#endif
     return all_acked;
 }
 
@@ -474,6 +483,10 @@ bool cec_receive_frame_passive(cec_frame_t *frame) {
         if (eom) {
             passive_frame.complete = true;
             *frame = passive_frame;
+#if PICOARC_USB_DIAGNOSTICS
+            diagnostics_trace_record((uint32_t)(now_us() / 1000u), DIAGNOSTICS_TRACE_CEC_RX,
+                                      0, frame->len, frame->bytes, frame->len);
+#endif
             passive_frame = (cec_frame_t){0};
             return true;
         }

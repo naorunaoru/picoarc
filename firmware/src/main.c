@@ -3,6 +3,7 @@
 #include "arc.h"
 #include "cec.h"
 #include "ddc_edid.h"
+#include "diagnostics_trace.h"
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"
 #include "hardware/watchdog.h"
@@ -111,6 +112,41 @@ static void adapter_set_state(adapter_state_t *state, adapter_state_t next) {
 }
 
 static void adapter_task(adapter_state_t *state, bool *usb_attached) {
+#if PICOARC_USB_DIAGNOSTICS
+    const uint8_t isolated_request = usb_audio_take_isolated_recovery_request();
+    if (isolated_request) {
+        switch (isolated_request) {
+        case PICOARC_DIAGNOSTICS_DDC:
+            ddc_edid_restart(false);
+            break;
+        case PICOARC_DIAGNOSTICS_HPD:
+            arc_diagnostics_hpd_pulse();
+            break;
+        case PICOARC_DIAGNOSTICS_CEC:
+            arc_diagnostics_cec_request();
+            break;
+        case PICOARC_DIAGNOSTICS_CEC_RX:
+            cec_reset_receiver();
+            break;
+        }
+        diagnostics_trace_record(to_ms_since_boot(get_absolute_time()),
+                                  DIAGNOSTICS_TRACE_RECOVERY,
+                                  isolated_request == PICOARC_DIAGNOSTICS_HPD ? 1 : 2,
+                                  isolated_request, NULL, 0);
+    }
+    if (usb_audio_take_hdmi_recovery_request()) {
+        usb_audio_stop_streaming();
+        if (*usb_attached) {
+            tud_disconnect();
+            *usb_attached = false;
+        }
+        arc_restart_negotiation();
+        ddc_edid_restart(true);
+        usb_recovery_reconnect_at = make_timeout_time_ms(PICOARC_USB_RECOVERY_DISCONNECT_MS);
+        adapter_set_state(state, ADAPTER_STATE_USB_RECOVERY);
+        return;
+    }
+#endif
     if (usb_audio_take_recovery_request()) {
         usb_audio_stop_streaming();
         if (*usb_attached) {
@@ -118,7 +154,7 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
             *usb_attached = false;
         }
         usb_recovery_reconnect_at = make_timeout_time_ms(PICOARC_USB_RECOVERY_DISCONNECT_MS);
-        printf("adapter: forcing USB re-enumeration after stalled audio stream\n");
+        printf("adapter: forcing USB re-enumeration for audio recovery\n");
         adapter_set_state(state, ADAPTER_STATE_USB_RECOVERY);
     }
 
@@ -431,6 +467,9 @@ int main(void) {
 #endif
         arc_task();
         adapter_task(&adapter_state, &usb_attached);
+#if PICOARC_USB_DIAGNOSTICS
+        usb_audio_trace_state();
+#endif
 
         const bool hdmi_connected = arc_hdmi_connected();
         const bool usb_enumerated = usb_attached && tud_mounted();

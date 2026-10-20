@@ -21,4 +21,13 @@ bool arc_audio_format_supported_quiet(uint8_t alt, uint32_t sample_rate);
 void arc_request_volume_sync(uint8_t volume);
 void arc_request_mute_sync(bool muted);
 
+#if PICOARC_USB_DIAGNOSTICS
+void arc_restart_negotiation(void);
+void arc_diagnostics_hpd_pulse(void);
+void arc_diagnostics_cec_request(void);
+#endif
+#if PICOARC_USB_DIAGNOSTICS
+uint32_t arc_get_audio_status_diagnostics(void);
+#endif
+
 #endif

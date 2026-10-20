@@ -31,6 +31,16 @@ target_link_options(audio_samples_test PRIVATE
 
 add_test(NAME audio_samples COMMAND audio_samples_test)
 
+add_executable(diagnostics_trace_test diagnostics_trace_test.c ../src/diagnostics_trace.c)
+target_include_directories(diagnostics_trace_test PRIVATE ../src)
+target_compile_definitions(diagnostics_trace_test PRIVATE PICOARC_USB_DIAGNOSTICS=1)
+set_target_properties(diagnostics_trace_test PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+target_compile_options(diagnostics_trace_test PRIVATE
+    -Wall -Wextra -Werror -fno-omit-frame-pointer -fno-sanitize-recover=all -fsanitize=address,undefined)
+target_link_options(diagnostics_trace_test PRIVATE
+    -fno-omit-frame-pointer -fno-sanitize-recover=all -fsanitize=address,undefined)
+add_test(NAME diagnostics_trace COMMAND diagnostics_trace_test)
+
 # Compile the real descriptors and USB request callbacks with only hardware and
 # transport calls stubbed. Exercise both audio classes and CDC/debug layouts.
 # Use TinyUSB's strict-alignment path, as on RP2040, even on ARM64 hosts.

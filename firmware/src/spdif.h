@@ -50,4 +50,76 @@ unsigned int spdif_buffered_frames(void);
 void spdif_clear_usb_buffer(void);
 void spdif_take_usb_stats(spdif_usb_stats_t *stats);
 
+#if PICOARC_USB_DIAGNOSTICS
+typedef struct {
+    uint32_t dma_blocks;
+    uint32_t dma_remaining;
+    uint32_t dma_ctrl;
+    uint32_t pio_fdebug;
+} spdif_diagnostics_t;
+
+// Read counters/registers without clearing them or waiting for core 1.
+void spdif_get_diagnostics(spdif_diagnostics_t *diagnostics);
+
+typedef struct {
+    uint32_t version;
+    uint32_t gpio_ctrl;
+    uint32_t gpio_status;
+    uint32_t pio_ctrl;
+    uint32_t pio_clkdiv;
+    uint32_t pio_execctrl;
+    uint32_t pio_shiftctrl;
+    uint32_t pio_pinctrl;
+    uint32_t pio_addr;
+    uint32_t pio_fstat;
+    uint32_t dma_read_addr;
+    uint32_t stream_format;
+    uint32_t encoded_nonzero_frames;
+    uint32_t encoder_table_hash;
+    uint32_t dma_block_hash;
+    uint32_t silence_block_hash;
+} spdif_output_diagnostics_t;
+
+// Registers and hashes are sampled without stopping the encoder; DMA block
+// hashes can cover concurrent writes and are not an atomic wire capture.
+void spdif_get_output_diagnostics(spdif_output_diagnostics_t *diagnostics);
+
+enum { SPDIF_DIAGNOSTIC_BLOCK_WORDS = 192 * 4 };
+typedef struct {
+    uint32_t version;
+    uint32_t stable;
+    uint32_t dma_blocks_before;
+    uint32_t dma_blocks_after;
+    uint32_t block_index;
+    uint32_t dma_remaining_before;
+    uint32_t dma_remaining_after;
+    uint32_t spdif_mode;
+    uint32_t stream_format;
+    uint32_t pio_clkdiv;
+    uint32_t pio_instruction;
+    uint32_t gpio_pad;
+    uint32_t clk_sys_hz;
+    uint32_t uptime_ms;
+    uint32_t reserved;
+    uint32_t word_count;
+    uint32_t words[SPDIF_DIAGNOSTIC_BLOCK_WORDS];
+} spdif_block_diagnostics_t;
+
+// Copy the buffer being consumed by DMA without stopping either core. A
+// changing DMA block invalidates the copy; callers must check stable.
+void spdif_get_block_diagnostics(spdif_block_diagnostics_t *diagnostics);
+
+typedef struct {
+    uint32_t requested;
+    uint32_t completed;
+    uint32_t last_uptime_ms;
+    uint32_t reserved;
+} spdif_restart_diagnostics_t;
+
+// Schedule a transmitter-only restart on core 1. USB, ARC and received audio
+// buffers remain intact; completion is reported asynchronously.
+void spdif_request_output_restart(void);
+void spdif_get_restart_diagnostics(spdif_restart_diagnostics_t *diagnostics);
+#endif
+
 #endif

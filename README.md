@@ -188,3 +188,114 @@ USB serial log.
 `make run-uac2` does the same with the optional UAC2 debug build.
 
 Press `Ctrl-]` to close the monitor.
+
+## Inspect silent audio
+
+For a connected adapter that stops producing sound while volume controls still
+work, an optional release build exposes read-only USB audio diagnostics while
+keeping the same audio interfaces and descriptors:
+
+```sh
+cmake -S firmware -B firmware/build-diagnostics-uac2 -G Ninja \
+  -DPICOARC_VARIANT=release -DPICOARC_USB_AUDIO_CLASS=uac2 \
+  -DPICOARC_USB_DIAGNOSTICS=ON
+cmake --build firmware/build-diagnostics-uac2
+```
+
+Flash `firmware/build-diagnostics-uac2/picoarc-release-uac2-diagnostics.uf2`
+using BOOTSEL, then capture during playback or a failure before reconnecting USB:
+
+```sh
+python3 tools/audio_probe.py --seconds 30 > audio-diagnostics.jsonl
+```
+
+The probe requires libusb and reports audio counters, ARC gating, DMA progress,
+output hardware state, and reset cause without clearing counters or claiming
+interfaces.
+During a bounded capture it waits for the adapter to return after a KVM switch;
+an uptime reset means the board rebooted, while `watchdog_timeout` and
+`watchdog_forced` distinguish watchdog resets from hardware resets.
+Reset-cause flags require diagnostic protocol version 2; output registers,
+nonzero encoded-frame counts, and encoder/buffer hashes require version 3,
+and unavailable fields are omitted for older firmware.
+Growing USB/frame counters with a stopped DMA block counter indicate a stuck
+output core; a closed format gate points to ARC/capability state, while growing
+DMA blocks with admitted nonzero audio require checking the carrier and receiver.
+Diagnostics are disabled by default and provide evidence for debugging rather
+than changing recovery behavior.
+
+Protocol 3 diagnostics also provide an explicit software BOOTSEL command;
+ordinary captures remain read-only, and rebooting requires the board's USB
+serial number:
+
+```sh
+python3 tools/audio_probe.py --bootsel --serial YOUR_BOARD_SERIAL
+```
+
+Protocol 4 can also copy the encoded 192-frame buffer currently being consumed
+by DMA, without pausing playback:
+
+```sh
+python3 tools/audio_probe.py --spdif-block --serial YOUR_BOARD_SERIAL
+```
+
+The snapshot includes the encoded words, current PIO instruction and pin-pad
+configuration. The host decoder checks preambles, BMC transitions, parity and
+sample validity, and reports PCM peak/RMS levels and channel-status bytes.
+Copies that cross a DMA buffer handoff are marked unstable and must be retried.
+This checks the data supplied to PIO; it does not measure the HDMI waveform or
+confirm that the soundbar has locked onto it. Ordinary captures omit this larger
+snapshot.
+
+Protocol 5 adds two explicit recovery commands, both requiring the matching
+USB serial number:
+
+```sh
+python3 tools/audio_probe.py --recover output --serial YOUR_BOARD_SERIAL
+python3 tools/audio_probe.py --recover usb --serial YOUR_BOARD_SERIAL
+```
+
+Capture the failed stream first, then try one recovery at a time. `output`
+asks core 1 to restart its S/PDIF state machine and DMA without restarting USB
+or ARC negotiation. `usb` reconnects the USB audio device without rebooting the
+adapter or reinitializing the S/PDIF state machine. Both briefly interrupt
+playback. Read-only captures report output request/completion counters and USB
+reconnect requests; an accepted command is not proof that sound has returned.
+These commands are diagnostic experiments, not automatic recovery policies.
+
+Protocol 6 adds read-only HPD/DDC controller state and cached soundbar volume
+and mute reports, plus an explicit HDMI recovery command:
+
+```sh
+python3 tools/audio_probe.py --recover hdmi --serial YOUR_BOARD_SERIAL
+```
+
+This reconnects USB, resets the EDID responder and ARC session, and pulses HPD
+while retaining processor uptime and the S/PDIF transmitter configuration.
+It briefly interrupts playback and reports the request in subsequent captures.
+Test it during a captured silent failure to determine whether that boundary
+restores sound; an accepted request alone does not establish recovery.
+
+Protocol 8 retains the last 128 observed USB/ARC state changes, streaming-alt
+requests, parsed CEC frames and CEC transmit results in memory, with timestamps
+and sequence numbers. Capture this history before a reset; reads preserve it,
+while a processor restart clears it:
+
+```sh
+python3 tools/audio_probe.py --trace --spdif-block --serial YOUR_BOARD_SERIAL
+```
+
+The following manual tests separate parts of the combined HDMI recovery:
+
+| Command | Direct action |
+| --- | --- |
+| `--recover ddc` | Reset only the EDID I2C controller, FIFOs and byte parser |
+| `--recover cec-rx` | Reset only the CEC receiver and parser |
+| `--recover cec` | Resend the existing system-audio and ARC-initiation requests |
+| `--recover hpd` | Pulse HPD low for 200 ms, retaining cached ARC and EDID state |
+
+Each command requires `--serial`; none explicitly reconnects USB or restarts
+the audio transmitter, although soundbar replies can trigger normal ARC/USB
+state changes. Try one command at a time during a captured silent failure and
+check audibility and the trace before proceeding; these diagnostics introduce
+no automatic recovery or idle refresh.
