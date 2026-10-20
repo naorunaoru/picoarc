@@ -6,6 +6,7 @@
 #endif
 #include "tusb.h"
 #include "usb_descriptors.h"
+#include "arc.h"
 
 #define USB_VID 0xcafe
 // Every audio-class/layout combination gets its own PID so host descriptor and
@@ -23,7 +24,7 @@
 #define USB_PID 0x4016
 #endif
 #endif
-#define USB_BCD 0x0201
+#define USB_BCD 0x0202
 #define USB_STRING_MAX_CHARS 32
 
 #define EPNUM_CDC_NOTIF 0x81
@@ -104,9 +105,93 @@ uint8_t const desc_configuration[] = {
 _Static_assert(sizeof(desc_configuration) == CONFIG_TOTAL_LEN,
                "USB configuration descriptor length mismatch");
 
+static uint8_t audio_configuration[CONFIG_TOTAL_LEN];
+static uint8_t audio_rates[PICOARC_AUDIO_ALT_MAX + 1];
+static uint8_t audio_formats[PICOARC_AUDIO_ALT_MAX + 1];
+
+uint8_t usb_descriptors_audio_format(uint8_t usb_alt) {
+    return usb_alt <= PICOARC_AUDIO_ALT_MAX ? audio_formats[usb_alt] : 0;
+}
+
+uint8_t usb_descriptors_audio_rate_mask(uint8_t format) {
+    if (format > PICOARC_AUDIO_ALT_MAX) {
+        return 0;
+    }
+    if (format != 0) {
+        return audio_rates[format];
+    }
+    // UAC2 has one physical clock shared by all streaming formats.
+    uint8_t rates = 0;
+    for (unsigned int i = 1; i <= PICOARC_AUDIO_ALT_MAX; ++i) {
+        rates |= audio_rates[i];
+    }
+    return rates;
+}
+
+bool usb_descriptors_audio_changed(void) {
+    for (unsigned int i = 1; i <= PICOARC_AUDIO_ALT_MAX; ++i) {
+        if (audio_rates[i] != arc_audio_rate_mask(i)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void usb_descriptors_prepare_audio(void) {
+    memset(audio_formats, 0, sizeof(audio_formats));
+    for (unsigned int i = 1; i <= PICOARC_AUDIO_ALT_MAX; ++i) {
+        audio_rates[i] = arc_audio_rate_mask(i);
+    }
+    unsigned int used = 0;
+    uint8_t next_alt = 0;
+    uint8_t format = 0;
+    bool skip = false;
+    bool streaming_interface = false;
+    for (unsigned int offset = 0; offset < sizeof(desc_configuration);) {
+        const uint8_t *source = desc_configuration + offset;
+        const unsigned int length = source[0];
+        if (source[1] == TUSB_DESC_INTERFACE) {
+            streaming_interface = source[2] == ITF_NUM_AUDIO_STREAMING;
+            format = streaming_interface ? source[3] : 0;
+            skip = format != 0 && audio_rates[format] == 0;
+        }
+        if (!skip) {
+            uint8_t *dest = audio_configuration + used;
+            memcpy(dest, source, length);
+            unsigned int out_length = length;
+            if (streaming_interface && source[1] == TUSB_DESC_INTERFACE && format != 0) {
+                dest[3] = ++next_alt;
+                audio_formats[next_alt] = format;
+            }
+#if PICOARC_UAC_VERSION == 1
+            if (streaming_interface && format != 0 && source[1] == TUSB_DESC_CS_INTERFACE &&
+                source[2] == AUDIO10_CS_AS_INTERFACE_FORMAT_TYPE) {
+                unsigned int count = 0;
+                for (unsigned int i = 0; i < PICOARC_AUDIO_SAMPLE_RATE_COUNT; ++i) {
+                    const uint32_t rate = usb_audio_rate_at(i);
+                    if (usb_audio_rate_in_mask(audio_rates[format], rate)) {
+                        dest[8 + 3 * count] = (uint8_t)rate;
+                        dest[9 + 3 * count] = (uint8_t)(rate >> 8);
+                        dest[10 + 3 * count] = (uint8_t)(rate >> 16);
+                        ++count;
+                    }
+                }
+                out_length = 8 + 3 * count;
+                dest[0] = (uint8_t)out_length;
+                dest[7] = (uint8_t)count;
+            }
+#endif
+            used += out_length;
+        }
+        offset += length;
+    }
+    audio_configuration[2] = (uint8_t)used;
+    audio_configuration[3] = (uint8_t)(used >> 8);
+}
+
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index) {
     (void)index;
-    return desc_configuration;
+    return audio_configuration;
 }
 
 static char serial_str[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];

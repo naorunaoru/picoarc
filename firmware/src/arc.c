@@ -1856,6 +1856,24 @@ bool arc_ready_for_usb(void) {
     return arc_initiated && arc_audio_caps_ready() && soundbar_name_ready_for_usb();
 }
 
+uint8_t arc_audio_rate_mask(uint8_t alt) {
+    if (!arc_initiated || !sad_query_finished()) {
+        return 0;
+    }
+    uint8_t rates = 0;
+    switch (alt) {
+    case PICOARC_AUDIO_ALT_PCM_16: rates = sad_pcm_rates_16; break;
+    case PICOARC_AUDIO_ALT_PCM_20: rates = sad_pcm_rates_20; break;
+    case PICOARC_AUDIO_ALT_PCM_24: rates = sad_pcm_rates_24; break;
+#if PICOARC_UAC_VERSION == 2
+    case PICOARC_AUDIO_ALT_IEC61937_AC3: rates = sad_ac3_rates; break;
+    case PICOARC_AUDIO_ALT_IEC61937_DTS: rates = sad_dts_rates; break;
+#endif
+    default: break;
+    }
+    return rates & PICOARC_AUDIO_USB_RATE_MASK;
+}
+
 static bool audio_format_supported(uint8_t alt, uint32_t sample_rate, bool log_rejection) {
     if (alt == PICOARC_AUDIO_ALT_ZERO) {
         return true;
@@ -1880,30 +1898,7 @@ static bool audio_format_supported(uint8_t alt, uint32_t sample_rate, bool log_r
         return false;
     }
 
-    const uint8_t rate_bit = sample_rate_to_sad_bit(sample_rate);
-    bool supported = false;
-    switch (alt) {
-    case PICOARC_AUDIO_ALT_PCM_16:
-        supported = (sad_pcm_rates_16 & rate_bit) != 0;
-        break;
-    case PICOARC_AUDIO_ALT_PCM_20:
-        supported = (sad_pcm_rates_20 & rate_bit) != 0;
-        break;
-    case PICOARC_AUDIO_ALT_PCM_24:
-        supported = (sad_pcm_rates_24 & rate_bit) != 0;
-        break;
-#if PICOARC_UAC_VERSION == 2
-    case PICOARC_AUDIO_ALT_IEC61937_AC3:
-        supported = (sad_ac3_rates & rate_bit) != 0;
-        break;
-    case PICOARC_AUDIO_ALT_IEC61937_DTS:
-        supported = (sad_dts_rates & rate_bit) != 0;
-        break;
-#endif
-    default:
-        supported = false;
-        break;
-    }
+    const bool supported = (arc_audio_rate_mask(alt) & sample_rate_to_sad_bit(sample_rate)) != 0;
 
     if (!supported && log_rejection) {
         printf("arc: reject audio alt=%u rate=%lu; caps pcm16=0x%02x pcm20=0x%02x pcm24=0x%02x ac3=0x%02x dts=0x%02x\n",

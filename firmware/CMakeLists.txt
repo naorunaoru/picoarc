@@ -63,6 +63,7 @@ add_executable(picoarc
     src/main.c
     src/arc.c
     src/audio_samples.c
+    src/audio_rates.c
     src/cec.c
     src/ddc_edid.c
     src/spdif.c

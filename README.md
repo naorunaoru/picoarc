@@ -115,15 +115,25 @@ Set it back to `0` for the default standby-friendly behavior.
 The release variant is audio-only with logging compiled out. It waits for an
 HDMI ARC device, completes ARC/SAD capability discovery, asks the soundbar for
 its OSD name, and then enumerates as USB audio using that name when the soundbar
-provides one. The debug variant keeps the USB serial log and reset interface
-online for bring-up work, so it enumerates immediately with the default audio
-descriptor.
+provides one. USB sample rates are limited to the connected soundbar's reported
+capabilities. UAC1 lists rates separately for each PCM bit depth; UAC2 reports
+the available rates on its shared clock and validates the selected format when
+starting a stream. Unsupported bit depths and codecs are omitted. UAC2 rejects
+unsupported rate requests; UAC1 rounds them to a supported rate and reports the
+selected value through GET_CUR. When SAD discovery is unavailable, the existing
+fallback remains 16-bit PCM at 48 kHz.
+
+Capabilities are frozen for each USB connection and refreshed by re-enumerating
+when they change. The initial rate is 48 kHz if supported, otherwise the nearest
+supported rate. The debug variant initially exposes its serial log and reset
+interface with no streaming alternates, then briefly reconnects USB when audio
+capabilities become available or change.
 
 ## Host sanitizer tests
 
 The host tests require CMake, Ninja, and a native Clang or GCC installation
 with AddressSanitizer and UndefinedBehaviorSanitizer runtimes. They do not need
-the Pico SDK, Arm compiler, or initialized submodules. Run them with the
+the Pico SDK or Arm compiler, but the TinyUSB submodule must be initialized. Run them with the
 default C compiler or select one before the first configure:
 
 ```sh
@@ -135,7 +145,10 @@ The compiler selection is cached in `firmware/build-host-sanitizers`; remove
 that generated directory before switching compilers. The tests compile the
 same USB audio sample decoder used by the firmware and cover the supported
 16-, 20-, and 24-bit subslots, including IEC 61937 words, unaligned byte input,
-buffer bounds, and the maximum audio-task batch.
+buffer bounds, and the maximum audio-task batch. They also compile the real USB
+descriptors and control callbacks for both audio classes and debug layouts,
+checking sample-rate negotiation, sink changes, fallback capabilities, and
+unsupported format/rate requests.
 
 The RP2040 firmware remains on its normal embedded build path and is not
 instrumented. Host tests cannot validate DMA and PIO timing, multicore races,

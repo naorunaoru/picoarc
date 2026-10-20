@@ -124,46 +124,17 @@ static const char *active_alt_format_name(void) {
     }
 }
 
-#if PICOARC_UAC_VERSION == 2
-static bool sample_rate_supported(uint32_t sample_rate) {
-    switch (sample_rate) {
-    case PICOARC_AUDIO_SAMPLE_RATE_32K:
-    case PICOARC_AUDIO_SAMPLE_RATE_44K1:
-    case PICOARC_AUDIO_SAMPLE_RATE_48K:
-    case PICOARC_AUDIO_SAMPLE_RATE_88K2:
-    case PICOARC_AUDIO_SAMPLE_RATE_96K:
-        return true;
-    default:
-        return false;
-    }
-}
-#else
-static uint32_t closest_supported_sample_rate(uint32_t requested) {
-    // UAC1 5.2.3.2.3.1 requires a discrete-frequency endpoint to round an
-    // unsupported SET_CUR value and report the result through GET_CUR.
-    static const uint32_t sample_rates[] = {
-        PICOARC_AUDIO_SAMPLE_RATE_32K,
-        PICOARC_AUDIO_SAMPLE_RATE_44K1,
-        PICOARC_AUDIO_SAMPLE_RATE_48K,
-        PICOARC_AUDIO_SAMPLE_RATE_88K2,
-        PICOARC_AUDIO_SAMPLE_RATE_96K,
-    };
-
-    uint32_t closest = sample_rates[0];
-    uint32_t closest_delta = requested > closest ? requested - closest : closest - requested;
-
-    for (unsigned int i = 1; i < TU_ARRAY_SIZE(sample_rates); i++) {
-        const uint32_t candidate = sample_rates[i];
-        const uint32_t delta = requested > candidate ? requested - candidate : candidate - requested;
-        if (delta < closest_delta) {
-            closest = candidate;
-            closest_delta = delta;
+static uint8_t available_rate_mask(uint8_t format) {
+    uint8_t live = 0;
+    if (format == 0) {
+        for (unsigned int i = 1; i <= PICOARC_AUDIO_ALT_MAX; ++i) {
+            live |= arc_audio_rate_mask(i);
         }
+    } else {
+        live = arc_audio_rate_mask(format);
     }
-
-    return closest;
+    return usb_descriptors_audio_rate_mask(format) & live;
 }
-#endif
 
 static int16_t host_volume_min_256(void) {
     return HOST_VOLUME_MIN_DB * 256;
@@ -445,6 +416,15 @@ static void apply_sample_rate(uint32_t sample_rate) {
            (unsigned long)active_sample_rate);
 }
 
+void usb_audio_prepare_connection(void) {
+    usb_descriptors_prepare_audio();
+    const uint32_t rate = usb_audio_nearest_rate(usb_descriptors_audio_rate_mask(0),
+                                               PICOARC_AUDIO_SAMPLE_RATE_DEFAULT);
+    if (rate != 0) {
+        apply_sample_rate(rate);
+    }
+}
+
 #if PICOARC_UAC_VERSION == 1
 
 bool tud_audio_get_req_ep_cb(uint8_t rhport, tusb_control_request_t const *request) {
@@ -483,7 +463,12 @@ bool tud_audio_set_req_ep_cb(uint8_t rhport, tusb_control_request_t const *reque
     const uint32_t requested = (uint32_t)buf[0] |
                                ((uint32_t)buf[1] << 8) |
                                ((uint32_t)buf[2] << 16);
-    apply_sample_rate(closest_supported_sample_rate(requested));
+    // UAC1 requires rounding unsupported discrete-frequency requests.
+    const uint32_t selected = usb_audio_nearest_rate(available_rate_mask(active_alt), requested);
+    if (selected == 0) {
+        return false;
+    }
+    apply_sample_rate(selected);
     return true;
 }
 
@@ -611,41 +596,27 @@ static bool clock_get_request(uint8_t rhport, tusb_control_request_t const *requ
 
     if (control_selector == AUDIO20_CS_CTRL_SAM_FREQ &&
         request->bRequest == AUDIO20_CS_REQ_RANGE) {
-        audio20_control_range_4_n_t(PICOARC_AUDIO_SAMPLE_RATE_COUNT) range = {
-            .wNumSubRanges = tu_htole16(PICOARC_AUDIO_SAMPLE_RATE_COUNT),
-            .subrange[0] = {
-                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_32K),
-                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_32K),
-                .bRes = 0,
-            },
-            .subrange[1] = {
-                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_44K1),
-                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_44K1),
-                .bRes = 0,
-            },
-            .subrange[2] = {
-                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_48K),
-                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_48K),
-                .bRes = 0,
-            },
-            .subrange[3] = {
-                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_88K2),
-                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_88K2),
-                .bRes = 0,
-            },
-            .subrange[4] = {
-                .bMin = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_96K),
-                .bMax = (int32_t)tu_htole32(PICOARC_AUDIO_SAMPLE_RATE_96K),
-                .bRes = 0,
-            },
-        };
+        audio20_control_range_4_n_t(PICOARC_AUDIO_SAMPLE_RATE_COUNT) range = {0};
+        const uint8_t mask = usb_descriptors_audio_rate_mask(0);
+        unsigned int count = 0;
+        for (unsigned int i = 0; i < PICOARC_AUDIO_SAMPLE_RATE_COUNT; ++i) {
+            const uint32_t rate = usb_audio_rate_at(i);
+            if (usb_audio_rate_in_mask(mask, rate)) {
+                range.subrange[count].bMin = (int32_t)tu_htole32(rate);
+                range.subrange[count].bMax = (int32_t)tu_htole32(rate);
+                ++count;
+            }
+        }
+        range.wNumSubRanges = tu_htole16(count);
         return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
-                                                           &range, sizeof(range));
+                                                           &range, 2 + 12 * count);
     }
 
     if (control_selector == AUDIO20_CS_CTRL_CLK_VALID &&
         request->bRequest == AUDIO20_CS_REQ_CUR) {
-        audio20_control_cur_1_t valid = {.bCur = 1};
+        audio20_control_cur_1_t valid = {
+            .bCur = usb_audio_rate_in_mask(available_rate_mask(active_alt), active_sample_rate),
+        };
         return tud_audio_buffer_and_schedule_control_xfer(rhport, request,
                                                            &valid, sizeof(valid));
     }
@@ -723,7 +694,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const *r
             return false;
         }
         const uint32_t requested = tu_le32toh(tu_unaligned_read32(buf));
-        if (!sample_rate_supported(requested)) {
+        if (!usb_audio_rate_in_mask(available_rate_mask(active_alt), requested)) {
             return false;
         }
         apply_sample_rate(requested);
@@ -780,12 +751,23 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
     uint8_t const alt = tu_u16_low(tu_le16toh(request->wValue));
 
     if (itf == ITF_NUM_AUDIO_STREAMING) {
-        if (alt > PICOARC_AUDIO_ALT_MAX) {
+        const uint8_t format = usb_descriptors_audio_format(alt);
+        if (alt != 0 && (format == 0 || available_rate_mask(format) == 0)) {
             return false;
         }
+#if PICOARC_UAC_VERSION == 2
+        if (alt != 0 && !usb_audio_rate_in_mask(available_rate_mask(format), active_sample_rate)) {
+            return false;
+        }
+#else
+        // UAC1 hosts select the interface before setting its endpoint rate.
+        if (alt != 0) {
+            apply_sample_rate(usb_audio_nearest_rate(available_rate_mask(format), active_sample_rate));
+        }
+#endif
 
         const uint64_t now_us = time_us_64();
-        active_alt = alt;
+        active_alt = format;
         streaming = alt != PICOARC_AUDIO_ALT_ZERO;
         stream_packet_count = 0;
         observed_stream_packet_count = 0;

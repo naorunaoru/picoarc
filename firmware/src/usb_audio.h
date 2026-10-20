@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 void usb_audio_task(void);
+void usb_audio_prepare_connection(void);
 bool usb_audio_is_streaming(void);
 bool usb_audio_take_recovery_request(void);
 void usb_audio_stop_streaming(void);
