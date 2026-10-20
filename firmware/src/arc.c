@@ -1456,32 +1456,37 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
     switch (opcode) {
     case 0x83:
         if (allow_tx) {
+            const bool ack = send_report_physical_address(CEC_LOGICAL_TV, tv_physical_address, 0x00);
             printf("arc: reply report-physical-address 0000 tv ack=%s\n",
-                   send_report_physical_address(CEC_LOGICAL_TV, tv_physical_address, 0x00) ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     case 0x8c:
         if (allow_tx) {
+            const bool ack = send_device_vendor_id(CEC_LOGICAL_TV);
             printf("arc: reply device-vendor-id ack=%s\n",
-                   send_device_vendor_id(CEC_LOGICAL_TV) ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     case 0x8f:
         if (allow_tx) {
+            const bool ack = send_power_status_on(CEC_LOGICAL_TV, initiator);
             printf("arc: reply report-power-status:on ack=%s\n",
-                   send_power_status_on(CEC_LOGICAL_TV, initiator) ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     case 0x9f:
         if (allow_tx) {
+            const bool ack = send_cec_version(CEC_LOGICAL_TV, initiator);
             printf("arc: reply cec-version:2.0 ack=%s\n",
-                   send_cec_version(CEC_LOGICAL_TV, initiator) ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     case 0x46:
         if (allow_tx) {
+            const bool ack = send_set_osd_name(CEC_LOGICAL_TV, initiator, "PicoARC");
             printf("arc: reply set-osd-name:PicoARC ack=%s\n",
-                   send_set_osd_name(CEC_LOGICAL_TV, initiator, "PicoARC") ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     case 0x00:
@@ -1521,21 +1526,24 @@ static void handle_frame(const cec_frame_t *frame, bool streaming, bool allow_tx
     case 0xc0:
         if (initiator == CEC_LOGICAL_AUDIO_SYSTEM) {
             arc_initiated = true;
+            const bool ack = send_report_arc_initiated();
             printf("arc: initiate-arc from soundbar; report-arc-initiated ack=%s\n",
-                   send_report_arc_initiated() ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     case 0xc3:
         if (initiator == CEC_LOGICAL_AUDIO_SYSTEM && allow_tx) {
+            const bool ack = send_initiate_arc();
             printf("arc: request from soundbar; initiate-arc ack=%s\n",
-                   send_initiate_arc() ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     default:
         if (allow_tx) {
+            const bool ack = send_feature_abort(CEC_LOGICAL_TV, initiator, opcode, 0x00);
             printf("arc: feature-abort opcode=0x%02x ack=%s\n",
                    opcode,
-                   send_feature_abort(CEC_LOGICAL_TV, initiator, opcode, 0x00) ? "yes" : "no");
+                   ack ? "yes" : "no");
         }
         break;
     }
