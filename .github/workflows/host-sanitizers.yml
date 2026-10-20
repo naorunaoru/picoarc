@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout PicoARC
         uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Run host sanitizer tests
         env:
