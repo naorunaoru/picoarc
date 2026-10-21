@@ -115,8 +115,7 @@ Use `0` to stop immediately, positive seconds for a timeout, or `-1` to keep
 sending silence forever. Reopening the stream cancels the countdown; the next
 close starts a fresh countdown. Silent audio within an open stream and temporary
 buffer refills do not start it. With a finite timeout, the carrier stays off at
-boot until a stream opens; `-1` sends silence from boot, as the old keepalive flag
-did. The setting replaces `PICOARC_IDLE_AUDIO_KEEPALIVE`.
+boot until a stream opens; `-1` sends silence from boot.
 
 The release variant is audio-only with logging compiled out. It waits for an
 HDMI ARC device, completes ARC/SAD capability discovery, asks the soundbar for
