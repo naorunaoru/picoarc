@@ -101,16 +101,22 @@ The equivalent helper option is `--usb-audio-class uac2` (or `--uac uac2`),
 for example `./picoarc build release --uac uac2`. Direct CMake builds can set
 `-DPICOARC_USB_AUDIO_CLASS=uac2`; omitting the option selects UAC1.
 
-By default PicoARC stops the ARC/S/PDIF carrier while USB audio is idle so the
-soundbar can go to standby. To keep sending silence instead, which can prevent
-short notification sounds from being swallowed while the soundbar wakes, edit
+By default PicoARC keeps sending silence for five minutes after the host closes
+its audio stream, then stops the ARC/S/PDIF carrier so the soundbar can go to
+standby. This can prevent short notification sounds from being swallowed while
+the soundbar wakes during gaps between playback. To change the timeout, edit
 `firmware/src/picoarc_config.h` before building:
 
 ```c
-#define PICOARC_IDLE_AUDIO_KEEPALIVE 1
+#define PICOARC_IDLE_AUDIO_TIMEOUT_SECONDS 300
 ```
 
-Set it back to `0` for the default standby-friendly behavior.
+Use `0` to stop immediately, positive seconds for a timeout, or `-1` to keep
+sending silence forever. Reopening the stream cancels the countdown; the next
+close starts a fresh countdown. Silent audio within an open stream and temporary
+buffer refills do not start it. With a finite timeout, the carrier stays off at
+boot until a stream opens; `-1` sends silence from boot, as the old keepalive flag
+did. The setting replaces `PICOARC_IDLE_AUDIO_KEEPALIVE`.
 
 The release variant is audio-only with logging compiled out. It waits for an
 HDMI ARC device, completes ARC/SAD capability discovery, asks the soundbar for
@@ -149,6 +155,12 @@ buffer bounds, and the maximum audio-task batch. They also compile the real USB
 descriptors and control callbacks for both audio classes and debug layouts,
 checking sample-rate negotiation, sink changes, fallback capabilities, and
 unsupported format/rate requests.
+
+Run the idle timeout checks for both USB audio classes with a simulated clock:
+
+```sh
+python3 firmware/tests/test_idle_audio.py
+```
 
 The RP2040 firmware remains on its normal embedded build path and is not
 instrumented. Host tests cannot validate DMA and PIO timing, multicore races,
