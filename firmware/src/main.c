@@ -47,14 +47,6 @@ static void cec_yield_pump(void) {
     usb_audio_task();
 }
 
-static spdif_mode_t idle_spdif_mode(void) {
-#if PICOARC_IDLE_AUDIO_KEEPALIVE
-    return SPDIF_MODE_SILENCE;
-#else
-    return SPDIF_MODE_OFF;
-#endif
-}
-
 #if PICOARC_HPD_GATE_ENABLE
 static void hpd_gate_hold(unsigned int gate_pin) {
     gpio_init(gate_pin);
@@ -112,6 +104,8 @@ static void adapter_set_state(adapter_state_t *state, adapter_state_t next) {
 }
 
 static void adapter_task(adapter_state_t *state, bool *usb_attached) {
+    // Service idle expiry even during ARC discovery or USB recovery.
+    usb_audio_task();
 #if PICOARC_USB_DIAGNOSTICS
     const uint8_t isolated_request = usb_audio_take_isolated_recovery_request();
     if (isolated_request) {
@@ -166,8 +160,6 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
             *usb_attached = false;
             usb_recovery_reconnect_at = make_timeout_time_ms(PICOARC_USB_RECOVERY_DISCONNECT_MS);
             adapter_set_state(state, ADAPTER_STATE_USB_RECOVERY);
-        } else {
-            usb_audio_task();
         }
         return;
     }
@@ -254,14 +246,12 @@ static void adapter_task(adapter_state_t *state, bool *usb_attached) {
         break;
 
     case ADAPTER_STATE_USB_IDLE:
-        usb_audio_task();
         if (usb_audio_is_streaming()) {
             adapter_set_state(state, ADAPTER_STATE_USB_STREAMING);
         }
         break;
 
     case ADAPTER_STATE_USB_STREAMING:
-        usb_audio_task();
         if (!usb_audio_is_streaming()) {
             adapter_set_state(state, ADAPTER_STATE_USB_IDLE);
         }
@@ -419,7 +409,7 @@ int main(void) {
     // issue class-specific audio control transfers as soon as enumeration
     // completes, so the S/PDIF path must be ready before USB traffic is served.
     spdif_start(PICOARC_SPDIF_PIN);
-    spdif_set_mode(idle_spdif_mode());
+    usb_audio_stop_streaming();
 #if PICOARC_DDC_EDID_ENABLE
     ddc_edid_init(PICOARC_DDC_EDID_SDA_PIN, PICOARC_DDC_EDID_SCL_PIN);
 #endif
@@ -441,7 +431,8 @@ int main(void) {
     }
 
     printf("spdif: GP%d 48k stereo %s\n", PICOARC_SPDIF_PIN, spdif_mode_name(spdif_get_mode()));
-    printf("adapter: idle audio policy=%s\n", PICOARC_IDLE_AUDIO_POLICY);
+    printf("adapter: idle audio timeout=%lld seconds (-1=forever)\n",
+           (long long)PICOARC_IDLE_AUDIO_TIMEOUT_SECONDS);
 #if PICOARC_DEBUG_USB
     printf("adapter: debug USB refreshes audio formats when ARC/SAD capabilities change\n");
 #else

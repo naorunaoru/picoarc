@@ -62,6 +62,9 @@ static int16_t volume[CHANNELS + 1];
 static uint8_t pcm_bytes[READ_FRAMES_BUDGET * MAX_BYTES_PER_FRAME];
 static int32_t pcm_frames[READ_FRAMES_BUDGET * CHANNELS];
 static bool streaming;
+#if PICOARC_IDLE_AUDIO_TIMEOUT_SECONDS > 0
+static uint64_t idle_audio_deadline_us;
+#endif
 static uint8_t active_alt;
 static uint32_t active_sample_rate = DEFAULT_SAMPLE_RATE;
 static bool output_enabled;
@@ -118,8 +121,11 @@ static bool active_alt_is_iec61937(void) {
 }
 
 static spdif_mode_t idle_spdif_mode(void) {
-#if PICOARC_IDLE_AUDIO_KEEPALIVE
+#if PICOARC_IDLE_AUDIO_TIMEOUT_SECONDS == -1
     return SPDIF_MODE_SILENCE;
+#elif PICOARC_IDLE_AUDIO_TIMEOUT_SECONDS > 0
+    return idle_audio_deadline_us != 0 && time_us_64() < idle_audio_deadline_us ?
+           SPDIF_MODE_SILENCE : SPDIF_MODE_OFF;
 #else
     return SPDIF_MODE_OFF;
 #endif
@@ -431,7 +437,9 @@ static void apply_sample_rate(uint32_t sample_rate) {
     audio_gate_open = false;
     refill_target_frames = START_BUFFER_FRAMES;
     spdif_clear_usb_buffer();
-    spdif_set_mode(idle_spdif_mode());
+    spdif_set_mode(streaming ?
+                   (arc_audio_format_supported_quiet(active_alt, active_sample_rate) ?
+                    SPDIF_MODE_SILENCE : SPDIF_MODE_OFF) : idle_spdif_mode());
 #if PICOARC_UAC_VERSION == 1
     next_feedback_us = 0;
     update_feedback(true);
@@ -798,7 +806,14 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
         diagnostics_trace_record((uint32_t)(now_us / 1000u), DIAGNOSTICS_TRACE_USB_ALT,
                                   0, alt, NULL, 0);
 #endif
-        streaming = alt != PICOARC_AUDIO_ALT_ZERO;
+        if (alt == PICOARC_AUDIO_ALT_ZERO) {
+            usb_audio_stop_streaming();
+            return true;
+        }
+        streaming = true;
+#if PICOARC_IDLE_AUDIO_TIMEOUT_SECONDS > 0
+        idle_audio_deadline_us = 0;
+#endif
         stream_packet_count = 0;
         observed_stream_packet_count = 0;
         // Arm recovery only after the first packet. Windows may select an
@@ -814,7 +829,7 @@ bool tud_audio_set_itf_cb(uint8_t rhport, tusb_control_request_t const *request)
         spdif_set_stream_format(active_alt_is_iec61937() ?
                                 SPDIF_STREAM_FORMAT_IEC61937 :
                                 SPDIF_STREAM_FORMAT_PCM);
-        spdif_set_mode(initial_gate_open ? SPDIF_MODE_SILENCE : idle_spdif_mode());
+        spdif_set_mode(initial_gate_open ? SPDIF_MODE_SILENCE : SPDIF_MODE_OFF);
         dropped_frames = 0;
         gated_frames = 0;
         next_diag_log_us = now_us + 2000000;
@@ -869,6 +884,14 @@ bool tud_audio_rx_done_isr(uint8_t rhport, uint16_t n_bytes_received,
 }
 
 void usb_audio_stop_streaming(void) {
+#if PICOARC_IDLE_AUDIO_TIMEOUT_SECONDS > 0
+    // TinyUSB closes the endpoint before reporting alt zero. Repeated stop
+    // notifications must not extend the deadline or wake an expired carrier.
+    if (streaming) {
+        idle_audio_deadline_us = time_us_64() +
+                                 (uint64_t)PICOARC_IDLE_AUDIO_TIMEOUT_SECONDS * 1000000u;
+    }
+#endif
     streaming = false;
     active_alt = PICOARC_AUDIO_ALT_ZERO;
     output_enabled = false;
@@ -909,6 +932,7 @@ void usb_audio_task(void) {
 #endif
 
     if (!streaming) {
+        spdif_set_mode(idle_spdif_mode());
         return;
     }
 
@@ -947,7 +971,7 @@ void usb_audio_task(void) {
         output_enabled = false;
         refill_target_frames = START_BUFFER_FRAMES;
         spdif_clear_usb_buffer();
-        spdif_set_mode(gate_open ? SPDIF_MODE_SILENCE : idle_spdif_mode());
+        spdif_set_mode(gate_open ? SPDIF_MODE_SILENCE : SPDIF_MODE_OFF);
 #if PICOARC_UAC_VERSION == 2
         reset_adaptive_clock();
 #endif
@@ -1055,7 +1079,7 @@ void usb_audio_task(void) {
         if (output_enabled && stats.underrun_frames > 0) {
             output_enabled = false;
             refill_target_frames = RECOVER_BUFFER_FRAMES;
-            spdif_set_mode(idle_spdif_mode());
+            spdif_set_mode(SPDIF_MODE_SILENCE);
 #if PICOARC_UAC_VERSION == 2
             reset_adaptive_clock();
 #endif

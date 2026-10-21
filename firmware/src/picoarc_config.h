@@ -12,9 +12,14 @@
 #define PICOARC_HPD_GATE_PIN 5
 #define PICOARC_HPD_REPLUG_LOW_MS 200
 
-// Set to 1 to keep sending silence while USB audio is idle.
-// Set to 0 to stop the ARC/S/PDIF carrier while idle so the soundbar can standby.
-#define PICOARC_IDLE_AUDIO_KEEPALIVE 0
+// Seconds to keep sending silence after the host closes its audio stream.
+// 0 stops the carrier immediately; -1 keeps sending silence forever.
+#ifndef PICOARC_IDLE_AUDIO_TIMEOUT_SECONDS
+#define PICOARC_IDLE_AUDIO_TIMEOUT_SECONDS 300
+#endif
+#if PICOARC_IDLE_AUDIO_TIMEOUT_SECONDS < -1
+#error "PICOARC_IDLE_AUDIO_TIMEOUT_SECONDS must be -1, 0, or positive seconds"
+#endif
 
 // Status LED user-visible timing.
 #define PICOARC_STATUS_LED_WAIT_HDMI_BLINK_MS 1000
@@ -39,11 +44,5 @@
 
 // Optional CEC audio probing
 #define PICOARC_CEC_QUERY_EXTRA_SADS 0
-
-#if PICOARC_IDLE_AUDIO_KEEPALIVE
-#define PICOARC_IDLE_AUDIO_POLICY "keepalive"
-#else
-#define PICOARC_IDLE_AUDIO_POLICY "standby"
-#endif
 
 #endif
